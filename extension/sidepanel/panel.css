@@ -140,7 +140,127 @@ body {
   font-weight: 600;
 }
 
-/* Session Selector */
+/* Custom Select Dropdown */
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s;
+}
+
+.custom-select-trigger:hover {
+  border-color: #1a73e8;
+}
+
+.custom-select-trigger.disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  color: #999;
+}
+
+.custom-select-trigger.disabled:hover {
+  border-color: #e0e0e0;
+}
+
+.session-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-status {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.session-status.warning {
+  color: #f57c00;
+  font-weight: 600;
+}
+
+.session-status.error {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.custom-select-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+}
+
+.custom-select.open .custom-select-options {
+  display: block;
+}
+
+.custom-select-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.custom-select-option:hover {
+  background: #f5f5f5;
+}
+
+.custom-select-option.selected {
+  background: #e3f2fd;
+}
+
+.custom-select-option .session-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-select-option .session-status {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.custom-select-option .session-status.warning {
+  color: #f57c00;
+  font-weight: 600;
+}
+
+.custom-select-option .session-status.error {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+/* Session Selector (legacy - can be removed) */
 .session-selector {
   width: 100%;
   padding: 8px 12px;

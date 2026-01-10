@@ -16,11 +16,12 @@ const statusBadge = document.getElementById('status-badge');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const clientCount = document.getElementById('client-count');
-const sessionSelector = document.getElementById('session-selector');
+const sessionSelectorWrapper = document.getElementById('session-selector-wrapper');
+const sessionSelectorTrigger = document.getElementById('session-selector-trigger');
+const sessionSelectorOptions = document.getElementById('session-selector-options');
 const sessionDetails = document.getElementById('session-details');
 const sessionId = document.getElementById('session-id');
 const sessionTimeout = document.getElementById('session-timeout');
-const sessionRemaining = document.getElementById('session-remaining');
 const tabsHeader = document.getElementById('tabs-header');
 const tabsCount = document.getElementById('tabs-count');
 const refreshTabsBtn = document.getElementById('refresh-tabs');
@@ -45,7 +46,13 @@ function init() {
   connectToBackground();
   
   // Event listeners
-  sessionSelector.addEventListener('change', onSessionChange);
+  sessionSelectorTrigger.addEventListener('click', toggleSessionSelector);
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!sessionSelectorWrapper.contains(e.target)) {
+      sessionSelectorWrapper.classList.remove('open');
+    }
+  });
   tabsHeader.addEventListener('click', toggleTabsList);
   refreshTabsBtn.addEventListener('click', (e) => {
     e.stopPropagation(); // Prevent collapse toggle
@@ -231,35 +238,67 @@ function handleLogEntry(message) {
 function updateSessionsUI() {
   clientCount.textContent = sessions.size;
   
-  // Update selector
-  sessionSelector.innerHTML = '';
+  // Clear options
+  sessionSelectorOptions.innerHTML = '';
   
   if (sessions.size === 0) {
-    const option = document.createElement('option');
-    option.value = '';
-    option.textContent = 'No active sessions';
-    sessionSelector.appendChild(option);
-    sessionSelector.disabled = true;
+    sessionSelectorTrigger.querySelector('.session-name').textContent = 'No active sessions';
+    sessionSelectorTrigger.querySelector('.session-status').textContent = '';
+    sessionSelectorTrigger.classList.add('disabled');
     sessionDetails.style.display = 'none';
   } else {
-    sessionSelector.disabled = false;
+    sessionSelectorTrigger.classList.remove('disabled');
     
     sessions.forEach((data, id) => {
-      const option = document.createElement('option');
-      option.value = id;
-      option.textContent = `Session ${id.substring(0, 8)}...`;
-      if (id === currentSessionId) {
-        option.selected = true;
+      const option = document.createElement('div');
+      option.className = 'custom-select-option';
+      option.dataset.sessionId = id;
+      
+      const sessionName = document.createElement('span');
+      sessionName.className = 'session-name';
+      sessionName.textContent = `Session ${id.substring(0, 8)}...`;
+      
+      const sessionStatus = document.createElement('span');
+      sessionStatus.className = 'session-status';
+      
+      // Format status/remaining time
+      if (data.expiresAt) {
+        const remaining = data.expiresAt - Date.now();
+        if (remaining > 0) {
+          sessionStatus.textContent = formatDuration(remaining);
+          if (remaining < 60000) {
+            sessionStatus.classList.add('warning');
+          }
+        } else {
+          sessionStatus.textContent = 'Expired';
+          sessionStatus.classList.add('error');
+        }
+      } else if (data.active === false) {
+        sessionStatus.textContent = 'Closed';
+        sessionStatus.classList.add('error');
       }
-      sessionSelector.appendChild(option);
+      
+      option.appendChild(sessionName);
+      option.appendChild(sessionStatus);
+      
+      if (id === currentSessionId) {
+        option.classList.add('selected');
+        // Update trigger display
+        sessionSelectorTrigger.querySelector('.session-name').textContent = sessionName.textContent;
+        sessionSelectorTrigger.querySelector('.session-status').textContent = sessionStatus.textContent;
+        sessionSelectorTrigger.querySelector('.session-status').className = 'session-status ' + sessionStatus.className.replace('session-status', '').trim();
+      }
+      
+      option.addEventListener('click', () => selectSession(id));
+      sessionSelectorOptions.appendChild(option);
     });
     
     if (!currentSessionId && sessions.size > 0) {
-      currentSessionId = sessions.keys().next().value;
-      sessionSelector.value = currentSessionId;
+      const firstSessionId = sessions.keys().next().value;
+      selectSession(firstSessionId);
+    } else {
+      updateSessionDetails();
     }
-    
-    updateSessionDetails();
   }
 }
 
@@ -277,28 +316,14 @@ function updateSessionDetails() {
   sessionDetails.style.display = 'block';
   sessionId.textContent = currentSessionId;
   sessionTimeout.textContent = formatDuration(session.timeout);
-  
-  updateRemainingTime();
 }
 
 /**
  * Update remaining time countdown
  */
 function updateRemainingTime() {
-  if (!currentSessionId || !sessions.has(currentSessionId)) {
-    return;
-  }
-  
-  const session = sessions.get(currentSessionId);
-  const remaining = session.expiresAt - Date.now();
-  
-  if (remaining > 0) {
-    sessionRemaining.textContent = formatDuration(remaining);
-    sessionRemaining.className = remaining < 60000 ? 'warning' : '';
-  } else {
-    sessionRemaining.textContent = 'Expired';
-    sessionRemaining.className = 'error';
-  }
+  // Update session selector to show current remaining times
+  updateSessionsUI();
 }
 
 /**
@@ -312,6 +337,29 @@ function startCountdownTimer() {
   countdownInterval = setInterval(() => {
     updateRemainingTime();
   }, 1000);
+}
+
+/**
+ * Toggle session selector dropdown
+ */
+function toggleSessionSelector() {
+  if (!sessionSelectorTrigger.classList.contains('disabled')) {
+    sessionSelectorWrapper.classList.toggle('open');
+  }
+}
+
+/**
+ * Select a session
+ */
+function selectSession(sessionId) {
+  currentSessionId = sessionId;
+  sessionSelectorWrapper.classList.remove('open');
+  
+  // Clear logs when switching sessions
+  logs = [];
+  renderLogs();
+  
+  updateSessionsUI();
 }
 
 /**

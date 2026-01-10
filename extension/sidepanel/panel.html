@@ -24,9 +24,13 @@
         <span class="badge" id="client-count">0</span>
       </div>
       
-      <select id="session-selector" class="session-selector" disabled>
-        <option value="">No active sessions</option>
-      </select>
+      <div class="custom-select" id="session-selector-wrapper">
+        <div class="custom-select-trigger" id="session-selector-trigger">
+          <span class="session-name">No active sessions</span>
+          <span class="session-status"></span>
+        </div>
+        <div class="custom-select-options" id="session-selector-options"></div>
+      </div>
     </section>
 
     <!-- Session Details Section -->
@@ -43,10 +47,6 @@
         <div class="detail-item">
           <label>Timeout:</label>
           <span id="session-timeout">-</span>
-        </div>
-        <div class="detail-item">
-          <label>Remaining:</label>
-          <span id="session-remaining">-</span>
         </div>
       </div>
     </section>
