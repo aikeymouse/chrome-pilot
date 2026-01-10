@@ -53,12 +53,16 @@
 
     <!-- Current Window Tabs Section -->
     <section class="section">
-      <div class="section-header">
-        <h2>Current Window Tabs</h2>
+      <div class="section-header collapsible" id="tabs-header">
+        <div class="section-header-left">
+          <span class="collapse-icon">▼</span>
+          <h2>Current Window Tabs</h2>
+          <span class="badge" id="tabs-count">0</span>
+        </div>
         <button id="refresh-tabs" class="btn-small">Refresh</button>
       </div>
       
-      <div id="tabs-list" class="tabs-list">
+      <div id="tabs-list" class="tabs-list collapsed">
         <div class="empty-state">No tabs loaded</div>
       </div>
     </section>

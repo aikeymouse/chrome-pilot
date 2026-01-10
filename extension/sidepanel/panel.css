@@ -94,6 +94,31 @@ body {
   margin-bottom: 12px;
 }
 
+.section-header.collapsible {
+  cursor: pointer;
+  user-select: none;
+  padding: 8px;
+  margin: -8px -8px 4px -8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.collapse-icon {
+  font-size: 12px;
+  transition: transform 0.2s;
+  color: #666;
+}
+
+.section-header.collapsed .collapse-icon {
+  transform: rotate(-90deg);
+}
+
 .section-header h2 {
   font-size: 16px;
   font-weight: 600;
@@ -193,6 +218,15 @@ body {
   overflow-y: auto;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.tabs-list.collapsed {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  border: none;
+  margin-top: 0;
 }
 
 .tab-item {

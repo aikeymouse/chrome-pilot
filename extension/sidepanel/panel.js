@@ -21,6 +21,8 @@ const sessionDetails = document.getElementById('session-details');
 const sessionId = document.getElementById('session-id');
 const sessionTimeout = document.getElementById('session-timeout');
 const sessionRemaining = document.getElementById('session-remaining');
+const tabsHeader = document.getElementById('tabs-header');
+const tabsCount = document.getElementById('tabs-count');
 const refreshTabsBtn = document.getElementById('refresh-tabs');
 const tabsList = document.getElementById('tabs-list');
 const logRetentionInput = document.getElementById('log-retention');
@@ -44,7 +46,11 @@ function init() {
   
   // Event listeners
   sessionSelector.addEventListener('change', onSessionChange);
-  refreshTabsBtn.addEventListener('click', refreshTabs);
+  tabsHeader.addEventListener('click', toggleTabsList);
+  refreshTabsBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent collapse toggle
+    refreshTabs();
+  });
   logRetentionInput.addEventListener('change', onLogRetentionChange);
   clearLogsBtn.addEventListener('click', clearLogs);
   
@@ -321,6 +327,14 @@ function onSessionChange(e) {
 }
 
 /**
+ * Toggle tabs list collapse
+ */
+function toggleTabsList() {
+  tabsList.classList.toggle('collapsed');
+  tabsHeader.classList.toggle('collapsed');
+}
+
+/**
  * Refresh tabs
  */
 async function refreshTabs() {
@@ -343,6 +357,9 @@ async function refreshTabs() {
  * Render tabs list
  */
 function renderTabs() {
+  // Update tab count
+  tabsCount.textContent = tabs.length;
+  
   if (tabs.length === 0) {
     tabsList.innerHTML = '<div class="empty-state">No tabs in current window</div>';
     return;
