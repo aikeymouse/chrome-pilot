@@ -45,8 +45,8 @@ Client App (WebSocket) ←→ Node.js Native Host ←→ Chrome Extension (Servi
    ```
    
    **Windows:**
-   ```powershell
-   .\install-scripts\install.ps1
+   ```cmd
+   install-scripts\install.bat
    ```
 
 3. **Load extension in Chrome**

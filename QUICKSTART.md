@@ -18,9 +18,9 @@ chmod +x install-scripts/install.sh
 ```
 
 **Windows:**
-```powershell
+```cmd
 cd C:\Path\To\chrome-driver-extension
-.\install-scripts\install.ps1
+install-scripts\install.bat
 ```
 
 ### Step 2: Load Extension in Chrome
@@ -44,6 +44,10 @@ nano ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.chrom
 ```bash
 nano ~/.config/google-chrome/NativeMessagingHosts/com.chromepilot.extension.json
 ```
+
+**Windows:**
+
+The installer will prompt you for the extension ID during installation.
 
 Replace `EXTENSION_ID_PLACEHOLDER` with your actual extension ID from Step 2.
 
@@ -129,7 +133,7 @@ ws.on('message', (data) => {
 # macOS/Linux
 lsof -i :9000
 
-# Should show: node (server.js) listening on port 9000
+# Should show: node (browser-pilot-server.js) listening on port 9000
 ```
 
 ### Check Extension

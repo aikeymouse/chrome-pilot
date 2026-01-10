@@ -13,13 +13,13 @@ chrome-driver-extension/
 │       ├── panel.js           # Side panel logic
 │       └── panel.css          # Side panel styles
 ├── native-host/               # Native messaging host
-│   ├── server.js              # WebSocket server + native messaging
+│   ├── browser-pilot-server.js              # WebSocket server + native messaging
 │   ├── package.json           # Node.js dependencies
 │   ├── manifest.json          # Native host manifest
 │   └── logs/                  # Session log files
 ├── install-scripts/           # Installation scripts
 │   ├── install.sh             # macOS/Linux installer
-│   └── install.ps1            # Windows installer
+│   └── install.bat            # Windows installer
 ├── docs/
 │   └── PROTOCOL.md            # WebSocket protocol documentation
 ├── PLAN.md                    # Implementation plan
@@ -61,7 +61,7 @@ Edit `native-host/manifest.json` and replace `EXTENSION_ID_PLACEHOLDER` with you
 {
   "name": "com.chromepilot.extension",
   "description": "ChromePilot Native Messaging Host",
-  "path": "/full/path/to/native-host/server.js",
+  "path": "/full/path/to/native-host/browser-pilot-server.js",
   "type": "stdio",
   "allowed_origins": [
     "chrome-extension://YOUR_ACTUAL_EXTENSION_ID/"
@@ -97,7 +97,7 @@ After registering the native host, restart Chrome completely.
 
 ```bash
 cd native-host
-node server.js
+node browser-pilot-server.js
 ```
 
 You should see:
@@ -197,7 +197,7 @@ tail -f native-host/logs/session-*.log
 **Native host not connecting:**
 - Check manifest.json has correct extension ID
 - Verify manifest is registered in Chrome directory
-- Check server.js is executable
+- Check browser-pilot-server.js is executable
 - Look at service worker console for errors
 
 **WebSocket connection fails:**
@@ -212,7 +212,7 @@ tail -f native-host/logs/session-*.log
 
 ## Code Structure
 
-### Native Host (`native-host/server.js`)
+### Native Host (`native-host/browser-pilot-server.js`)
 
 - **Session Management:** Handles session creation, timeout, resumption
 - **WebSocket Server:** Accepts connections, routes messages
@@ -249,7 +249,7 @@ tail -f native-host/logs/session-*.log
    - Implement Chrome API calls
    - Add error handling
 
-3. **Handle in Native Host** (`native-host/server.js`)
+3. **Handle in Native Host** (`native-host/browser-pilot-server.js`)
    - No changes needed (it forwards all commands)
 
 4. **Update Side Panel** (if UI changes needed)
@@ -257,7 +257,7 @@ tail -f native-host/logs/session-*.log
 
 ### Modifying Session Management
 
-Edit `Session` class in `native-host/server.js`:
+Edit `Session` class in `native-host/browser-pilot-server.js`:
 - Timeout logic
 - Log format
 - Activity tracking
