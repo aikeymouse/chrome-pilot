@@ -1,0 +1,8 @@
+node_modules/
+native-host/logs/*.log
+*.log
+.DS_Store
+*.zip
+dist/
+PLAN.md
+IMPLEMENTATION_SUMMARY.md

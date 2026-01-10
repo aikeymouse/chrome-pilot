@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChromePilot Panel</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>ChromePilot</h1>
+      <div class="status-badge" id="status-badge">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Connecting...</span>
+      </div>
+    </header>
+
+    <!-- Connected Clients Section -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Connected Clients</h2>
+        <span class="badge" id="client-count">0</span>
+      </div>
+      
+      <select id="session-selector" class="session-selector" disabled>
+        <option value="">No active sessions</option>
+      </select>
+    </section>
+
+    <!-- Session Details Section -->
+    <section class="section" id="session-details" style="display: none;">
+      <div class="section-header">
+        <h2>Session Details</h2>
+      </div>
+      
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Session ID:</label>
+          <span id="session-id" class="mono">-</span>
+        </div>
+        <div class="detail-item">
+          <label>Timeout:</label>
+          <span id="session-timeout">-</span>
+        </div>
+        <div class="detail-item">
+          <label>Remaining:</label>
+          <span id="session-remaining">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Current Window Tabs Section -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Current Window Tabs</h2>
+        <button id="refresh-tabs" class="btn-small">Refresh</button>
+      </div>
+      
+      <div id="tabs-list" class="tabs-list">
+        <div class="empty-state">No tabs loaded</div>
+      </div>
+    </section>
+
+    <!-- Logs Section -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Request/Response Logs</h2>
+        <div class="log-controls">
+          <label for="log-retention">Retention:</label>
+          <input type="number" id="log-retention" min="10" max="1000" value="100" step="10">
+          <button id="clear-logs" class="btn-small">Clear</button>
+        </div>
+      </div>
+      
+      <div id="logs-container" class="logs-container">
+        <div class="empty-state">No logs yet</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>

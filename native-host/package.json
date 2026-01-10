@@ -1,0 +1,24 @@
+{
+  "name": "chrome-driver-native-host",
+  "version": "1.0.0",
+  "description": "Native messaging host with WebSocket server for ChromePilot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "chrome",
+    "extension",
+    "native-messaging",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "com.chromedriver.extension",
+  "description": "ChromePilot Native Messaging Host",
+  "path": "server.js",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID_PLACEHOLDER/"
+  ]
+}
