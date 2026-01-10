@@ -4,7 +4,7 @@ async function main() {
   console.log('🚀 ChromePilot Test Client\n');
   
   console.log('Connecting to ws://localhost:9000/session...');
-  const ws = new WebSocket('ws://localhost:9000/session?timeout=600000');
+  const ws = new WebSocket('ws://localhost:9000/session?timeout=60000');
   
   await new Promise((resolve, reject) => {
     ws.once('open', resolve);

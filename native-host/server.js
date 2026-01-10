@@ -457,11 +457,33 @@ function processNativeMessage(message) {
 /**
  * Startup
  */
+
+// Start native messaging first (always works)
+handleNativeMessages();
+
+// Attach error handler to HTTP server before listening
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${WS_PORT} is already in use. Running as native messaging bridge only.`);
+    
+    // Send ready signal indicating another instance is serving WebSocket
+    sendNativeMessage({
+      type: 'ready',
+      port: WS_PORT,
+      bridgeOnly: true
+    });
+    
+    // Keep process alive
+    process.stdin.resume();
+  } else {
+    console.error('Server error:', err);
+    process.exit(1);
+  }
+});
+
+// Try to start WebSocket server
 server.listen(WS_PORT, () => {
   console.error(`WebSocket server listening on port ${WS_PORT}`);
-  
-  // Start native messaging
-  handleNativeMessages();
   
   // Send ready signal to extension
   sendNativeMessage({
