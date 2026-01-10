@@ -103,6 +103,12 @@ class Session {
       this.ws.close();
     }
     
+    // Notify Chrome extension
+    sendNativeMessage({
+      type: 'sessionExpired',
+      sessionId: this.sessionId
+    });
+    
     this.cleanup();
     sessions.delete(this.sessionId);
   }
@@ -291,6 +297,14 @@ wss.on('connection', (ws, req) => {
       timeout: session.timeout,
       expiresAt: session.expiresAt
     }));
+    
+    // Notify Chrome extension about new session
+    sendNativeMessage({
+      type: 'sessionCreated',
+      sessionId: session.sessionId,
+      timeout: session.timeout,
+      expiresAt: session.expiresAt
+    });
   }
   
   ws.on('message', async (data) => {

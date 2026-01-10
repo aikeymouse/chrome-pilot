@@ -109,6 +109,10 @@ function handleBackgroundMessage(message) {
       handleSessionsUpdate(message);
       break;
       
+    case 'sessionDetails':
+      handleSessionDetails(message);
+      break;
+      
     case 'logEntry':
       handleLogEntry(message);
       break;
@@ -177,11 +181,30 @@ function handleSessionsUpdate(message) {
   // Update connected clients count
   clientCount.textContent = sessionIds.length;
   
-  // Update sessions display
-  sessions.clear();
+  // Update sessions display (but keep existing session details)
   sessionIds.forEach(id => {
-    sessions.set(id, { id, active: true });
+    if (!sessions.has(id)) {
+      sessions.set(id, { id, active: true });
+    }
   });
+  
+  updateSessionsUI();
+}
+
+/**
+ * Handle session details from background
+ */
+function handleSessionDetails(message) {
+  const { session } = message;
+  
+  // Update or create session with full details
+  sessions.set(session.id, session);
+  
+  // If this is the first or current session, select it
+  if (!currentSessionId || currentSessionId === session.id) {
+    currentSessionId = session.id;
+    sessionSelector.value = session.id;
+  }
   
   updateSessionsUI();
 }

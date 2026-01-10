@@ -83,6 +83,38 @@ async function handleNativeMessage(message) {
     return;
   }
   
+  if (message.type === 'sessionCreated') {
+    // New session created, add to tracking
+    if (!activeSessions.has(message.sessionId)) {
+      activeSessions.add(message.sessionId);
+      broadcastSessionUpdate();
+    }
+    
+    // Broadcast session details to side panel
+    broadcastToSidePanel({
+      type: 'sessionDetails',
+      session: {
+        id: message.sessionId,
+        timeout: message.timeout,
+        expiresAt: message.expiresAt
+      }
+    });
+    return;
+  }
+  
+  if (message.type === 'sessionExpired') {
+    // Session expired, remove from tracking
+    activeSessions.delete(message.sessionId);
+    broadcastSessionUpdate();
+    
+    // Notify side panel
+    broadcastToSidePanel({
+      type: 'sessionExpired',
+      sessionId: message.sessionId
+    });
+    return;
+  }
+  
   if (message.type === 'command') {
     await handleCommand(message.sessionId, message.command);
   }
