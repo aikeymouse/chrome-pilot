@@ -458,11 +458,32 @@ function renderLogs() {
     const direction = log.direction === 'in' ? 'request' : 'response';
     const data = typeof log.data === 'string' ? log.data : JSON.stringify(log.data, null, 2);
     
+    // Parse data to extract action and requestId
+    let parsedData = null;
+    let actionBadge = '';
+    let requestIdBadge = '';
+    
+    try {
+      parsedData = typeof log.data === 'string' ? JSON.parse(log.data) : log.data;
+      
+      if (direction === 'request' && parsedData.action) {
+        actionBadge = `<span class="log-badge log-badge-action">${escapeHtml(parsedData.action)}</span>`;
+      }
+      
+      if (parsedData.requestId) {
+        requestIdBadge = `<span class="log-badge log-badge-requestid">${escapeHtml(parsedData.requestId)}</span>`;
+      }
+    } catch (e) {
+      // If parsing fails, just show the raw data
+    }
+    
     return `
       <div class="log-entry ${direction}">
         <div class="log-header">
           <span class="log-time">${time}</span>
           <span class="log-direction">${direction.toUpperCase()}</span>
+          ${requestIdBadge}
+          ${actionBadge}
           <span class="log-index">#${index + 1}</span>
         </div>
         <pre class="log-data">${escapeHtml(data)}</pre>
