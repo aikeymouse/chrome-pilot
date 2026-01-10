@@ -403,11 +403,17 @@ body {
   border-left: 3px solid #1a73e8;
 }
 
-.tab-header {
+.log-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.log-header:hover {
+  opacity: 0.8;
 }
 
 .tab-id {
@@ -489,6 +495,12 @@ body {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.log-header:hover {
+  opacity: 0.8;
 }
 
 .log-time {
@@ -551,6 +563,11 @@ body {
   word-break: break-all;
   margin: 0;
   color: #333;
+  display: none;
+}
+
+.log-entry.expanded .log-data {
+  display: block;
 }
 
 /* Empty State */

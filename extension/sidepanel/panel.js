@@ -491,6 +491,15 @@ function renderLogs() {
     `;
   }).join('');
   
+  // Add click handlers to log headers for collapse/expand
+  setTimeout(() => {
+    document.querySelectorAll('.log-header').forEach(header => {
+      header.addEventListener('click', function() {
+        this.parentElement.classList.toggle('expanded');
+      });
+    });
+  }, 0);
+  
   // Scroll to bottom
   logsContainer.scrollTop = logsContainer.scrollHeight;
 }
