@@ -1,5 +1,5 @@
 {
-  "name": "com.chromedriver.extension",
+  "name": "com.chromepilot.extension",
   "description": "ChromePilot Native Messaging Host",
   "path": "server.js",
   "type": "stdio",

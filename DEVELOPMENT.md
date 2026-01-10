@@ -59,7 +59,7 @@ Edit `native-host/manifest.json` and replace `EXTENSION_ID_PLACEHOLDER` with you
 
 ```json
 {
-  "name": "com.chromedriver.extension",
+  "name": "com.chromepilot.extension",
   "description": "ChromePilot Native Messaging Host",
   "path": "/full/path/to/native-host/server.js",
   "type": "stdio",
@@ -74,17 +74,17 @@ Edit `native-host/manifest.json` and replace `EXTENSION_ID_PLACEHOLDER` with you
 **macOS:**
 ```bash
 mkdir -p ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/
-cp native-host/manifest.json ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.chromedriver.extension.json
+cp native-host/manifest.json ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.chromepilot.extension.json
 ```
 
 **Linux:**
 ```bash
 mkdir -p ~/.config/google-chrome/NativeMessagingHosts/
-cp native-host/manifest.json ~/.config/google-chrome/NativeMessagingHosts/com.chromedriver.extension.json
+cp native-host/manifest.json ~/.config/google-chrome/NativeMessagingHosts/com.chromepilot.extension.json
 ```
 
 **Windows:**
-Create registry key at `HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\com.chromedriver.extension`
+Create registry key at `HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\com.chromepilot.extension`
 with default value pointing to manifest.json path.
 
 ### 6. Restart Chrome

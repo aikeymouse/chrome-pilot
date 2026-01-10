@@ -4,7 +4,7 @@
  */
 
 // Native messaging host name
-const NATIVE_HOST_NAME = 'com.chromedriver.extension';
+const NATIVE_HOST_NAME = 'com.chromepilot.extension';
 
 // State
 let nativePort = null;

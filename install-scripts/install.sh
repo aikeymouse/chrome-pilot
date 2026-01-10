@@ -10,7 +10,7 @@ set -e
 # Configuration
 EXTENSION_NAME="chrome-pilot"
 INSTALL_DIR="$HOME/.${EXTENSION_NAME}"
-NATIVE_HOST_NAME="com.chromedriver.extension"
+NATIVE_HOST_NAME="com.chromepilot.extension"
 VERSION_URL="https://api.github.com/repos/aikeymouse/chrome-pilot/releases/latest"
 
 # Platform detection

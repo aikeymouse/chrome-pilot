@@ -229,7 +229,7 @@ See [docs/PROTOCOL.md](docs/PROTOCOL.md) for complete API documentation.
    ```
 
 2. Verify native messaging manifest:
-   - macOS: `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.chromedriver.extension.json`
+   - macOS: `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.chromepilot.extension.json`
    - Linux: `~/.config/google-chrome/NativeMessagingHosts/`
    - Windows: Check registry key
 

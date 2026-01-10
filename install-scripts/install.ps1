@@ -11,7 +11,7 @@ param(
 # Configuration
 $ExtensionName = "chrome-pilot"
 $InstallDir = Join-Path $env:USERPROFILE ".$ExtensionName"
-$NativeHostName = "com.chromedriver.extension"
+$NativeHostName = "com.chromepilot.extension"
 $VersionUrl = "https://api.github.com/repos/aikeymouse/chrome-pilot/releases/latest"
 
 # Registry path for Chrome native messaging

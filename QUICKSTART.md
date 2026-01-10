@@ -37,12 +37,12 @@ Edit the native host manifest:
 
 **macOS:**
 ```bash
-nano ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.chromedriver.extension.json
+nano ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.chromepilot.extension.json
 ```
 
 **Linux:**
 ```bash
-nano ~/.config/google-chrome/NativeMessagingHosts/com.chromedriver.extension.json
+nano ~/.config/google-chrome/NativeMessagingHosts/com.chromepilot.extension.json
 ```
 
 Replace `EXTENSION_ID_PLACEHOLDER` with your actual extension ID from Step 2.
@@ -164,7 +164,7 @@ lsof -i :9000
 ls -la ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/
 
 # Check manifest content
-cat ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.chromedriver.extension.json
+cat ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.chromepilot.extension.json
 
 # Verify extension ID matches
 ```
