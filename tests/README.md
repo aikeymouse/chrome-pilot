@@ -1,10 +1,10 @@
 # ChromePilot Test Suite
 
-Comprehensive Mocha test suite for ChromePilot WebSocket automation.
+Complete test suite for ChromePilot extension with unit, integration, and UI tests.
 
 ## Prerequisites
 
-1. **ChromePilot Server Running**
+1. **ChromePilot Server Running** (or tests will start it)
    ```bash
    # Server must be running on ws://localhost:9000
    # Check DEVELOPMENT.md for installation instructions
@@ -18,6 +18,9 @@ Comprehensive Mocha test suite for ChromePilot WebSocket automation.
    ```bash
    cd tests
    npm install
+   
+   # Install Playwright browsers (first time only)
+   npx playwright install chromium
    ```
 
 ## Installation
@@ -33,13 +36,19 @@ This installs:
 - `chai` - Assertion library
 - `chai-as-promised` - Promise assertions
 - `ws` - WebSocket client
+- `@playwright/test` - Browser automation for UI tests
 
 ## Running Tests
 
-### Run All Tests
+### Run All Tests (Sequential)
 ```bash
 npm test
 ```
+
+This runs all test suites in sequence:
+1. Unit tests
+2. Integration tests
+3. UI tests
 
 ### Run Unit Tests Only
 ```bash
@@ -51,15 +60,22 @@ npm run test:unit
 npm run test:integration
 ```
 
+### Run UI Tests Only
+```bash
+npm run test:ui
+```
+
 ### Watch Mode
 ```bash
-npm run test:watch
+npm run test:unit:watch
+npm run test:integration:watch
 ```
 
 ### Run Specific Test File
 ```bash
 npx mocha unit/list-tabs.test.js
 npx mocha integration/session-lifecycle.test.js
+npx playwright test ui/sidepanel.spec.js
 ```
 
 ## Test Structure
@@ -79,16 +95,22 @@ tests/
 │   ├── chunked-responses.test.js   # Large data handling
 │   ├── tab-events.test.js          # Tab state tracking
 │   └── multi-command-flow.test.js  # Complex workflows
+├── ui/                        # UI tests (Playwright)
+│   └── sidepanel.spec.js     # Sidepanel UI tests
+├── fixtures/                  # Test fixtures
+│   └── ui-fixtures.js        # Playwright custom fixtures
 ├── helpers/                   # Test utilities
 │   ├── hooks.js              # Global hooks and client factory
 │   ├── test-client.js        # Enhanced test client
-│   └── fixtures.js           # Test data and constants
+│   ├── test-data.js          # Test URLs and selectors
+│   ├── server-helper.js      # Server lifecycle management
+│   └── session-helper.js     # Session utilities
 ├── examples/                  # Example client scripts
 │   ├── chromepilot-client.js # Base WebSocket client
 │   ├── google-search-client.js
-│   ├── test-client.js
-│   └── test-client-new.js
-└── .mocharc.json             # Mocha configuration
+│   └── test-client.js
+├── .mocharc.json             # Mocha configuration
+└── playwright.config.js      # Playwright configuration
 ```
 
 ## Test Features
@@ -101,17 +123,33 @@ tests/
 - TAB_NOT_FOUND error validation
 - Timeout handling
 
+**Duration:** ~5-10 seconds
+
 ### Integration Tests
 - Session lifecycle management
 - Multi-command workflows
 - Chunked response handling (>1MB data)
 - Tab event tracking
 - Complex user scenarios
+- DOM helper functions
+
+**Duration:** ~20-30 seconds
+
+### UI Tests
+- Browser-based tests with extension loaded
+- Sidepanel rendering
+- Material Symbols icons
+- Interactive elements (buttons, inputs)
+- Section toggling
+- Empty states
+
+**Duration:** ~15-25 seconds
 
 ### Test Helpers
 - `TestClient` - Enhanced client with helper methods
 - `createClient()` - Factory for test clients
-- `fixtures.js` - Test URLs and selectors
+- `test-data.js` - Test URLs and selectors
+- `ui-fixtures.js` - Playwright custom fixtures
 - Automatic tab cleanup
 - Connection verification
 - **Response validation helpers** - Standardized validation methods
@@ -228,7 +266,7 @@ describe('Command Name', function() {
 ```javascript
 const { expect } = require('chai');
 const { createClient } = require('../helpers/hooks');
-const { TEST_URLS } = require('../helpers/fixtures');
+const { TEST_URLS } = require('../helpers/test-data');
 
 describe('Workflow Name', function() {
   let client;
@@ -260,19 +298,47 @@ describe('Workflow Name', function() {
 });
 ```
 
+### UI Test Template
+
+```javascript
+const { test, expect } = require('../fixtures/ui-fixtures');
+
+test.describe('Component Name', () => {
+  test('should display element', async ({ page, extensionId }) => {
+    await page.goto(`chrome-extension://${extensionId}/page.html`);
+    const element = page.locator('#my-element');
+    await expect(element).toBeVisible();
+  });
+});
+```
+
 ## Test Data
 
-Test URLs defined in `helpers/fixtures.js`:
+Test URLs defined in `helpers/test-data.js`:
 - `TEST_URLS.EXAMPLE` - http://example.com
 - `TEST_URLS.SELENIUM_FORM` - Selenium web form for interaction tests
 - `TEST_URLS.HTTPBIN` - HTTP testing service
+
+## Test Configuration
+
+### Mocha (.mocharc.json)
+- Timeout: 60 seconds
+- Reporter: spec
+- Require: chai-as-promised
+
+### Playwright (playwright.config.js)
+- Workers: 1 (sequential execution)
+- Retries: 0 (local), 2 (CI)
+- Screenshots: on failure
+- Video: on failure
+- Timeout: 60 seconds per test
 
 ## Troubleshooting
 
 ### Tests Hang or Timeout
 - Verify ChromePilot server is running on ws://localhost:9000
 - Check Chrome extension is loaded and connected
-- Increase timeout in `.mocharc.json` if needed
+- Increase timeout in `.mocharc.json` or `playwright.config.js` if needed
 
 ### Connection Errors
 - Ensure no firewall blocking localhost:9000
@@ -283,6 +349,12 @@ Test URLs defined in `helpers/fixtures.js`:
 - Tests automatically clean up created tabs
 - If tabs persist, manually close them before re-running
 - Check afterEach hooks are executing
+
+### UI Tests Can't Find Extension
+- Build extension first: `cd extension && npm run build`
+- Ensure extension path is correct in `fixtures/ui-fixtures.js`
+- Verify Chrome/Chromium is installed
+- Check service worker started correctly
 
 ### Random Failures
 - Some tests depend on page load timing
@@ -304,15 +376,39 @@ This script:
 3. Runs complete test suite
 4. Reports results
 
+Tests run sequentially in CI to prevent:
+- Port conflicts
+- Resource contention
+- Race conditions
+
+Example GitHub Actions:
+```yaml
+- run: npm run test:unit
+- run: npm run test:integration
+- run: npm run test:ui
+```
+
+## Coverage
+
+Current test coverage:
+- **Unit Tests:** 7 files, ~60 assertions
+- **Integration Tests:** 5 files, ~50 assertions
+- **UI Tests:** 1 file, ~10 assertions
+
+**Total:** 13 test files, ~120 assertions
+
 ## Contributing
 
 When adding new tests:
 1. Place unit tests in `unit/`
 2. Place integration tests in `integration/`
-3. Follow existing naming: `command-name.test.js`
-4. Include error handling tests
-5. Clean up resources in afterEach
-6. Update this README with new test descriptions
+3. Place UI tests in `ui/`
+4. Follow existing naming: `command-name.test.js` or `feature.spec.js`
+5. Use shared helpers from `helpers/` and `fixtures/`
+6. Include error handling tests
+7. Clean up resources in afterEach
+8. Add JSDoc comments
+9. Update this README with new test descriptions
 
 ## TODO
 
