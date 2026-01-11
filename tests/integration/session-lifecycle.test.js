@@ -106,4 +106,61 @@ describe('Session Lifecycle', function() {
     await client2.closeTab(tabId);
     client2.close();
   });
+
+  it('should expire session after timeout period', async function() {
+    this.timeout(15000); // Test needs 10+ seconds to run
+    
+    // Create session with very short timeout (5 seconds)
+    const client1 = new TestClient();
+    await client1.connect('ws://localhost:9000', 5000);
+    await client1.waitForConnection();
+    const sessionId = client1.sessionId;
+    
+    // Create a tab to verify tabs persist beyond session lifetime
+    const tabResult = await client1.sendRequest('openTab', { 
+      url: 'http://example.com' 
+    });
+    const tabId = tabResult.tab.id;
+    
+    // Close connection
+    client1.close();
+    
+    // Wait for session to expire (5 seconds + 1 second buffer)
+    console.log('⏳ Waiting for session to expire...');
+    await new Promise(resolve => setTimeout(resolve, 6000));
+    
+    // Try to reconnect with expired session ID - should fail
+    const client2 = new TestClient();
+    let connectionError = null;
+    try {
+      await client2.connect(`ws://localhost:9000?sessionId=${sessionId}`);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (err) {
+      connectionError = err;
+    }
+    
+    // Should get error because session expired
+    expect(connectionError).to.exist;
+    expect(connectionError.message).to.include('Session not found or expired');
+    
+    // Create a new session (without sessionId) to clean up the tab
+    const client3 = new TestClient();
+    await client3.connect('ws://localhost:9000');
+    await client3.waitForConnection();
+    
+    // New session should have different ID
+    expect(client3.sessionId).to.not.equal(sessionId);
+    
+    // Tab created during expired session should still exist in browser
+    // (tabs are browser resources, not session resources)
+    const tabs = await client3.listTabs();
+    const foundTab = tabs.tabs.find(t => t.id === tabId);
+    expect(foundTab).to.exist;
+    expect(foundTab.url).to.include('example.com');
+    
+    // New session should be able to close the tab from the expired session
+    await client3.closeTab(tabId);
+    
+    client3.close();
+  });
 });

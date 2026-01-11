@@ -50,6 +50,13 @@ class ChromePilotClient {
           return;
         }
         
+        // Handle error message during connection
+        if (message.type === 'error' && !this.sessionId) {
+          console.error(`✗ Connection error: ${message.message}`);
+          reject(new Error(message.message));
+          return;
+        }
+        
         this.handleMessage(message);
       });
 

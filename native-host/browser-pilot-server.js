@@ -296,8 +296,19 @@ wss.on('connection', (ws, req) => {
       expiresAt: session.expiresAt
     }));
   } else {
-    // Create new session
-    sessionId = sessionId || crypto.randomUUID();
+    // Create new session - always generate a new ID
+    // Expired/invalid session IDs should not be reused
+    if (sessionId) {
+      // Client tried to resume an expired or non-existent session
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Session not found or expired'
+      }));
+      ws.close();
+      return;
+    }
+    
+    sessionId = crypto.randomUUID();
     session = new Session(sessionId, timeout);
     session.ws = ws;
     sessions.set(sessionId, session);
