@@ -410,6 +410,95 @@ If the result exceeds 1MB, it will be chunked:
 }
 ```
 
+### 7. Call DOM Helper Function
+
+Call a predefined DOM helper function for CSP-restricted pages. This command is designed for pages with strict Content Security Policies that block dynamic JavaScript evaluation.
+
+**Request:**
+```json
+{
+  "action": "callHelper",
+  "params": {
+    "tabId": 123,
+    "functionName": "clickElement",
+    "args": ["button.send-button"],
+    "timeout": 30000,
+    "focus": false
+  },
+  "requestId": "req-006"
+}
+```
+
+**Parameters:**
+- `tabId` (number, optional): Tab ID to execute in. If omitted, uses active tab
+- `functionName` (string, required): Name of the helper function to call
+- `args` (array, optional): Arguments to pass to the function. Default: []
+- `timeout` (number, optional): Execution timeout in milliseconds. Default: 30000
+- `focus` (boolean, optional): Focus Chrome window before execution. Default: false
+
+**Available Helper Functions:**
+
+1. **clickElement(selector)** - Click and focus an element
+2. **typeText(selector, text, clearFirst)** - Type text into input/textarea/contenteditable
+3. **appendChar(selector, char)** - Append single character to contenteditable element
+4. **clearContentEditable(selector)** - Clear contenteditable element
+5. **getText(selector)** - Get text content of element
+6. **getHTML(selector)** - Get innerHTML of element
+7. **getLastHTML(selector)** - Get innerHTML of last element matching selector
+8. **elementExists(selector)** - Check if element exists
+9. **isVisible(selector)** - Check if element is visible
+10. **waitForElement(selector, timeoutMs)** - Wait for element to appear
+
+**Response:**
+```json
+{
+  "requestId": "req-006",
+  "result": {
+    "value": true,
+    "type": "boolean"
+  },
+  "error": null
+}
+```
+
+**Error Cases:**
+
+Helper not loaded:
+```json
+{
+  "requestId": "req-006",
+  "result": null,
+  "error": {
+    "code": "EXECUTION_ERROR",
+    "message": "ChromePilot helper not loaded"
+  }
+}
+```
+
+Function not found:
+```json
+{
+  "requestId": "req-006",
+  "result": null,
+  "error": {
+    "code": "EXECUTION_ERROR",
+    "message": "Helper function not found: invalidFunction"
+  }
+}
+```
+
+Element not found:
+```json
+{
+  "requestId": "req-006",
+  "result": null,
+  "error": {
+    "code": "EXECUTION_ERROR",
+    "message": "Element not found: button.send-button"
+  }
+}
+```
+
 ## Event Messages
 
 Events are sent from the server to the client without a corresponding request.
