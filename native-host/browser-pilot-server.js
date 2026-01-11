@@ -27,6 +27,30 @@ const sessions = new Map();
 
 // Native messaging communication - tracks if extension is connected
 let extensionConnected = false;
+let lastExtensionPing = null; // Will be set when first message received
+const EXTENSION_TIMEOUT = 8000; // 8 seconds without ping -> exit (pings every 5s)
+const INITIAL_CONNECT_TIMEOUT = 3000; // 3 seconds to receive first message
+
+// Watchdog to detect disconnected Chrome extension
+setInterval(() => {
+  // Don't check until we've received at least one message
+  if (lastExtensionPing === null) {
+    const uptime = Date.now() - startTime;
+    if (uptime > INITIAL_CONNECT_TIMEOUT) {
+      console.error(`No connection from Chrome extension after ${uptime}ms, exiting...`);
+      process.exit(0);
+    }
+    return;
+  }
+  
+  const timeSinceLastPing = Date.now() - lastExtensionPing;
+  if (timeSinceLastPing > EXTENSION_TIMEOUT) {
+    console.error(`No activity from Chrome extension for ${timeSinceLastPing}ms, assuming disconnected, exiting...`);
+    process.exit(0);
+  }
+}, 1000); // Check every second for faster detection
+
+const startTime = Date.now();
 
 /**
  * Session class
@@ -438,7 +462,13 @@ function handleNativeMessages() {
 }
 
 function processNativeMessage(message) {
-  console.error(`Received message from extension: ${message.type}`);
+  // Don't log ping messages (too noisy)
+  if (message.type !== 'ping') {
+    console.error(`Received message from extension: ${message.type}`);
+  }
+  
+  // Update ping timestamp on any message from extension
+  lastExtensionPing = Date.now();
   
   // Mark extension as connected when we receive any message
   if (!extensionConnected) {
@@ -448,6 +478,11 @@ function processNativeMessage(message) {
   
   if (message.type === 'extensionReady') {
     console.error(`Extension ready, ID: ${message.extensionId}`);
+    return;
+  }
+  
+  if (message.type === 'ping') {
+    // Keepalive ping, just update timestamp (already done above)
     return;
   }
   
@@ -487,36 +522,68 @@ let serverStarted = false;
 // Start native messaging first (always works)
 handleNativeMessages();
 
-// Handle server errors before starting
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${WS_PORT} already in use - another instance is running, exiting silently`);
-    process.exit(0); // Exit quietly, this is expected
-  } else {
-    console.error('Server error:', err);
-    process.exit(1);
-  }
-});
-
-// Start WebSocket server
-server.listen(WS_PORT, () => {
-  console.error(`WebSocket server listening on port ${WS_PORT}`);
-  serverStarted = true;
-  console.error('Server marked as started, will not exit on stdin close');
+// Retry logic for port binding (handles race condition during Chrome reload)
+function startServerWithRetry(attempt = 1, maxAttempts = 3) {
+  // Set up error handler BEFORE listen()
+  const errorHandler = (err) => {
+    if (err.code === 'EADDRINUSE') {
+      if (attempt < maxAttempts) {
+        // Brief delay and retry
+        const delay = 300 * attempt; // 300ms, 600ms, 900ms
+        console.error(`Port ${WS_PORT} in use, retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})`);
+        setTimeout(() => {
+          startServerWithRetry(attempt + 1, maxAttempts);
+        }, delay);
+      } else {
+        // Exit silently - another instance succeeded
+        console.error(`Port ${WS_PORT} in use, another instance is running, exiting silently`);
+        process.exit(0);
+      }
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  };
   
-  // Send ready signal to extension
-  sendNativeMessage({
-    type: 'ready',
-    port: WS_PORT
+  server.once('error', errorHandler);
+  
+  server.listen(WS_PORT, () => {
+    console.error(`WebSocket server listening on port ${WS_PORT}`);
+    serverStarted = true;
+    
+    // Remove error handler on success
+    server.removeListener('error', errorHandler);
+    
+    // Send ready signal to extension
+    sendNativeMessage({
+      type: 'ready',
+      port: WS_PORT
+    });
   });
-});
+}
 
-// Handle stdin end - don't exit, let the WebSocket server keep us alive
+// Start WebSocket server with retry logic
+// Add small random delay to reduce collision when Chrome launches multiple instances
+const startupDelay = Math.floor(Math.random() * 200); // 0-200ms random delay
+setTimeout(() => {
+  startServerWithRetry();
+}, startupDelay);
+
+// Handle stdin end - exit gracefully when Chrome disconnects
 process.stdin.on('end', () => {
   console.error(`stdin closed, serverStarted=${serverStarted}, activeSessions=${sessions.size}`);
-  console.error('stdin closed but server will continue running');
-  // Don't exit - the WebSocket server keeps the process alive
-  // Chrome can reconnect by starting a new process via the launch script
+  
+  // If we have active WebSocket sessions, give them a grace period
+  if (sessions.size > 0) {
+    console.error('stdin closed but keeping server alive for 5s to allow WebSocket clients to finish');
+    setTimeout(() => {
+      console.error('Grace period expired, shutting down');
+      process.exit(0);
+    }, 5000);
+  } else {
+    console.error('stdin closed with no active sessions, exiting immediately');
+    process.exit(0);
+  }
 });
 
 /**

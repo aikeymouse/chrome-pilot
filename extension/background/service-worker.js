@@ -9,9 +9,47 @@ const NATIVE_HOST_NAME = 'com.chromepilot.extension';
 // State
 let nativePort = null;
 let reconnectTimer = null;
+let keepaliveTimer = null;
 let currentWindowId = null;
 let tabCache = new Map();
 const activeSessions = new Set(); // Track active session IDs
+
+/**
+ * Send keepalive ping to native host
+ */
+function sendKeepalivePing() {
+  if (nativePort) {
+    try {
+      nativePort.postMessage({
+        type: 'ping',
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.error('Failed to send keepalive ping:', err);
+    }
+  }
+}
+
+/**
+ * Start keepalive timer
+ */
+function startKeepalive() {
+  if (keepaliveTimer) {
+    clearInterval(keepaliveTimer);
+  }
+  // Send ping every 5 seconds (server timeout is 10 seconds)
+  keepaliveTimer = setInterval(sendKeepalivePing, 5000);
+}
+
+/**
+ * Stop keepalive timer
+ */
+function stopKeepalive() {
+  if (keepaliveTimer) {
+    clearInterval(keepaliveTimer);
+    keepaliveTimer = null;
+  }
+}
 
 /**
  * Connect to native messaging host
@@ -28,6 +66,9 @@ function connectNativeHost() {
       console.error('Native host disconnected:', chrome.runtime.lastError);
       nativePort = null;
       
+      // Stop keepalive
+      stopKeepalive();
+      
       // Broadcast error to side panel
       broadcastToSidePanel({
         type: 'nativeHostDisconnected',
@@ -39,6 +80,9 @@ function connectNativeHost() {
     });
     
     console.log('Connected to native host');
+    
+    // Start keepalive pings
+    startKeepalive();
     
     // Broadcast connection status
     broadcastToSidePanel({

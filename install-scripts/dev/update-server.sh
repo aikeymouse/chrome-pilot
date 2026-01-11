@@ -18,7 +18,8 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Configuration
 INSTALL_DIR="$HOME/.chrome-pilot"
-SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 # Check if installed directory exists
 if [ ! -d "$INSTALL_DIR" ]; then
@@ -34,7 +35,7 @@ sleep 1
 
 # Copy updated server file
 echo -e "${YELLOW}→${NC} Copying updated server code..."
-cp "$SOURCE_DIR/native-host/browser-pilot-server.js" "$INSTALL_DIR/native-host/browser-pilot-server.js"
+cp "$PROJECT_ROOT/native-host/browser-pilot-server.js" "$INSTALL_DIR/native-host/browser-pilot-server.js"
 
 echo -e "${GREEN}✓${NC} Server code updated successfully"
 echo ""

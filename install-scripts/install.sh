@@ -523,17 +523,28 @@ diagnose() {
     
     echo ""
     
-    # Offer auto-fix
-    if [ $issues -gt 0 ]; then
-        read -p "Attempt to auto-fix detected issues? (y/N): " -n 1 -r
-        echo
+    # Offer auto-fix or force restart
+    if [ $issues -gt 0 ] || [ "$1" == "--force-restart" ]; then
+        if [ "$1" == "--force-restart" ]; then
+            AUTO_FIX=true
+        else
+            read -p "Attempt to auto-fix detected issues? (y/N): " -n 1 -r
+            echo
+            AUTO_FIX=false
+            [[ $REPLY =~ ^[Yy]$ ]] && AUTO_FIX=true
+        fi
         
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [ "$AUTO_FIX" = true ]; then
             echo ""
             print_info "Running auto-fix..."
             
-            # Kill stuck server if detected
-            if [ "$SERVER_RUNNING" = true ] && [ "$SERVER_RESPONSIVE" = false ]; then
+            # Kill stuck server if detected, or force restart if requested
+            if [ "$1" == "--force-restart" ] && [ "$SERVER_RUNNING" = true ]; then
+                print_info "Force restarting server (--force-restart)..."
+                auto_fix_kill_server
+                echo ""
+                print_info "Server stopped. Reload Chrome extension to restart it."
+            elif [ "$SERVER_RUNNING" = true ] && [ "$SERVER_RESPONSIVE" = false ]; then
                 print_info "Stopping stuck server process..."
                 auto_fix_kill_server
             fi
@@ -704,7 +715,7 @@ main() {
             ;;
             
         diagnose|--diagnose)
-            diagnose
+            diagnose "$2"
             exit 0
             ;;
             
