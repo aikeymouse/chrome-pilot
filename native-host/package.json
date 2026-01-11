@@ -1,6 +1,6 @@
 {
   "name": "chrome-pilot-native-host",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Native messaging host with WebSocket server for ChromePilot",
   "main": "server.js",
   "scripts": {
