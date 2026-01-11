@@ -204,22 +204,28 @@ function Restore-Installation {
 # ============================================================================
 
 function Install-Local {
-    Write-Info "Installing ChromePilot locally..."
+    Write-Info "Installing from local files..."
     
     # Get script directory
     $scriptDir = $PSScriptRoot
-    $projectRoot = Split-Path $scriptDir -Parent
     
-    $extensionPath = Join-Path $projectRoot "extension"
-    $nativeHostPath = Join-Path $projectRoot "native-host"
+    # Try to find native-host directory
+    # Case 1: Release package - native-host is sibling to install.ps1
+    $nativeHostPath = Join-Path $scriptDir "native-host"
     
-    if (-not (Test-Path $extensionPath)) {
-        Write-ErrorMsg "Extension directory not found: $extensionPath"
-        throw "Extension directory not found"
+    # Case 2: Source repo - native-host is in parent directory (install-scripts/install.ps1)
+    if (-not (Test-Path $nativeHostPath)) {
+        $projectDir = Split-Path $scriptDir -Parent
+        $nativeHostPath = Join-Path $projectDir "native-host"
     }
     
     if (-not (Test-Path $nativeHostPath)) {
-        Write-ErrorMsg "Native host directory not found: $nativeHostPath"
+        Write-ErrorMsg "Native host directory not found"
+        Write-Host "Expected either:"
+        Write-Host "  - $scriptDir\native-host (release package)"
+        Write-Host "  - $(Join-Path (Split-Path $scriptDir -Parent) 'native-host') (source repository)"
+        Write-Host ""
+        Write-Host "Current directory: $scriptDir"
         throw "Native host directory not found"
     }
     
@@ -228,44 +234,56 @@ function Install-Local {
         New-Item -ItemType Directory -Path $script:INSTALL_DIR -Force | Out-Null
     }
     
-    # Copy extension
-    Write-Info "Copying extension..."
-    $installExtPath = Join-Path $script:INSTALL_DIR "extension"
-    if (Test-Path $installExtPath) {
-        Remove-Item -Path $installExtPath -Recurse -Force
+    # Backup logs if upgrading
+    $logsPath = Join-Path $script:INSTALL_DIR "native-host\logs"
+    if (Test-Path $logsPath) {
+        $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        $backupLogsPath = Join-Path $script:INSTALL_DIR "logs-backup-$timestamp"
+        Write-Info "Backing up existing logs..."
+        Copy-Item -Path $logsPath -Destination $backupLogsPath -Recurse -Force
     }
-    Copy-Item -Path $extensionPath -Destination $installExtPath -Recurse -Force
-    Write-Success "Extension copied"
     
-    # Copy native host
-    Write-Info "Copying native host..."
+    # Copy native host files
+    Write-Info "Copying native host files..."
     $installNativeHostPath = Join-Path $script:INSTALL_DIR "native-host"
     if (Test-Path $installNativeHostPath) {
         Remove-Item -Path $installNativeHostPath -Recurse -Force
     }
     Copy-Item -Path $nativeHostPath -Destination $installNativeHostPath -Recurse -Force
-    Write-Success "Native host copied"
+    
+    # Restore logs
+    $backupDirs = Get-ChildItem -Path $script:INSTALL_DIR -Filter "logs-backup-*" -Directory -ErrorAction SilentlyContinue
+    if ($backupDirs) {
+        Write-Info "Restoring logs..."
+        $latestBackup = $backupDirs | Sort-Object Name -Descending | Select-Object -First 1
+        $newLogsPath = Join-Path $installNativeHostPath "logs"
+        if (-not (Test-Path $newLogsPath)) {
+            New-Item -ItemType Directory -Path $newLogsPath -Force | Out-Null
+        }
+        Copy-Item -Path "$($latestBackup.FullName)\*" -Destination $newLogsPath -Recurse -Force -ErrorAction SilentlyContinue
+    }
     
     # Install npm dependencies
-    Write-Info "Installing npm dependencies..."
+    Write-Info "Installing Node.js dependencies..."
     Push-Location $installNativeHostPath
     try {
-        $output = & npm install --production 2>&1
+        $output = & npm install --production --silent 2>&1
         if ($LASTEXITCODE -ne 0) {
             Write-ErrorMsg "Failed to install dependencies"
             throw "npm install failed"
         }
-        Write-Success "Dependencies installed"
     }
     finally {
         Pop-Location
     }
     
-    # Create logs directory
+    # Create logs directory if it doesn't exist
     $logsPath = Join-Path $installNativeHostPath "logs"
     if (-not (Test-Path $logsPath)) {
         New-Item -ItemType Directory -Path $logsPath -Force | Out-Null
     }
+    
+    Write-Info "Native host installed to: $installNativeHostPath"
 }
 
 function Register-NativeHost {
