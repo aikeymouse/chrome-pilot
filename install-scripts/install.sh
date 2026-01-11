@@ -318,7 +318,7 @@ export PATH="/opt/homebrew/bin:$PATH"
 cd "$(dirname "$0")"
 
 # Launch the server with error logging
-exec node browser-pilot-browser-pilot-server.js 2>> /tmp/chromepilot-error.log
+exec node browser-pilot-server.js 2>> /tmp/chromepilot-error.log
 LAUNCH_EOF
     
     chmod +x "$INSTALL_DIR/native-host/launch.sh"
