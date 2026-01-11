@@ -63,6 +63,14 @@ function init() {
   logRetentionInput.addEventListener('change', onLogRetentionChange);
   clearLogsBtn.addEventListener('click', clearLogs);
   
+  // Event delegation for log entry expand/collapse
+  logsContainer.addEventListener('click', (e) => {
+    const logHeader = e.target.closest('.log-header');
+    if (logHeader) {
+      logHeader.parentElement.classList.toggle('expanded');
+    }
+  });
+  
   // Start countdown timer
   startCountdownTimer();
 }
@@ -593,15 +601,6 @@ function renderLogs() {
       </div>
     `;
   }).join('');
-  
-  // Add click handlers to log headers for collapse/expand
-  setTimeout(() => {
-    document.querySelectorAll('.log-header').forEach(header => {
-      header.addEventListener('click', function() {
-        this.parentElement.classList.toggle('expanded');
-      });
-    });
-  }, 0);
   
   // Scroll to bottom
   logsContainer.scrollTop = logsContainer.scrollHeight;
