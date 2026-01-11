@@ -16,6 +16,7 @@ const statusBadge = document.getElementById('status-badge');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const clientCount = document.getElementById('client-count');
+const removeExpiredBtn = document.getElementById('remove-expired-sessions');
 const sessionSelectorWrapper = document.getElementById('session-selector-wrapper');
 const sessionSelectorTrigger = document.getElementById('session-selector-trigger');
 const sessionSelectorOptions = document.getElementById('session-selector-options');
@@ -47,6 +48,7 @@ function init() {
   
   // Event listeners
   sessionSelectorTrigger.addEventListener('click', toggleSessionSelector);
+  removeExpiredBtn.addEventListener('click', removeExpiredSessions);
   // Close dropdown when clicking outside
   document.addEventListener('click', (e) => {
     if (!sessionSelectorWrapper.contains(e.target)) {
@@ -385,6 +387,51 @@ function startCountdownTimer() {
 function toggleSessionSelector() {
   if (!sessionSelectorTrigger.classList.contains('disabled')) {
     sessionSelectorWrapper.classList.toggle('open');
+  }
+}
+
+/**
+ * Remove expired sessions
+ */
+function removeExpiredSessions() {
+  const now = Date.now();
+  let removedCount = 0;
+  
+  // Find and remove expired sessions
+  for (const [sessionId, sessionData] of sessions.entries()) {
+    const isExpired = sessionData.expiresAt && sessionData.expiresAt <= now;
+    const isClosed = sessionData.active === false;
+    
+    if (isExpired || isClosed) {
+      sessions.delete(sessionId);
+      
+      // Remove logs for this session
+      if (allLogs.has(sessionId)) {
+        allLogs.delete(sessionId);
+      }
+      
+      removedCount++;
+    }
+  }
+  
+  if (removedCount > 0) {
+    console.log(`Removed ${removedCount} expired session(s)`);
+    
+    // If current session was removed, clear selection
+    if (!sessions.has(currentSessionId)) {
+      currentSessionId = null;
+    }
+    
+    // Update UI
+    updateSessionsUI();
+    updateSessionDetails();
+    
+    // If current session was removed, also clear logs display
+    if (currentSessionId === null) {
+      renderLogs();
+    }
+  } else {
+    console.log('No expired sessions to remove');
   }
 }
 

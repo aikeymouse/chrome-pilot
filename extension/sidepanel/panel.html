@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChromePilot Panel</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="stylesheet" href="panel.css">
 </head>
 <body>
@@ -21,7 +22,12 @@
     <section class="section">
       <div class="section-header">
         <h2>Connected Clients</h2>
-        <span class="badge" id="client-count">0</span>
+        <div class="section-header-right">
+          <button id="remove-expired-sessions" class="icon-btn" title="Remove expired sessions">
+            <span class="material-symbols-outlined">delete</span>
+          </button>
+          <span class="badge" id="client-count">0</span>
+        </div>
       </div>
       
       <div class="custom-select" id="session-selector-wrapper">
@@ -50,9 +56,11 @@
         <div class="section-header-left">
           <span class="collapse-icon">▼</span>
           <h2>Current Window Tabs</h2>
-          <button id="refresh-tabs" class="icon-btn" title="Refresh tabs">↻</button>
         </div>
         <div class="section-header-right">
+          <button id="refresh-tabs" class="icon-btn" title="Refresh tabs">
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
           <span class="badge" id="tabs-count">0</span>
         </div>
       </div>
