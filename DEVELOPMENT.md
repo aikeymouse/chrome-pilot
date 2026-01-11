@@ -3,25 +3,38 @@
 ## Project Structure
 
 ```
-chrome-driver-extension/
+chrome-pilot/
 ├── extension/                  # Chrome extension files
-│   ├── manifest.json          # Extension manifest
+│   ├── manifest.json          # Extension manifest (Manifest V3)
 │   ├── background/
-│   │   └── service-worker.js  # Background service worker
+│   │   └── service-worker.js  # Background service worker & native messaging bridge
+│   ├── content/
+│   │   └── dom-helper.js      # DOM helper functions for CSP-restricted pages
 │   └── sidepanel/
 │       ├── panel.html         # Side panel UI
-│       ├── panel.js           # Side panel logic
+│       ├── panel.js           # Side panel logic with custom dropdown & session management
 │       └── panel.css          # Side panel styles
 ├── native-host/               # Native messaging host
-│   ├── browser-pilot-server.js              # WebSocket server + native messaging
+│   ├── browser-pilot-server.js # WebSocket server + native messaging + session management
 │   ├── package.json           # Node.js dependencies
 │   ├── manifest.json          # Native host manifest
-│   └── logs/                  # Session log files
+│   ├── launch.sh              # Launch script for macOS/Linux
+│   ├── launch.bat             # Launch script for Windows
+│   └── logs/                  # Per-session log files
 ├── install-scripts/           # Installation scripts
 │   ├── install.sh             # macOS/Linux installer
 │   └── install.bat            # Windows installer
+├── tests/                     # Test automation clients
+│   ├── chromepilot-client.js  # Base WebSocket client helper class
+│   ├── google-search-client.js # Google search automation example
+│   ├── test-client.js         # Simple test client example
+│   ├── test-client-new.js     # Extended test client
+│   ├── package.json           # Test dependencies
+│   └── README.md              # Test documentation
 ├── docs/
 │   └── PROTOCOL.md            # WebSocket protocol documentation
+├── update-server.sh           # Development helper: update installed server
+├── DEVELOPMENT.md             # This file - development guide
 ├── PLAN.md                    # Implementation plan
 └── README.md                  # User documentation
 
@@ -36,16 +49,7 @@ cd native-host
 npm install
 ```
 
-### 2. Run Native Host in Development Mode
-
-```bash
-cd native-host
-npm run dev
-```
-
-This will start the native host with nodemon for auto-restart on file changes.
-
-### 3. Load Extension in Chrome
+### 2. Load Extension in Chrome
 
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" (toggle in top right)
@@ -53,7 +57,41 @@ This will start the native host with nodemon for auto-restart on file changes.
 4. Select the `extension/` directory
 5. Note the extension ID (e.g., `abcdefghijklmnopqrstuvwxyz123456`)
 
-### 4. Update Native Host Manifest
+### 3. Install ChromePilot
+
+Run the installation script to set up the native host:
+
+```bash
+./install-scripts/install.sh
+```
+
+This will:
+- Install the native host to `~/.chrome-pilot/`
+- Register it with Chrome
+- Start the WebSocket server automatically
+
+### 4. Development Workflow
+
+When making changes to the server code:
+
+```bash
+# Update the installed server with your changes
+./update-server.sh
+
+# Then reload the Chrome extension at chrome://extensions
+```
+
+For extension changes, just reload the extension - no script needed.
+
+### 5. Manual Native Host Setup (Alternative)
+
+If you prefer to run the native host manually for debugging:
+
+### 5. Manual Native Host Setup (Alternative)
+
+If you prefer to run the native host manually for debugging:
+
+**Update Native Host Manifest:**
 
 Edit `native-host/manifest.json` and replace `EXTENSION_ID_PLACEHOLDER` with your actual extension ID:
 
@@ -69,7 +107,7 @@ Edit `native-host/manifest.json` and replace `EXTENSION_ID_PLACEHOLDER` with you
 }
 ```
 
-### 5. Register Native Host for Development
+**Register Native Host:**
 
 **macOS:**
 ```bash
@@ -86,6 +124,12 @@ cp native-host/manifest.json ~/.config/google-chrome/NativeMessagingHosts/com.ch
 **Windows:**
 Create registry key at `HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\com.chromepilot.extension`
 with default value pointing to manifest.json path.
+
+**Run Manually:**
+```bash
+cd native-host
+node browser-pilot-server.js
+```
 
 ### 6. Restart Chrome
 

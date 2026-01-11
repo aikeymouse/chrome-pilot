@@ -36,13 +36,6 @@ sleep 1
 echo -e "${YELLOW}→${NC} Copying updated server code..."
 cp "$SOURCE_DIR/native-host/browser-pilot-server.js" "$INSTALL_DIR/native-host/browser-pilot-server.js"
 
-# Copy updated content script if exists
-if [ -f "$SOURCE_DIR/extension/content/dom-helper.js" ]; then
-    echo -e "${YELLOW}→${NC} Copying updated content scripts..."
-    mkdir -p "$INSTALL_DIR/extension/content"
-    cp "$SOURCE_DIR/extension/content/dom-helper.js" "$INSTALL_DIR/extension/content/dom-helper.js"
-fi
-
 echo -e "${GREEN}✓${NC} Server code updated successfully"
 echo ""
 echo "Next steps:"
