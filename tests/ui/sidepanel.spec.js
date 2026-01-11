@@ -4,6 +4,7 @@
  */
 
 const { test, expect } = require('../fixtures/ui-fixtures');
+const { TEST_URLS } = require('../helpers/test-data');
 
 test.describe('ChromePilot Sidepanel UI', () => {
   
@@ -164,7 +165,7 @@ test.describe('ChromePilot Sidepanel UI', () => {
     
     // Open new tab with example.com
     const newTab = await context.newPage();
-    await newTab.goto('http://example.com');
+    await newTab.goto(TEST_URLS.EXAMPLE);
     await newTab.waitForLoadState('networkidle');
     
     // Wait for UI to update
@@ -197,8 +198,8 @@ test.describe('ChromePilot Sidepanel UI', () => {
     // Verify tab title
     expect(exampleTabTitle).toBe('Example Domain');
     
-    // Verify tab URL (example.com redirects to https)
-    expect(exampleTabUrl).toBe('https://example.com/');
+    // Verify tab URL (browser adds trailing slash)
+    expect(exampleTabUrl).toBe(TEST_URLS.EXAMPLE + '/');
     
     // Close the example.com tab
     await newTab.close();

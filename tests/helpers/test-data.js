@@ -3,7 +3,7 @@
  */
 
 const TEST_URLS = {
-  EXAMPLE: 'http://example.com',
+  EXAMPLE: 'https://example.com',
   SELENIUM_FORM: 'https://www.selenium.dev/selenium/web/web-form.html',
   HTTPBIN: 'https://httpbin.org/html'
 };
