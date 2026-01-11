@@ -156,6 +156,9 @@ async function handleCommand(sessionId, command) {
       case 'closeTab':
         result = await closeTab(params);
         break;
+      case 'callHelper':
+        result = await callHelper(params);
+        break;
       case 'executeJS':
         result = await executeJS(params);
         break;
@@ -318,6 +321,54 @@ async function closeTab(params) {
   };
 }
 
+/**
+ * Call a predefined helper function (for CSP-restricted pages)
+ */
+async function callHelper(params) {
+  let { tabId, functionName, args = [], timeout = 30000, focus = false } = params;
+  
+  if (!functionName) {
+    throw { code: 'MISSING_PARAMS', message: 'Missing required parameter: functionName' };
+  }
+  
+  // If no tabId, use active tab
+  if (!tabId) {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length === 0) {
+      throw { code: 'TAB_NOT_FOUND', message: 'No active tab found' };
+    }
+    tabId = tabs[0].id;
+  }
+  
+  // Validate tab exists
+  try {
+    await chrome.tabs.get(tabId);
+  } catch (err) {
+    throw { code: 'TAB_NOT_FOUND', message: `Tab with ID ${tabId} not found or was closed` };
+  }
+  
+  if (focus) {
+    const tab = await chrome.tabs.get(tabId);
+    await chrome.windows.update(tab.windowId, { focused: true });
+  }
+  
+  // First, ensure dom-helper.js is injected
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['content/dom-helper.js'],
+      world: 'MAIN'
+    });
+  } catch (err) {
+    // Might already be injected, that's okay
+    console.log('dom-helper.js injection note:', err.message);
+  }
+  
+  // Now call the helper function
+  const result = await callHelperWithTimeout(tabId, functionName, args, timeout);
+  return result;
+}
+
 async function executeJS(params) {
   let { tabId, code, timeout = 30000, focus = false } = params;
   
@@ -398,16 +449,66 @@ async function executeScriptWithTimeout(tabId, code, timeout) {
       }
       
       const result = results[0].result;
+      resolve(result);
       
-      if (result.type === 'error') {
+    } catch (err) {
+      clearTimeout(timer);
+      
+      reject({
+        code: 'EXECUTION_ERROR',
+        message: err.message
+      });
+    }
+  });
+}
+
+/**
+ * Call helper function with timeout
+ */
+async function callHelperWithTimeout(tabId, functionName, args, timeout) {
+  return new Promise(async (resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject({
+        code: 'EXECUTION_TIMEOUT',
+        message: `Helper function execution exceeded timeout of ${timeout}ms`
+      });
+    }, timeout);
+    
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (fnName, fnArgs) => {
+          if (!window.__chromePilotHelper) {
+            throw new Error('ChromePilot helper not loaded');
+          }
+          
+          const fn = window.__chromePilotHelper[fnName];
+          if (!fn) {
+            throw new Error(`Helper function not found: ${fnName}`);
+          }
+          
+          return fn(...fnArgs);
+        },
+        args: [functionName, args],
+        world: 'MAIN'
+      });
+      
+      clearTimeout(timer);
+      
+      if (!results || results.length === 0) {
         reject({
-          code: 'SCRIPT_ERROR',
-          message: result.error
+          code: 'EXECUTION_ERROR',
+          message: 'No result returned from helper function'
         });
         return;
       }
       
-      resolve(result);
+      const result = results[0].result;
+      
+      resolve({
+        value: result,
+        type: typeof result
+      });
       
     } catch (err) {
       clearTimeout(timer);

@@ -132,6 +132,21 @@ class ChromePilotClient {
   }
 
   /**
+   * Call a predefined helper function (for CSP-restricted pages)
+   */
+  async callHelper(functionName, args = [], tabId = null) {
+    const targetTabId = tabId || this.currentTabId;
+    console.log(`→ Calling helper: ${functionName}(${args.join(', ')})`);
+    const result = await this.sendRequest('callHelper', { 
+      functionName, 
+      args, 
+      tabId: targetTabId 
+    });
+    console.log(`✓ Result: ${JSON.stringify(result.value)}`);
+    return result;
+  }
+
+  /**
    * Wait for element (using polling with executeJS)
    */
   async waitForElement(selector, timeout = 10000) {
