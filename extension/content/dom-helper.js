@@ -91,6 +91,15 @@ window.__chromePilotHelper = {
   },
 
   /**
+   * Get the last element matching selector and return its innerHTML
+   */
+  getLastHTML(selector) {
+    const els = document.querySelectorAll(selector);
+    if (els.length === 0) throw new Error(`No elements found: ${selector}`);
+    return els[els.length - 1].innerHTML;
+  },
+
+  /**
    * Check if element exists
    */
   elementExists(selector) {
