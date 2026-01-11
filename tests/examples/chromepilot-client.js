@@ -14,9 +14,17 @@ class ChromePilotClient {
   /**
    * Connect to WebSocket server
    * The server automatically creates a session on connection
+   * @param {string} url - WebSocket URL (default: ws://localhost:9000)
+   * @param {number} timeout - Session timeout in milliseconds (default: 60000 = 1 minute)
    */
-  connect(url = 'ws://localhost:9000') {
+  connect(url = 'ws://localhost:9000', timeout = 60000) {
     return new Promise((resolve, reject) => {
+      // Add timeout parameter to URL if not already present
+      if (!url.includes('timeout=')) {
+        const separator = url.includes('?') ? '&' : '?';
+        url = `${url}${separator}timeout=${timeout}`;
+      }
+      
       this.ws = new WebSocket(url);
 
       this.ws.on('open', () => {
