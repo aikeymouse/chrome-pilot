@@ -146,11 +146,15 @@ jobs:
           echo "" >> CHANGELOG.md
           echo "## Installation" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
-          echo "### Quick Install" >> CHANGELOG.md
+          echo "⚠️ **You need to download BOTH files below:**" >> CHANGELOG.md
+          echo "- \`chromepilot-native-host-v${VERSION}.zip\` - Backend server + installer" >> CHANGELOG.md
+          echo "- \`chromepilot-extension-v${VERSION}.zip\` - Chrome extension" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Step 1: Install Native Host" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "**macOS/Linux:**" >> CHANGELOG.md
           echo '```bash' >> CHANGELOG.md
-          echo "# Download and extract native-host package" >> CHANGELOG.md
+          echo "# Download and extract chromepilot-native-host-v${VERSION}.zip" >> CHANGELOG.md
           echo "unzip chromepilot-native-host-v${VERSION}.zip -d chromepilot" >> CHANGELOG.md
           echo "cd chromepilot" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
@@ -161,12 +165,12 @@ jobs:
           echo "" >> CHANGELOG.md
           echo "**Windows:**" >> CHANGELOG.md
           echo '```cmd' >> CHANGELOG.md
-          echo "REM Download and extract native-host package" >> CHANGELOG.md
+          echo "REM Download and extract chromepilot-native-host-v${VERSION}.zip" >> CHANGELOG.md
           echo "REM Run installer" >> CHANGELOG.md
           echo "install-scripts\\install.bat" >> CHANGELOG.md
           echo '```' >> CHANGELOG.md
           echo "" >> CHANGELOG.md
-          echo "### Extension Setup" >> CHANGELOG.md
+          echo "### Step 2: Install Extension" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "1. Download \`chromepilot-extension-v${VERSION}.zip\`" >> CHANGELOG.md
           echo "2. Extract the zip file" >> CHANGELOG.md
@@ -174,9 +178,12 @@ jobs:
           echo "4. Enable **Developer mode** (top right)" >> CHANGELOG.md
           echo "5. Click **Load unpacked**" >> CHANGELOG.md
           echo "6. Select the extracted extension folder" >> CHANGELOG.md
-          echo "7. Copy your extension ID from chrome://extensions/" >> CHANGELOG.md
-          echo "8. Run: \`./install-scripts/install.sh update-id <your-extension-id>\`" >> CHANGELOG.md
-          echo "9. Restart Chrome" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Step 3: Connect Extension to Native Host" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "1. Copy your extension ID from \`chrome://extensions/\`" >> CHANGELOG.md
+          echo "2. Run: \`./install-scripts/install.sh update-id <your-extension-id>\`" >> CHANGELOG.md
+          echo "3. Restart Chrome" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "## Troubleshooting" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
