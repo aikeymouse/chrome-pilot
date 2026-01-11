@@ -153,6 +153,9 @@ async function handleCommand(sessionId, command) {
       case 'switchTab':
         result = await switchTab(params);
         break;
+      case 'closeTab':
+        result = await closeTab(params);
+        break;
       case 'executeJS':
         result = await executeJS(params);
         break;
@@ -283,6 +286,31 @@ async function switchTab(params) {
   }
   
   await chrome.tabs.update(tabId, { active: true });
+  
+  return {
+    success: true,
+    tabId
+  };
+}
+
+/**
+ * Close a tab
+ */
+async function closeTab(params) {
+  const { tabId } = params;
+  
+  if (!tabId) {
+    throw { code: 'MISSING_PARAMS', message: 'Missing required parameter: tabId' };
+  }
+  
+  // Validate tab exists
+  try {
+    await chrome.tabs.get(tabId);
+  } catch (err) {
+    throw { code: 'TAB_NOT_FOUND', message: `Tab with ID ${tabId} not found or was closed` };
+  }
+  
+  await chrome.tabs.remove(tabId);
   
   return {
     success: true,

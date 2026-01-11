@@ -8,6 +8,7 @@ async function main() {
   console.log('🚀 ChromePilot Test Client\n');
   
   const client = new ChromePilotClient();
+  const openedTabs = []; // Track tabs opened during tests
   
   try {
     // Connect to server (session auto-created)
@@ -24,7 +25,8 @@ async function main() {
     
     // Test 2: Navigate to example.com
     console.log('\nTest 2: Navigating to example.com...');
-    await client.navigate('https://example.com');
+    const exampleTab = await client.navigate('https://example.com');
+    openedTabs.push(exampleTab.tab.id);
     await client.wait(2000);
     
     // Test 3: Wait for h1 element
@@ -39,7 +41,8 @@ async function main() {
     
     // Test 5: Navigate to Google
     console.log('\nTest 5: Navigating to Google...');
-    await client.navigate('https://www.google.com');
+    const googleTab = await client.navigate('https://www.google.com');
+    openedTabs.push(googleTab.tab.id);
     await client.wait(2000);
     
     // Test 6: List tabs again
@@ -47,8 +50,16 @@ async function main() {
     const updatedTabs = await client.listTabs();
     await client.wait(1000);
     
-    // Test 7: Close session
-    console.log('\nTest 7: Closing session...');
+    // Test 7: Close all opened tabs
+    console.log('\nTest 7: Closing all opened tabs...');
+    for (const tabId of openedTabs) {
+      await client.closeTab(tabId);
+      console.log(`  ✓ Closed tab ${tabId}`);
+    }
+    await client.wait(1000);
+    
+    // Test 8: Close session
+    console.log('\nTest 8: Closing session...');
     await client.closeSession();
     
     console.log('\n🎉 All tests passed!\n');

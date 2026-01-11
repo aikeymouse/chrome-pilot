@@ -208,6 +208,16 @@ class ChromePilotClient {
   }
 
   /**
+   * Close a tab
+   */
+  async closeTab(tabId) {
+    console.log(`→ Closing tab: ${tabId}`);
+    const result = await this.sendRequest('closeTab', { tabId });
+    console.log('✓ Tab closed');
+    return result;
+  }
+
+  /**
    * Close session (note: sessions auto-close on timeout, this is optional)
    */
   async closeSession() {

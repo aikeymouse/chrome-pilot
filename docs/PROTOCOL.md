@@ -259,7 +259,49 @@ Activate (focus) a specific tab.
 }
 ```
 
-### 5. Execute JavaScript
+### 5. Close Tab
+
+Close (remove) a specific tab.
+
+**Request:**
+```json
+{
+  "action": "closeTab",
+  "params": {
+    "tabId": 124
+  },
+  "requestId": "req-005"
+}
+```
+
+**Parameters:**
+- `tabId` (number, required): Chrome tab ID to close
+
+**Response:**
+```json
+{
+  "requestId": "req-005",
+  "result": {
+    "success": true,
+    "tabId": 124
+  },
+  "error": null
+}
+```
+
+**Error Cases:**
+```json
+{
+  "requestId": "req-005",
+  "result": null,
+  "error": {
+    "code": "TAB_NOT_FOUND",
+    "message": "Tab with ID 124 not found or was closed"
+  }
+}
+```
+
+### 6. Execute JavaScript
 
 Execute JavaScript code in a tab and return the result.
 
