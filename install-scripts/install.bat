@@ -60,7 +60,7 @@ echo   install.bat diagnose                  # Run diagnostics
 echo   install.bat update-id abcd...xyz      # Set extension ID
 echo   install.bat uninstall                 # Remove installation
 echo.
-exit /b 0
+goto :eof
 
 REM ============================================================================
 REM Version Management
@@ -109,7 +109,7 @@ if errorlevel 1 (
 for /f "tokens=*" %%a in ('npm --version') do set NPM_VERSION=%%a
 call :print_success "npm !NPM_VERSION! found"
 
-exit /b 0
+goto :eof
 
 REM ============================================================================
 REM Auto-fix Functions
@@ -140,7 +140,7 @@ if not errorlevel 1 (
 
 timeout /t 2 /nobreak >nul
 call :print_success "Server stopped"
-exit /b 0
+goto :eof
 
 :auto_fix_permissions
 call :print_info "Fixing file permissions..."
@@ -151,11 +151,11 @@ if exist "%INSTALL_DIR%" (
     call :print_success "Permissions fixed"
 )
 
-exit /b 0
+goto :eof
 
 :create_backup
 if not exist "%INSTALL_DIR%" (
-    exit /b 0
+    goto :eof
 )
 
 for /f "tokens=2-4 delims=/ " %%a in ('date /t') do set DATE=%%c%%a%%b
@@ -171,11 +171,11 @@ if errorlevel 1 (
 
 set BACKUP_CREATED=1
 call :print_success "Backup created: %BACKUP_DIR%"
-exit /b 0
+goto :eof
 
 :rollback_installation
 if not defined BACKUP_DIR (
-    exit /b 0
+    goto :eof
 )
 
 call :print_warning "Rolling back installation..."
@@ -186,7 +186,7 @@ if exist "%INSTALL_DIR%" (
 
 xcopy "%BACKUP_DIR%" "%INSTALL_DIR%" /E /I /Q /Y >nul 2>&1
 call :print_info "Installation rolled back to backup"
-exit /b 0
+goto :eof
 
 REM ============================================================================
 REM Installation Functions
@@ -245,7 +245,7 @@ call :print_success "Dependencies installed"
 REM Create logs directory
 if not exist "%INSTALL_DIR%\native-host\logs" mkdir "%INSTALL_DIR%\native-host\logs"
 
-exit /b 0
+goto :eof
 
 :register_native_host
 call :print_info "Registering native messaging host..."
@@ -289,7 +289,7 @@ if not exist "%MANIFEST_FILE%" (
 )
 
 call :print_success "Native host registered"
-exit /b 0
+goto :eof
 
 :verify_installation
 call :print_info "Verifying installation..."
@@ -310,7 +310,7 @@ if not exist "%CHROME_DIR%\%NATIVE_HOST_NAME%.json" (
 )
 
 call :print_success "Installation verified"
-exit /b 0
+goto :eof
 
 REM ============================================================================
 REM Diagnostic Functions
@@ -436,7 +436,7 @@ if /i "!AUTOFIX!"=="y" (
     call :print_success "Auto-fix complete. Run 'install.bat diagnose' to verify."
 )
 
-exit /b 0
+goto :eof
 
 :update_extension_id
 set "EXTENSION_ID=%~1"
@@ -476,7 +476,7 @@ if errorlevel 1 (
 call :print_success "Extension ID updated successfully"
 echo.
 echo Next step: Restart Chrome for changes to take effect
-exit /b 0
+goto :eof
 
 REM ============================================================================
 REM Upgrade Function
@@ -492,7 +492,7 @@ echo Please download the latest release from:
 echo https://github.com/aikeymouse/ChromePilot/releases
 echo.
 echo Then run: install.bat install
-exit /b 0
+goto :eof
 
 REM ============================================================================
 REM Uninstall Function
@@ -547,7 +547,7 @@ echo Note: Chrome extension must be removed manually:
 echo 1. Open chrome://extensions/
 echo 2. Find ChromePilot and click 'Remove'
 echo.
-exit /b 0
+goto :eof
 
 REM ============================================================================
 REM Main Entry Point
@@ -589,7 +589,7 @@ if /i not "%COMMAND%"=="install" (
 
 :install_command
 echo.
-echo [INFO] ChromePilot - Installer
+call :print_info "ChromePilot - Installer"
 echo ==========================
 echo.
 echo [DEBUG] About to check dependencies...
