@@ -538,6 +538,10 @@ body {
   font-size: 11px;
   color: #666;
   font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .log-direction {
@@ -547,6 +551,7 @@ body {
   border-radius: 3px;
   background: #e0e0e0;
   color: #666;
+  flex-shrink: 0;
 }
 
 .log-entry.request .log-direction {
@@ -565,6 +570,11 @@ body {
   padding: 2px 6px;
   border-radius: 3px;
   font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+  flex-shrink: 1;
 }
 
 .log-badge-action {
