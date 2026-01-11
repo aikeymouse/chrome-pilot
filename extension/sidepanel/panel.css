@@ -322,7 +322,7 @@ body {
   color: #333;
   text-align: right;
   min-width: 0;
-  flex: 1;
+  flex-shrink: 1;
   overflow: hidden;
 }
 
@@ -335,6 +335,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: inline-block;
+  max-width: 100%;
 }
 
 .warning {
