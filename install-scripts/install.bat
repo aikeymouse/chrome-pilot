@@ -12,10 +12,14 @@ set "BACKUP_TIMESTAMP="
 set "BACKUP_CREATED="
 
 REM ============================================================================
-REM Helper Functions
+REM Skip to main execution
 REM ============================================================================
 
-goto :skip_functions
+goto :main
+
+REM ============================================================================
+REM Helper Functions
+REM ============================================================================
 
 :print_info
 echo [INFO] %*
@@ -32,8 +36,6 @@ goto :eof
 :print_error
 echo [ERROR] %*
 goto :eof
-
-:skip_functions
 
 :show_usage
 echo.
