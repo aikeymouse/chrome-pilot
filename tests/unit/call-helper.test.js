@@ -4,7 +4,7 @@
 
 const { expect } = require('chai');
 const { createClient } = require('../helpers/hooks');
-const { TEST_URLS } = require('../helpers/fixtures');
+const { TEST_URLS } = require('../helpers/test-data');
 
 describe('callHelper command', function() {
   let client;

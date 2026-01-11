@@ -3,7 +3,7 @@
  * Tests the sidepanel user interface with the extension loaded
  */
 
-const { test, expect } = require('./fixtures');
+const { test, expect } = require('../fixtures/ui-fixtures');
 
 test.describe('ChromePilot Sidepanel UI', () => {
   
