@@ -15,6 +15,8 @@ REM ============================================================================
 REM Helper Functions
 REM ============================================================================
 
+goto :skip_functions
+
 :print_info
 echo [INFO] %*
 goto :eof
@@ -30,6 +32,8 @@ goto :eof
 :print_error
 echo [ERROR] %*
 goto :eof
+
+:skip_functions
 
 :show_usage
 echo.
@@ -583,7 +587,7 @@ if /i not "%COMMAND%"=="install" (
 
 :install_command
 echo.
-call :print_info "ChromePilot - Installer"
+echo [INFO] ChromePilot - Installer
 echo ==========================
 echo.
 echo [DEBUG] About to check dependencies...
