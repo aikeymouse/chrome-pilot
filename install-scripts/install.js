@@ -528,12 +528,16 @@ function diagnose() {
   
   try {
     if (PLATFORM === 'win32') {
-      // Windows: Use PowerShell Get-Process
-      const psCmd = `powershell -Command "Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*browser-pilot-server.js*' } | Select-Object -First 1 -ExpandProperty Id"`;
-      const output = execSync(psCmd, { encoding: 'utf-8' }).trim();
-      if (output && !isNaN(output)) {
-        serverRunning = true;
-        serverPid = output;
+      // Windows: Use tasklist to find node.exe processes
+      const output = execSync('tasklist /FI "IMAGENAME eq node.exe" /V /FO CSV', { encoding: 'utf-8' });
+      const lines = output.split('\n').filter(line => line.includes('browser-pilot-server.js'));
+      if (lines.length > 0) {
+        // Extract PID from CSV format - second column
+        const match = lines[0].match(/"node\.exe","(\d+)"/);
+        if (match) {
+          serverRunning = true;
+          serverPid = match[1];
+        }
       }
     } else {
       // macOS/Linux: Use pgrep
