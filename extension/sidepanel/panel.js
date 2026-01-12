@@ -521,6 +521,34 @@ function renderTabs() {
 }
 
 /**
+ * Truncate long dataUrl fields to prevent memory/display issues
+ */
+function truncateDataUrls(obj, maxLength = 50) {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+  
+  // Handle arrays
+  if (Array.isArray(obj)) {
+    return obj.map(item => truncateDataUrls(item, maxLength));
+  }
+  
+  // Handle objects
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === 'dataUrl' && typeof value === 'string' && value.startsWith('data:image/')) {
+      // Truncate dataUrl to first maxLength characters + '...'
+      result[key] = value.substring(0, maxLength) + '...';
+    } else if (typeof value === 'object' && value !== null) {
+      result[key] = truncateDataUrls(value, maxLength);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+/**
  * Add log entry
  */
 function addLog(log) {
@@ -529,11 +557,15 @@ function addLog(log) {
     allLogs.set(log.sessionId, []);
   }
   
-  const sessionLogs = allLogs.get(log.sessionId);
-  sessionLogs.push({
+  // Truncate dataUrl fields in the log data before storing
+  const truncatedLog = {
     ...log,
-    timestamp: Date.now()
-  });
+    timestamp: Date.now(),
+    data: truncateDataUrls(log.data)
+  };
+  
+  const sessionLogs = allLogs.get(log.sessionId);
+  sessionLogs.push(truncatedLog);
   
   // Enforce retention limit (FIFO) per session
   if (sessionLogs.length > logRetention) {
