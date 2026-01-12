@@ -32,6 +32,25 @@ async function main() {
     await client.type(searchSelector, 'ChromePilot WebSocket automation');
     await client.wait(2000);
 
+    // Highlight the Google Search button
+    const searchButtonSelector = 'input[name="btnK"]';
+    await client.callHelper('highlightElement', [searchButtonSelector]);
+    await client.wait(10000);
+
+    // Remove the highlight
+    await client.callHelper('removeHighlights', []);
+    await client.wait(2000);
+
+    // Try to highlight a non-existent element (should return 0)
+    console.log('\n→ Attempting to highlight non-existent element...');
+    const result = await client.callHelper('highlightElement', ['#this-element-does-not-exist-12345']);
+    if (result.value === 0) {
+      console.log('✓ Correctly returned 0 for non-existent element');
+    } else {
+      console.log('✗ Expected 0 but got:', result.value);
+    }
+    await client.wait(1000);
+
     // Close session
     await client.closeSession();
     await client.wait(1000);

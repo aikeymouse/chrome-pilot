@@ -187,6 +187,104 @@ describe('callHelper command', function() {
     expect(result.value).to.be.true;
   });
 
+  it('should call highlightElement helper on single element', async function() {
+    const result = await client.callHelper(
+      'highlightElement',
+      ['h1'],
+      testTabId
+    );
+    
+    client.assertValidExecutionResponse(result);
+    expect(result.value).to.equal(1);
+    expect(result.type).to.equal('number');
+    
+    // Verify element is highlighted
+    const bgResult = await client.executeJS(
+      'document.querySelector("h1").style.background',
+      testTabId
+    );
+    expect(bgResult.value).to.equal('yellow');
+  });
+
+  it('should call highlightElement helper on multiple elements', async function() {
+    // The form has multiple labels
+    const result = await client.callHelper(
+      'highlightElement',
+      ['label.form-label'],
+      testTabId
+    );
+    
+    client.assertValidExecutionResponse(result);
+    expect(result.value).to.be.greaterThan(1);
+    expect(result.type).to.equal('number');
+    
+    // Verify first element is highlighted
+    const bgResult = await client.executeJS(
+      'document.querySelector("label.form-label").style.background',
+      testTabId
+    );
+    expect(bgResult.value).to.equal('yellow');
+  });
+
+  it('should call removeHighlights helper', async function() {
+    // First highlight some elements
+    const highlightResult = await client.callHelper(
+      'highlightElement',
+      ['label.form-label'],
+      testTabId
+    );
+    const highlightedCount = highlightResult.value;
+    expect(highlightedCount).to.be.greaterThan(0);
+    
+    // Now remove highlights
+    const result = await client.callHelper(
+      'removeHighlights',
+      [],
+      testTabId
+    );
+    
+    client.assertValidExecutionResponse(result);
+    expect(result.value).to.equal(highlightedCount);
+    expect(result.type).to.equal('number');
+    
+    // Verify highlights are removed (background should be empty or not yellow)
+    const bgResult = await client.executeJS(
+      'document.querySelector("label.form-label").style.background',
+      testTabId
+    );
+    expect(bgResult.value).to.not.equal('yellow');
+  });
+
+  it('should not duplicate highlights when called twice', async function() {
+    // First highlight
+    const result1 = await client.callHelper(
+      'highlightElement',
+      ['h1'],
+      testTabId
+    );
+    expect(result1.value).to.equal(1);
+    
+    // Call again - should not add duplicate
+    const result2 = await client.callHelper(
+      'highlightElement',
+      ['h1'],
+      testTabId
+    );
+    expect(result2.value).to.equal(0); // No new highlights added
+  });
+
+  it('should return 0 when highlighting non-existent elements', async function() {
+    const result = await client.callHelper(
+      'highlightElement',
+      ['#totally-nonexistent-element-12345'],
+      testTabId
+    );
+    
+    client.assertValidExecutionResponse(result);
+    expect(result.value).to.equal(0);
+    expect(result.type).to.equal('number');
+  });
+
   describe('error handling', function() {
     it('should handle TAB_NOT_FOUND error', async function() {
       try {

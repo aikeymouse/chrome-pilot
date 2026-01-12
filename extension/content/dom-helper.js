@@ -138,6 +138,68 @@ window.__chromePilotHelper = {
       
       check();
     });
+  },
+
+  /**
+   * Highlight elements with yellow background
+   * Highlights all elements matching the selector
+   * Returns the number of elements highlighted (0 if none found)
+   */
+  highlightElement(selector) {
+    const elements = document.querySelectorAll(selector);
+    if (elements.length === 0) {
+      return 0;
+    }
+
+    // Store original styles if not already stored
+    if (!window.__chromePilotHighlights) {
+      window.__chromePilotHighlights = new Map();
+    }
+
+    let highlightedCount = 0;
+    elements.forEach((el, index) => {
+      const key = `${selector}[${index}]`;
+      
+      // Store original background and transition
+      if (!window.__chromePilotHighlights.has(key)) {
+        window.__chromePilotHighlights.set(key, {
+          element: el,
+          originalBackground: el.style.background,
+          originalTransition: el.style.transition
+        });
+        
+        // Apply highlight with smooth transition (semi-transparent yellow)
+        el.style.transition = 'background 0.3s ease';
+        el.style.background = 'rgba(255, 255, 0, 0.5)';
+        highlightedCount++;
+      }
+    });
+
+    return highlightedCount;
+  },
+
+  /**
+   * Remove all highlights applied by highlightElement
+   */
+  removeHighlights() {
+    if (!window.__chromePilotHighlights) {
+      return 0;
+    }
+
+    let removedCount = 0;
+    window.__chromePilotHighlights.forEach((data) => {
+      const { element, originalBackground, originalTransition } = data;
+      
+      // Restore original styles
+      element.style.background = originalBackground;
+      element.style.transition = originalTransition;
+      removedCount++;
+    });
+
+    // Clear the highlights map
+    window.__chromePilotHighlights.clear();
+    
+    return removedCount;
   }
 };
 

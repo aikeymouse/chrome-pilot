@@ -448,6 +448,8 @@ Call a predefined DOM helper function for CSP-restricted pages. This command is 
 8. **elementExists(selector)** - Check if element exists
 9. **isVisible(selector)** - Check if element is visible
 10. **waitForElement(selector, timeoutMs)** - Wait for element to appear
+11. **highlightElement(selector)** - Highlight all matching elements with yellow background
+12. **removeHighlights()** - Remove all highlights from the page
 
 **Response:**
 ```json
@@ -498,6 +500,87 @@ Element not found:
   }
 }
 ```
+
+**Highlight Examples:**
+
+Highlight single element:
+```json
+{
+  "action": "callHelper",
+  "params": {
+    "functionName": "highlightElement",
+    "args": ["h1"]
+  },
+  "requestId": "req-007"
+}
+```
+
+Response:
+```json
+{
+  "requestId": "req-007",
+  "result": {
+    "value": 1,
+    "type": "number"
+  },
+  "error": null
+}
+```
+
+Highlight multiple elements:
+```json
+{
+  "action": "callHelper",
+  "params": {
+    "functionName": "highlightElement",
+    "args": ["button.action-btn"]
+  },
+  "requestId": "req-008"
+}
+```
+
+Response (3 buttons highlighted):
+```json
+{
+  "requestId": "req-008",
+  "result": {
+    "value": 3,
+    "type": "number"
+  },
+  "error": null
+}
+```
+
+Remove all highlights:
+```json
+{
+  "action": "callHelper",
+  "params": {
+    "functionName": "removeHighlights",
+    "args": []
+  },
+  "requestId": "req-009"
+}
+```
+
+Response:
+```json
+{
+  "requestId": "req-009",
+  "result": {
+    "value": 3,
+    "type": "number"
+  },
+  "error": null
+}
+```
+
+**Notes:**
+- Returns the number of elements highlighted/unhighlighted
+- Multiple elements matching the selector are all highlighted
+- Highlights persist until explicitly removed with `removeHighlights()`
+- Highlights are cleared automatically on page navigation
+- Calling `highlightElement` with the same selector multiple times won't duplicate highlights
 
 ## Event Messages
 
