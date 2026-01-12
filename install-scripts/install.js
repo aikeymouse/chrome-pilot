@@ -429,6 +429,91 @@ function diagnose() {
   }
   console.log('');
   
+  // Server Status
+  console.log('Server Status:');
+  let serverRunning = false;
+  let serverPid = null;
+  
+  try {
+    if (PLATFORM === 'win32') {
+      // Windows: Check for node.exe running browser-pilot-server.js
+      const output = execSync('tasklist /FI "IMAGENAME eq node.exe" /FO CSV /NH', { encoding: 'utf-8' });
+      const lines = output.split('\n').filter(line => line.includes('node.exe'));
+      
+      for (const line of lines) {
+        const match = line.match(/"node\.exe","(\d+)"/);
+        if (match) {
+          const pid = match[1];
+          try {
+            const cmdline = execSync(`wmic process where processid=${pid} get commandline /format:list`, { encoding: 'utf-8' });
+            if (cmdline.includes('browser-pilot-server.js')) {
+              serverRunning = true;
+              serverPid = pid;
+              break;
+            }
+          } catch {
+            // Continue checking other processes
+          }
+        }
+      }
+    } else {
+      // macOS/Linux: Use pgrep
+      const output = execSync('pgrep -f browser-pilot-server.js', { encoding: 'utf-8' }).trim();
+      if (output) {
+        serverRunning = true;
+        serverPid = output.split('\n')[0];
+      }
+    }
+  } catch {
+    // Process not found
+    serverRunning = false;
+  }
+  
+  if (serverRunning) {
+    console.log(`  Server Process: Running (PID: ${serverPid}) ${okTag}`);
+  } else {
+    console.log(`  Server Process: Not Running ${warnTag}`);
+    console.log('  Note: Server starts automatically when Chrome extension connects');
+  }
+  
+  // Check port 9000
+  let portInUse = false;
+  let portPid = null;
+  
+  try {
+    if (PLATFORM === 'win32') {
+      // Windows: netstat
+      const output = execSync('netstat -ano | findstr :9000', { encoding: 'utf-8' });
+      const match = output.match(/LISTENING\s+(\d+)/);
+      if (match) {
+        portInUse = true;
+        portPid = match[1];
+      }
+    } else {
+      // macOS/Linux: lsof
+      const output = execSync('lsof -ti :9000', { encoding: 'utf-8' }).trim();
+      if (output) {
+        portInUse = true;
+        portPid = output.split('\n')[0];
+      }
+    }
+  } catch {
+    // Port not in use
+    portInUse = false;
+  }
+  
+  if (portInUse) {
+    if (serverPid && portPid === serverPid) {
+      console.log(`  Port 9000: Listening ${okTag}`);
+    } else {
+      console.log(`  Port 9000: In use by different process (PID: ${portPid}) ${warnTag}`);
+    }
+  } else {
+    console.log(`  Port 9000: Available ${warnTag}`);
+    console.log('  Note: Port will be used when server starts');
+  }
+  console.log('');
+  
   // Recent Logs
   const logsPath = path.join(INSTALL_DIR, 'native-host', 'logs');
   if (exists(logsPath)) {
