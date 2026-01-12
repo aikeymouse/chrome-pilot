@@ -259,9 +259,9 @@ window.__chromePilotHelper = {
   },
 
   /**
-   * Crop screenshot to element bounds using Canvas API
+   * Crop screenshot to element bounds using Canvas API (internal helper)
+   * Called by captureScreenshot command in service-worker
    * Returns array of cropped screenshots as base64 data URLs
-   * If no bounds provided, returns empty array
    */
   async cropScreenshotToElements(fullScreenshotDataUrl, boundsArray) {
     if (!boundsArray || boundsArray.length === 0) {

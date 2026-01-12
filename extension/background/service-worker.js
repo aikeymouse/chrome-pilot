@@ -464,7 +464,7 @@ async function executeJS(params) {
 }
 
 async function captureScreenshot(params) {
-  let { tabId, format = 'png', quality = 90 } = params;
+  let { tabId, format = 'png', quality = 90, selector } = params;
   
   // If no tabId, use active tab
   if (!tabId) {
@@ -494,7 +494,36 @@ async function captureScreenshot(params) {
     throw { code: 'TAB_NOT_FOUND', message: `Tab with ID ${tabId} not found or was closed` };
   }
   
-  // Capture the visible tab in the specified window
+  // If selector provided, get bounds and crop to elements
+  if (selector) {
+    // Get element bounds
+    const boundsResult = await callHelper({
+      tabId,
+      functionName: 'getElementBounds',
+      args: [selector]
+    });
+    
+    if (!boundsResult.value || boundsResult.value.length === 0) {
+      return { screenshots: [] };
+    }
+    
+    // Capture viewport
+    const dataUrl = await chrome.tabs.captureVisibleTab(windowId, {
+      format: format === 'jpeg' ? 'jpeg' : 'png',
+      quality: format === 'jpeg' ? quality : undefined
+    });
+    
+    // Crop to elements
+    const cropResult = await callHelper({
+      tabId,
+      functionName: 'cropScreenshotToElements',
+      args: [dataUrl, boundsResult.value]
+    });
+    
+    return { screenshots: cropResult.value };
+  }
+  
+  // No selector - return full viewport
   const dataUrl = await chrome.tabs.captureVisibleTab(windowId, {
     format: format === 'jpeg' ? 'jpeg' : 'png',
     quality: format === 'jpeg' ? quality : undefined

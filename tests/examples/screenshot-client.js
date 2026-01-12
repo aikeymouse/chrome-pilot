@@ -75,7 +75,7 @@ async function main() {
     console.log('3. Save the cropped screenshots');
     
     // Example 6: Capture viewport screenshot directly
-    console.log('\n📸 Capturing viewport screenshot...');
+    console.log('\n📸 Capturing full viewport screenshot...');
     const captureResult = await client.sendRequest('captureScreenshot', { tabId });
     console.log(`Screenshot captured, size: ${captureResult.dataUrl.length} characters`);
     
@@ -85,26 +85,27 @@ async function main() {
     fs.writeFileSync(viewportPath, Buffer.from(viewportData, 'base64'));
     console.log(`💾 Viewport screenshot saved to: ${viewportPath}`);
     
-    // Example 7: Crop viewport screenshot to element
-    // Get fresh bounds - element should be visible in current viewport
-    const updatedBounds = await client.callHelper('getElementBounds', ['h1'], tabId);
-    console.log('Current h1 bounds:', JSON.stringify(updatedBounds.value[0], null, 2));
+    // Example 7: Capture and crop element screenshots in one command
+    console.log('\n📸 Capturing h1 element screenshot (with auto-crop)...');
+    const elementCaptureResult = await client.sendRequest('captureScreenshot', { 
+      tabId,
+      selector: 'h1'
+    });
     
-    console.log('\n✂️  Cropping screenshot to h1 element...');
-    const cropResult = await client.callHelper('cropScreenshotToElements', [captureResult.dataUrl, updatedBounds.value], tabId);
-    console.log(`Cropped ${cropResult.value.length} screenshot(s)`);
-    if (cropResult.value.length > 0) {
-      console.log('First cropped screenshot:');
-      console.log('  - Index:', cropResult.value[0].index);
-      console.log('  - DataURL length:', cropResult.value[0].dataUrl.length);
-      console.log('  - Device Pixel Ratio:', cropResult.value[0].devicePixelRatio);
-      console.log('  - Bounds:', JSON.stringify(cropResult.value[0].bounds, null, 2));
+    console.log(`Captured ${elementCaptureResult.screenshots.length} element screenshot(s)`);
+    if (elementCaptureResult.screenshots.length > 0) {
+      const screenshot = elementCaptureResult.screenshots[0];
+      console.log('Element screenshot:');
+      console.log('  - Index:', screenshot.index);
+      console.log('  - DataURL length:', screenshot.dataUrl.length);
+      console.log('  - Device Pixel Ratio:', screenshot.devicePixelRatio);
+      console.log('  - Bounds:', JSON.stringify(screenshot.bounds, null, 2));
       
-      // Save cropped screenshot to file
-      const screenshotData = cropResult.value[0].dataUrl.replace(/^data:image\/png;base64,/, '');
+      // Save element screenshot to file
+      const screenshotData = screenshot.dataUrl.replace(/^data:image\/png;base64,/, '');
       const screenshotPath = path.join(__dirname, 'h1-screenshot.png');
       fs.writeFileSync(screenshotPath, Buffer.from(screenshotData, 'base64'));
-      console.log(`💾 Cropped screenshot saved to: ${screenshotPath}`);
+      console.log(`💾 Element screenshot saved to: ${screenshotPath}`);
     }
     
     // Example 8: Test with non-existent element

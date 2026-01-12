@@ -452,7 +452,6 @@ Call a predefined DOM helper function for CSP-restricted pages. This command is 
 12. **removeHighlights()** - Remove all highlights from the page (returns count)
 13. **getElementBounds(selector)** - Get position and size of all matching elements (returns array)
 14. **scrollElementIntoView(selector, index)** - Scroll element into view by index (returns bounds array)
-15. **cropScreenshotToElements(dataUrl, boundsArray)** - Crop screenshot to element bounds with device pixel ratio support (returns array)
 
 **Response:**
 ```json
@@ -685,74 +684,114 @@ Response (bounds array after scrolling):
 }
 ```
 
-Crop screenshot to elements (after capturing with chrome.tabs.captureVisibleTab):
+### 8. Capture Screenshot
+
+Capture screenshot of the visible viewport or specific elements.
+
+**Request (Full Viewport):**
 ```json
 {
-  "action": "callHelper",
+  "action": "captureScreenshot",
   "params": {
-    "functionName": "cropScreenshotToElements",
-    "args": [
-      "data:image/png;base64,iVBORw0KGgo...",
-      [
-        {"index": 0, "x": 100, "y": 200, "width": 150, "height": 50},
-        {"index": 1, "x": 100, "y": 400, "width": 150, "height": 50}
-      ]
-    ]
+    "tabId": 123,
+    "format": "png",
+    "quality": 90
   },
-  "requestId": "req-012"
+  "requestId": "req-013"
 }
 ```
 
-Response (array of cropped screenshots):
+**Parameters:**
+- `tabId` (number, optional): Tab ID to capture. If omitted, uses active tab
+- `format` (string, optional): Image format - `"png"` or `"jpeg"`. Default: `"png"`
+- `quality` (number, optional): JPEG quality 0-100. Only used when format is `"jpeg"`. Default: 90
+- `selector` (string, optional): CSS selector to capture specific elements. If provided, captures and crops to matching elements
+
+**Response (Full Viewport):**
 ```json
 {
-  "requestId": "req-012",
+  "requestId": "req-013",
   "result": {
-    "value": [
-      {
-        "index": 0,
-        "dataUrl": "data:image/png;base64,iVBORw0KGgo...",
-        "bounds": {
-          "index": 0,
-          "x": 100,
-          "y": 200,
-          "width": 150,
-          "height": 50
-        },
-        "devicePixelRatio": 2
-      },
-      {
-        "index": 1,
-        "dataUrl": "data:image/png;base64,iVBORw0KGgo...",
-        "bounds": {
-          "index": 1,
-          "x": 100,
-          "y": 400,
-          "width": 150,
-          "height": 50
-        },
-        "devicePixelRatio": 2
-      }
-    ],
-    "type": "object"
+    "dataUrl": "data:image/png;base64,iVBORw0KGgo..."
   },
   "error": null
 }
 ```
 
-**Screenshot Workflow:**
+**Request (Element Screenshots):**
+```json
+{
+  "action": "captureScreenshot",
+  "params": {
+    "tabId": 123,
+    "selector": "h1"
+  },
+  "requestId": "req-014"
+}
+```
 
-1. Capture viewport: `captureScreenshot` command captures the visible viewport
-2. Get element bounds: `callHelper('getElementBounds', ['selector'])` - gets current position in viewport
-3. Crop to elements: `callHelper('cropScreenshotToElements', [dataUrl, boundsArray])` - automatically accounts for device pixel ratio
+**Response (Element Screenshots):**
+```json
+{
+  "requestId": "req-014",
+  "result": {
+    "screenshots": [
+      {
+        "index": 0,
+        "dataUrl": "data:image/png;base64,iVBORw0KGgo...",
+        "bounds": {
+          "index": 0,
+          "x": 113,
+          "y": 0,
+          "width": 936,
+          "height": 47,
+          "absoluteX": 113,
+          "absoluteY": 0
+        },
+        "devicePixelRatio": 2
+      }
+    ]
+  },
+  "error": null
+}
+```
 
-**Optional:** Use `scrollElementIntoView(selector, index)` before capture if element is not in viewport.
+**Response (No Elements Found):**
+```json
+{
+  "requestId": "req-014",
+  "result": {
+    "screenshots": []
+  },
+  "error": null
+}
+```
 
-**Note:** `captureScreenshot` uses `chrome.tabs.captureVisibleTab` which:
-- Only captures the visible viewport (not full page)
+**Notes:**
+- Uses `chrome.tabs.captureVisibleTab` which only captures visible viewport (not full page)
 - Captures at device resolution (2x on Retina displays)
-- Requires element to be visible in current viewport
-- `cropScreenshotToElements` automatically handles device pixel ratio scaling
+- When `selector` is provided, automatically crops to all matching elements
+- Elements must be visible in current viewport
+- Device pixel ratio is automatically handled for accurate cropping
+- Adds 10px padding around each element
+- Works on CSP-restricted pages
+
+**Example Usage:**
+
+Viewport screenshot:
+```javascript
+const result = await client.sendRequest('captureScreenshot', { tabId });
+// Returns: { dataUrl: "data:image/png;base64,..." }
+```
+
+Element screenshots:
+```javascript
+const result = await client.sendRequest('captureScreenshot', { 
+  tabId, 
+  selector: 'h1' 
+});
+// Returns: { screenshots: [{index, dataUrl, bounds, devicePixelRatio}, ...] }
+```
 
 ## Event Messages
 
