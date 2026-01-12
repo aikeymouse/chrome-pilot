@@ -38,15 +38,20 @@ Client App (WebSocket) ←→ Node.js Native Host ←→ Chrome Extension (Servi
 
 2. **Run installation script**
    
+   **Cross-Platform (Recommended):**
+   ```bash
+   node install-scripts/install.js
+   ```
+   
    **macOS/Linux:**
    ```bash
    chmod +x install-scripts/install.sh
    ./install-scripts/install.sh
    ```
    
-   **Windows:**
-   ```cmd
-   install-scripts\install.bat
+   **Windows (PowerShell):**
+   ```powershell
+   .\install-scripts\install.ps1
    ```
 
 3. **Load extension in Chrome**
