@@ -417,12 +417,26 @@ function diagnose() {
   if (exists(nativeManifest)) {
     console.log(`  Location: ${nativeManifest} ${okTag}`);
     
-    const content = fs.readFileSync(nativeManifest, 'utf-8');
-    if (content.includes('EXTENSION_ID_PLACEHOLDER')) {
-      console.log(`  Extension ID: NOT SET ${warnTag}`);
-      console.log('  Run: node install.js update-id <your-extension-id>');
-    } else {
-      console.log(`  Extension ID: Set ${okTag}`);
+    try {
+      const content = fs.readFileSync(nativeManifest, 'utf-8');
+      const manifest = JSON.parse(content);
+      
+      if (content.includes('EXTENSION_ID_PLACEHOLDER')) {
+        console.log(`  Extension ID: NOT SET ${warnTag}`);
+        console.log('  Run: node install.js update-id <your-extension-id>');
+      } else if (manifest.allowed_origins && manifest.allowed_origins.length > 0) {
+        const origin = manifest.allowed_origins[0];
+        const match = origin.match(/chrome-extension:\/\/([a-z]{32})\//);
+        if (match) {
+          console.log(`  Extension ID: ${match[1]} ${okTag}`);
+        } else {
+          console.log(`  Extension ID: Set ${okTag}`);
+        }
+      } else {
+        console.log(`  Extension ID: Set ${okTag}`);
+      }
+    } catch (err) {
+      console.log(`  Extension ID: Error reading manifest ${errTag}`);
     }
   } else {
     console.log(`  Manifest: NOT FOUND ${errTag}`);
