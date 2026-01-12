@@ -631,11 +631,29 @@ function uninstall() {
   // Kill running server
   stopServerProcesses();
   
+  // Windows: Wait for process to fully terminate
+  if (PLATFORM === 'win32') {
+    printInfo('Waiting for processes to terminate...');
+    setTimeout(() => {}, 2000);
+  }
+  
   // Remove installation directory
   if (exists(INSTALL_DIR)) {
     printInfo('Removing installation directory...');
-    removeRecursive(INSTALL_DIR);
-    printSuccess('Installation directory removed');
+    try {
+      removeRecursive(INSTALL_DIR);
+      printSuccess('Installation directory removed');
+    } catch (err) {
+      if (PLATFORM === 'win32') {
+        printError('Failed to remove installation directory');
+        printWarn('Server may still be running. Try:');
+        console.log('  1. Close Chrome completely');
+        console.log('  2. Check Task Manager for node.exe processes');
+        console.log('  3. Run uninstall again');
+      } else {
+        throw err;
+      }
+    }
   }
   
   // Remove native messaging manifest
