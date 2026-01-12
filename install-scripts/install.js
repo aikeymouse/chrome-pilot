@@ -259,26 +259,43 @@ function registerNativeHost() {
   
   mkdir(CHROME_DIR);
   
-  // Use platform-specific launch script
-  const launchScript = PLATFORM === 'win32' 
-    ? 'launch.bat'
-    : 'launch.sh';
+  let manifest;
   
-  const launchPath = path.join(INSTALL_DIR, 'native-host', launchScript);
-  
-  // Convert to forward slashes for JSON (works on all platforms)
-  const launchPathJson = launchPath.replace(/\\/g, '/');
-  
-  // Create manifest
-  const manifest = {
-    name: NATIVE_HOST_NAME,
-    description: 'ChromePilot Native Messaging Host',
-    path: launchPathJson,
-    type: 'stdio',
-    allowed_origins: [
-      'chrome-extension://EXTENSION_ID_PLACEHOLDER/',
-    ],
-  };
+  if (PLATFORM === 'win32') {
+    // Windows: Chrome requires executable, use node.exe directly
+    const nodePath = process.execPath;
+    const serverPath = path.join(INSTALL_DIR, 'native-host', 'browser-pilot-server.js');
+    
+    // Convert to forward slashes for JSON
+    const nodePathJson = nodePath.replace(/\\/g, '/');
+    const serverPathJson = serverPath.replace(/\\/g, '/');
+    
+    manifest = {
+      name: NATIVE_HOST_NAME,
+      description: 'ChromePilot Native Messaging Host',
+      path: nodePathJson,
+      type: 'stdio',
+      allowed_origins: [
+        'chrome-extension://EXTENSION_ID_PLACEHOLDER/',
+      ],
+      // Windows requires full command array
+      command: [nodePathJson, serverPathJson],
+    };
+  } else {
+    // Unix: Use launch script
+    const launchPath = path.join(INSTALL_DIR, 'native-host', 'launch.sh');
+    const launchPathJson = launchPath.replace(/\\/g, '/');
+    
+    manifest = {
+      name: NATIVE_HOST_NAME,
+      description: 'ChromePilot Native Messaging Host',
+      path: launchPathJson,
+      type: 'stdio',
+      allowed_origins: [
+        'chrome-extension://EXTENSION_ID_PLACEHOLDER/',
+      ],
+    };
+  }
   
   const manifestFile = path.join(CHROME_DIR, `${NATIVE_HOST_NAME}.json`);
   
@@ -437,8 +454,29 @@ function diagnose() {
         console.log(`  Extension ID: Set ${okTag}`);
       }
       
-      // Show manifest path
-      if (manifest.path) {
+      // Show manifest path and command
+      if (manifest.command && manifest.command.length > 0) {
+        // Windows format with command array
+        console.log(`  Launch Script: node.exe (direct)`);
+        console.log(`    Node: ${manifest.command[0]}`);
+        console.log(`    Server: ${manifest.command[1]}`);
+        
+        const nodePath = manifest.command[0].replace(/\//g, path.sep);
+        const serverPath = manifest.command[1].replace(/\//g, path.sep);
+        
+        if (exists(nodePath)) {
+          console.log(`    Node exists: ${okTag}`);
+        } else {
+          console.log(`    Node exists: NOT FOUND ${errTag}`);
+        }
+        
+        if (exists(serverPath)) {
+          console.log(`    Server exists: ${okTag}`);
+        } else {
+          console.log(`    Server exists: NOT FOUND ${errTag}`);
+        }
+      } else if (manifest.path) {
+        // Unix format with launch script
         const scriptName = path.basename(manifest.path);
         console.log(`  Launch Script: ${scriptName}`);
         console.log(`    Path: ${manifest.path}`);
