@@ -260,31 +260,26 @@ function registerNativeHost() {
   mkdir(CHROME_DIR);
   
   let manifest;
+  let launchScriptPath;
   
   if (PLATFORM === 'win32') {
-    // Windows: Chrome requires executable, use node.exe directly
-    const nodePath = process.execPath;
-    const serverPath = path.join(INSTALL_DIR, 'native-host', 'browser-pilot-server.js');
-    
-    // Convert to forward slashes for JSON
-    const nodePathJson = nodePath.replace(/\\/g, '/');
-    const serverPathJson = serverPath.replace(/\\/g, '/');
+    // Windows: Use launch.bat script
+    launchScriptPath = path.join(INSTALL_DIR, 'native-host', 'launch.bat');
+    const launchPathJson = launchScriptPath.replace(/\\/g, '/');
     
     manifest = {
       name: NATIVE_HOST_NAME,
       description: 'ChromePilot Native Messaging Host',
-      path: nodePathJson,
+      path: launchPathJson,
       type: 'stdio',
       allowed_origins: [
         'chrome-extension://EXTENSION_ID_PLACEHOLDER/',
       ],
-      // Windows requires full command array
-      command: [nodePathJson, serverPathJson],
     };
   } else {
-    // Unix: Use launch script
-    const launchPath = path.join(INSTALL_DIR, 'native-host', 'launch.sh');
-    const launchPathJson = launchPath.replace(/\\/g, '/');
+    // Unix: Use launch.sh script
+    launchScriptPath = path.join(INSTALL_DIR, 'native-host', 'launch.sh');
+    const launchPathJson = launchScriptPath.replace(/\\/g, '/');
     
     manifest = {
       name: NATIVE_HOST_NAME,
@@ -303,29 +298,34 @@ function registerNativeHost() {
     fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2), 'utf-8');
     printSuccess('Native host registered');
     
-    // Verify the manifest on Windows
+    // Verify the launch script exists
+    if (!exists(launchScriptPath)) {
+      printError(`Launch script not found: ${launchScriptPath}`);
+      throw new Error('Launch script missing');
+    }
+    printSuccess(`Launch script verified: ${launchScriptPath}`);
+    
+    // Windows requires registry entry
     if (PLATFORM === 'win32') {
-      console.log('');
-      printInfo('Verifying manifest paths...');
-      
-      const nodePath = manifest.command[0].replace(/\//g, path.sep);
-      const serverPath = manifest.command[1].replace(/\//g, path.sep);
-      
-      if (!exists(nodePath)) {
-        printError(`Node.js not found at: ${nodePath}`);
-        printWarn('The manifest may not work. Node.js path must match where it is installed.');
-      } else {
-        printSuccess(`Node.js verified: ${nodePath}`);
-      }
-      
-      if (!exists(serverPath)) {
-        printError(`Server script not found at: ${serverPath}`);
-      } else {
-        printSuccess(`Server script verified: ${serverPath}`);
+      printInfo('Registering in Windows Registry...');
+      try {
+        const regKey = 'HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\' + NATIVE_HOST_NAME;
+        const manifestPathForReg = manifestFile.replace(/\//g, '\\');
+        
+        // Create registry key and set default value
+        execSync(`reg add "${regKey}" /ve /d "${manifestPathForReg}" /f`, { stdio: 'ignore' });
+        
+        printSuccess('Registry entry created');
+        console.log(`  Key: ${regKey}`);
+        console.log(`  Value: ${manifestPathForReg}`);
+      } catch (err) {
+        printError('Failed to create registry entry');
+        printWarn('You may need to run this as Administrator');
+        throw err;
       }
     }
   } catch (err) {
-    printError(`Failed to create manifest: ${err.message}`);
+    printError(`Failed to register native host: ${err.message}`);
     throw err;
   }
 }
@@ -476,29 +476,8 @@ function diagnose() {
         console.log(`  Extension ID: Set ${okTag}`);
       }
       
-      // Show manifest path and command
-      if (manifest.command && manifest.command.length > 0) {
-        // Windows format with command array
-        console.log(`  Launch Script: node.exe (direct)`);
-        console.log(`    Node: ${manifest.command[0]}`);
-        console.log(`    Server: ${manifest.command[1]}`);
-        
-        const nodePath = manifest.command[0].replace(/\//g, path.sep);
-        const serverPath = manifest.command[1].replace(/\//g, path.sep);
-        
-        if (exists(nodePath)) {
-          console.log(`    Node exists: ${okTag}`);
-        } else {
-          console.log(`    Node exists: NOT FOUND ${errTag}`);
-        }
-        
-        if (exists(serverPath)) {
-          console.log(`    Server exists: ${okTag}`);
-        } else {
-          console.log(`    Server exists: NOT FOUND ${errTag}`);
-        }
-      } else if (manifest.path) {
-        // Unix format with launch script
+      // Show manifest path
+      if (manifest.path) {
         const scriptName = path.basename(manifest.path);
         console.log(`  Launch Script: ${scriptName}`);
         console.log(`    Path: ${manifest.path}`);
@@ -517,6 +496,30 @@ function diagnose() {
     console.log(`  Manifest: NOT FOUND ${errTag}`);
   }
   console.log('');
+  
+  // Windows Registry Check
+  if (PLATFORM === 'win32') {
+    console.log('Windows Registry:');
+    const regKey = 'HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\' + NATIVE_HOST_NAME;
+    try {
+      const output = execSync(`reg query "${regKey}" /ve`, { encoding: 'utf-8' });
+      if (output.includes(NATIVE_HOST_NAME + '.json')) {
+        console.log(`  Registry Key: ${okTag}`);
+        console.log(`    ${regKey}`);
+        // Extract path from output
+        const match = output.match(/REG_SZ\s+(.+)/);
+        if (match) {
+          console.log(`    Path: ${match[1].trim()}`);
+        }
+      } else {
+        console.log(`  Registry Key: NOT FOUND ${errTag}`);
+      }
+    } catch {
+      console.log(`  Registry Key: NOT FOUND ${errTag}`);
+      console.log(`    Expected: ${regKey}`);
+    }
+    console.log('');
+  }
   
   // Server Status
   console.log('Server Status:');
@@ -646,6 +649,18 @@ function uninstall() {
       // Ignore
     }
     printSuccess('Manifest removed');
+  }
+  
+  // Remove Windows registry entry
+  if (PLATFORM === 'win32') {
+    printInfo('Removing Windows registry entry...');
+    try {
+      const regKey = 'HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\' + NATIVE_HOST_NAME;
+      execSync(`reg delete "${regKey}" /f`, { stdio: 'ignore' });
+      printSuccess('Registry entry removed');
+    } catch {
+      // Ignore if doesn't exist
+    }
   }
   
   console.log('');
@@ -797,79 +812,79 @@ function testNativeHost() {
   
   const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf-8'));
   
-  if (PLATFORM === 'win32' && manifest.command) {
-    const nodePath = manifest.command[0].replace(/\//g, path.sep);
-    const serverPath = manifest.command[1].replace(/\//g, path.sep);
-    
-    printInfo(`Testing: ${nodePath} ${serverPath}`);
+  if (!manifest.path) {
+    printError('Invalid manifest: no path specified');
+    process.exit(1);
+  }
+  
+  const launchScript = manifest.path.replace(/\//g, path.sep);
+  
+  if (!exists(launchScript)) {
+    printError(`Launch script not found: ${launchScript}`);
+    process.exit(1);
+  }
+  
+  printInfo(`Testing: ${launchScript}`);
+  console.log('');
+  
+  try {
+    // Spawn the process to see its output
+    printInfo('Starting native host (will auto-terminate after 3 seconds)...');
     console.log('');
     
-    try {
-      // Spawn the process to see its output
-      printInfo('Starting native host (will auto-terminate after 3 seconds)...');
+    const isWindows = PLATFORM === 'win32';
+    const proc = spawn(isWindows ? 'cmd.exe' : launchScript, isWindows ? ['/c', launchScript] : [], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      windowsHide: true
+    });
+    
+    let stdout = '';
+    let stderr = '';
+    
+    proc.stdout.on('data', (data) => {
+      stdout += data.toString();
+      process.stdout.write(data);
+    });
+    
+    proc.stderr.on('data', (data) => {
+      stderr += data.toString();
+      process.stderr.write(data);
+    });
+    
+    // Auto-kill after 3 seconds
+    setTimeout(() => {
+      if (!proc.killed) {
+        proc.kill();
+      }
+    }, 3000);
+    
+    proc.on('exit', (code, signal) => {
       console.log('');
+      if (stdout.includes('WebSocket server') || stdout.includes('listening on')) {
+        printSuccess('Native host started successfully!');
+        console.log(`Process exited (code: ${code}, signal: ${signal})`);
+      } else if (code === 0) {
+        printSuccess('Native host executable!');
+      } else {
+        printError(`Process exited with code: ${code}`);
+      }
       
-      const proc = spawn(nodePath, [serverPath], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true
-      });
-      
-      let stdout = '';
-      let stderr = '';
-      
-      proc.stdout.on('data', (data) => {
-        stdout += data.toString();
-        process.stdout.write(data);
-      });
-      
-      proc.stderr.on('data', (data) => {
-        stderr += data.toString();
-        process.stderr.write(data);
-      });
-      
-      // Auto-kill after 3 seconds
-      setTimeout(() => {
-        if (!proc.killed) {
-          proc.kill();
-        }
-      }, 3000);
-      
-      proc.on('exit', (code, signal) => {
+      if (stderr) {
         console.log('');
-        if (stdout.includes('WebSocket server') || stdout.includes('listening on')) {
-          printSuccess('Native host started successfully!');
-          console.log(`Process exited (code: ${code}, signal: ${signal})`);
-        } else if (code === 0) {
-          printSuccess('Native host executable!');
-        } else {
-          printError(`Process exited with code: ${code}`);
-        }
-        
-        if (stderr) {
-          console.log('');
-          printWarn('Errors detected:');
-          console.log(stderr);
-        }
-        
-        console.log('');
-        printInfo('This test verifies the native host can start.');
-        printInfo('The actual connection will be made by Chrome extension.');
-      });
+        printWarn('Errors detected:');
+        console.log(stderr);
+      }
       
-    } catch (err) {
-      printError('Failed to execute native host');
-      console.log('Error:', err.message);
       console.log('');
-      printWarn('Chrome will also fail to start the native host.');
-      console.log('');
-      console.log('Possible solutions:');
-      console.log('  1. Check Node.js is installed and in PATH');
-      console.log('  2. Verify Node.js path in manifest matches installed location');
-      console.log(`  3. Current Node.js: ${process.execPath}`);
-      console.log(`  4. Manifest Node.js: ${nodePath}`);
-    }
-  } else {
-    printWarn('Test command only works on Windows with command-based manifest');
+      printInfo('This test verifies the native host can start.');
+      printInfo('The actual connection will be made by Chrome extension.');
+    });
+    
+  } catch (err) {
+    printError('Failed to execute native host');
+    console.log('Error:', err.message);
+    console.log('');
+    printWarn('Chrome will also fail to start the native host.');
   }
 }
 
