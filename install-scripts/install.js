@@ -805,15 +805,57 @@ function testNativeHost() {
     console.log('');
     
     try {
-      // Try to execute the command directly
-      const result = execSync(`"${nodePath}" "${serverPath}" --test`, {
-        encoding: 'utf-8',
-        timeout: 5000,
-        stdio: ['pipe', 'pipe', 'pipe']
+      // Spawn the process to see its output
+      printInfo('Starting native host (will auto-terminate after 3 seconds)...');
+      console.log('');
+      
+      const proc = spawn(nodePath, [serverPath], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true
       });
       
-      printSuccess('Native host executable!');
-      console.log('Output:', result);
+      let stdout = '';
+      let stderr = '';
+      
+      proc.stdout.on('data', (data) => {
+        stdout += data.toString();
+        process.stdout.write(data);
+      });
+      
+      proc.stderr.on('data', (data) => {
+        stderr += data.toString();
+        process.stderr.write(data);
+      });
+      
+      // Auto-kill after 3 seconds
+      setTimeout(() => {
+        if (!proc.killed) {
+          proc.kill();
+        }
+      }, 3000);
+      
+      proc.on('exit', (code, signal) => {
+        console.log('');
+        if (stdout.includes('WebSocket server') || stdout.includes('listening on')) {
+          printSuccess('Native host started successfully!');
+          console.log(`Process exited (code: ${code}, signal: ${signal})`);
+        } else if (code === 0) {
+          printSuccess('Native host executable!');
+        } else {
+          printError(`Process exited with code: ${code}`);
+        }
+        
+        if (stderr) {
+          console.log('');
+          printWarn('Errors detected:');
+          console.log(stderr);
+        }
+        
+        console.log('');
+        printInfo('This test verifies the native host can start.');
+        printInfo('The actual connection will be made by Chrome extension.');
+      });
+      
     } catch (err) {
       printError('Failed to execute native host');
       console.log('Error:', err.message);
