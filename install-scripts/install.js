@@ -436,25 +436,12 @@ function diagnose() {
   
   try {
     if (PLATFORM === 'win32') {
-      // Windows: Check for node.exe running browser-pilot-server.js
-      const output = execSync('tasklist /FI "IMAGENAME eq node.exe" /FO CSV /NH', { encoding: 'utf-8' });
-      const lines = output.split('\n').filter(line => line.includes('node.exe'));
-      
-      for (const line of lines) {
-        const match = line.match(/"node\.exe","(\d+)"/);
-        if (match) {
-          const pid = match[1];
-          try {
-            const cmdline = execSync(`wmic process where processid=${pid} get commandline /format:list`, { encoding: 'utf-8' });
-            if (cmdline.includes('browser-pilot-server.js')) {
-              serverRunning = true;
-              serverPid = pid;
-              break;
-            }
-          } catch {
-            // Continue checking other processes
-          }
-        }
+      // Windows: Use PowerShell Get-Process
+      const psCmd = `powershell -Command "Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*browser-pilot-server.js*' } | Select-Object -First 1 -ExpandProperty Id"`;
+      const output = execSync(psCmd, { encoding: 'utf-8' }).trim();
+      if (output && !isNaN(output)) {
+        serverRunning = true;
+        serverPid = output;
       }
     } else {
       // macOS/Linux: Use pgrep
