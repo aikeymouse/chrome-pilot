@@ -302,6 +302,28 @@ function registerNativeHost() {
   try {
     fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2), 'utf-8');
     printSuccess('Native host registered');
+    
+    // Verify the manifest on Windows
+    if (PLATFORM === 'win32') {
+      console.log('');
+      printInfo('Verifying manifest paths...');
+      
+      const nodePath = manifest.command[0].replace(/\//g, path.sep);
+      const serverPath = manifest.command[1].replace(/\//g, path.sep);
+      
+      if (!exists(nodePath)) {
+        printError(`Node.js not found at: ${nodePath}`);
+        printWarn('The manifest may not work. Node.js path must match where it is installed.');
+      } else {
+        printSuccess(`Node.js verified: ${nodePath}`);
+      }
+      
+      if (!exists(serverPath)) {
+        printError(`Server script not found at: ${serverPath}`);
+      } else {
+        printSuccess(`Server script verified: ${serverPath}`);
+      }
+    }
   } catch (err) {
     printError(`Failed to create manifest: ${err.message}`);
     throw err;
@@ -646,6 +668,7 @@ function showUsage() {
   console.log('Commands:');
   console.log('  install           Install ChromePilot (default)');
   console.log('  diagnose          Run diagnostic checks');
+  console.log('  test              Test native host execution (Windows)');
   console.log('  update-id <ID>    Update extension ID in manifest');
   console.log('  uninstall         Remove ChromePilot installation');
   console.log('  help              Show this help message');
@@ -746,11 +769,65 @@ function main() {
       doInstall();
       break;
       
+    case 'test':
+      testNativeHost();
+      break;
+      
     default:
       printError(`Unknown command: ${command}`);
       console.log('');
       showUsage();
       process.exit(1);
+  }
+}
+
+// Test native host
+function testNativeHost() {
+  console.log('');
+  printInfo('ChromePilot - Native Host Test');
+  console.log('==========================');
+  console.log('');
+  
+  const manifestFile = path.join(CHROME_DIR, `${NATIVE_HOST_NAME}.json`);
+  
+  if (!exists(manifestFile)) {
+    printError('Manifest not found. Run: node install.js install');
+    process.exit(1);
+  }
+  
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf-8'));
+  
+  if (PLATFORM === 'win32' && manifest.command) {
+    const nodePath = manifest.command[0].replace(/\//g, path.sep);
+    const serverPath = manifest.command[1].replace(/\//g, path.sep);
+    
+    printInfo(`Testing: ${nodePath} ${serverPath}`);
+    console.log('');
+    
+    try {
+      // Try to execute the command directly
+      const result = execSync(`"${nodePath}" "${serverPath}" --test`, {
+        encoding: 'utf-8',
+        timeout: 5000,
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+      
+      printSuccess('Native host executable!');
+      console.log('Output:', result);
+    } catch (err) {
+      printError('Failed to execute native host');
+      console.log('Error:', err.message);
+      console.log('');
+      printWarn('Chrome will also fail to start the native host.');
+      console.log('');
+      console.log('Possible solutions:');
+      console.log('  1. Check Node.js is installed and in PATH');
+      console.log('  2. Verify Node.js path in manifest matches installed location');
+      console.log(`  3. Current Node.js: ${process.execPath}`);
+      console.log(`  4. Manifest Node.js: ${nodePath}`);
+    }
+  } else {
+    printWarn('Test command only works on Windows with command-based manifest');
   }
 }
 
