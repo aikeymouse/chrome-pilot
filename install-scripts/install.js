@@ -561,19 +561,74 @@ function diagnose() {
   
   // Recent Logs
   const logsPath = path.join(INSTALL_DIR, 'native-host', 'logs');
+  console.log('Recent Logs:');
   if (exists(logsPath)) {
-    console.log('Recent Logs:');
+    console.log(`  Location: ${logsPath} ${okTag}`);
     try {
-      fs.readdirSync(logsPath)
-        .filter(file => file.endsWith('.log'))
-        .forEach(file => {
+      const logFiles = fs.readdirSync(logsPath)
+        .filter(file => file.endsWith('.log'));
+      
+      if (logFiles.length > 0) {
+        console.log(`  Files: ${logFiles.length} log file(s)`);
+        logFiles.forEach(file => {
           const stat = fs.statSync(path.join(logsPath, file));
-          console.log(`  ${file} (${stat.size} bytes)`);
+          console.log(`    - ${file} (${stat.size} bytes)`);
         });
+      } else {
+        console.log(`  Files: No log files`);
+      }
     } catch {
-      // Ignore
+      console.log(`  Files: Error reading directory`);
     }
+  } else {
+    console.log(`  Location: NOT FOUND ${errTag}`);
+  }
+  console.log('');
+}
+
+// Clear logs
+function clearLogs() {
+  console.log('');
+  printInfo('ChromePilot - Clear Logs');
+  console.log('==========================');
+  console.log('');
+  
+  const logsPath = path.join(INSTALL_DIR, 'native-host', 'logs');
+  
+  if (!exists(logsPath)) {
+    printWarn('Logs directory not found');
+    console.log(`Expected: ${logsPath}`);
+    process.exit(1);
+  }
+  
+  printInfo('Clearing session logs...');
+  
+  try {
+    const logFiles = fs.readdirSync(logsPath)
+      .filter(file => file.endsWith('.log'));
+    
+    if (logFiles.length === 0) {
+      printInfo('No log files found');
+      return;
+    }
+    
+    let deletedCount = 0;
+    logFiles.forEach(file => {
+      const filePath = path.join(logsPath, file);
+      try {
+        fs.unlinkSync(filePath);
+        deletedCount++;
+        console.log(`  Deleted: ${file}`);
+      } catch (err) {
+        printWarn(`Failed to delete: ${file}`);
+      }
+    });
+    
     console.log('');
+    printSuccess(`Cleared ${deletedCount} log file(s)`);
+  } catch (err) {
+    printError(`Failed to clear logs: ${err.message}`);
+    process.exit(1);
   }
 }
 
@@ -667,6 +722,7 @@ function showUsage() {
   console.log('Commands:');
   console.log('  install           Install ChromePilot (default)');
   console.log('  diagnose          Run diagnostic checks');
+  console.log('  clear-logs        Clear session log files');
   console.log('  update-id <ID>    Update extension ID in manifest');
   console.log('  uninstall         Remove ChromePilot installation');
   console.log('  help              Show this help message');
@@ -753,6 +809,10 @@ function main() {
       
     case 'diagnose':
       diagnose();
+      break;
+      
+    case 'clear-logs':
+      clearLogs();
       break;
       
     case 'update-id':
