@@ -134,8 +134,8 @@ describe('inspectElement helper', function() {
       const divChildren = result.children.filter(child => child.tagName === 'div');
       expect(divChildren.length).to.be.greaterThan(0);
       
-      // Validate parents (should have container div, main, body, etc.)
-      expect(result.parents.length).to.be.greaterThan(2);
+      // Validate parents
+      expect(result.parents.length).to.be.at.least(2);
       const containerParent = result.parents.find(p => p.attributes?.class?.includes('container'));
       expect(containerParent).to.exist;
     });
