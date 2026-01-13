@@ -391,14 +391,15 @@ async function closeTab(params) {
  * Call a predefined helper function (for CSP-restricted pages)
  */
 async function callHelper(params) {
-  let { tabId, functionName, args = [], timeout = 30000, focus = false } = params;
+  let { tabId, functionName, args = [], timeout = 30000, focus = false, _internal = false } = params;
   
   if (!functionName) {
     throw { code: 'MISSING_PARAMS', message: 'Missing required parameter: functionName' };
   }
   
-  // Prevent clients from calling internal UI functions (prefixed with _internal_)
-  if (functionName.startsWith('_internal_')) {
+  // Prevent external clients from calling internal functions (prefixed with _internal_)
+  // Internal service-worker code can bypass this check
+  if (!_internal && functionName.startsWith('_internal_')) {
     throw { 
       code: 'PERMISSION_DENIED', 
       message: `Function '${functionName}' is restricted to internal use only. Use public API functions like 'inspectElement' instead.` 
@@ -531,7 +532,8 @@ async function captureScreenshot(params) {
     const cropResult = await callHelper({
       tabId,
       functionName: '_internal_cropScreenshotToElements',
-      args: [dataUrl, boundsResult.value]
+      args: [dataUrl, boundsResult.value],
+      _internal: true
     });
     
     return { screenshots: cropResult.value };
