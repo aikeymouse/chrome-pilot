@@ -440,6 +440,52 @@ window.__chromePilotHelper = {
   },
 
   /**
+   * Inspect an element by selector and return its tree data
+   * Returns element information including parents, clicked element, and children
+   */
+  inspectElement(selector) {
+    const element = document.querySelector(selector);
+    if (!element) throw new Error(`Element not found: ${selector}`);
+    
+    if (!window.__chromePilotBuildElementInfo || !window.__chromePilotCalculateSiblingCount) {
+      throw new Error('Inspector mode not initialized. Call enableClickTracking() first.');
+    }
+    
+    const buildElementInfo = window.__chromePilotBuildElementInfo;
+    const calculateSiblingCount = window.__chromePilotCalculateSiblingCount;
+    
+    // Build element tree data
+    const parents = [];
+    let currentParent = element.parentElement;
+    while (currentParent && currentParent !== document.body) {
+      if (currentParent.id !== '__chromepilot-inspector-indicator') {
+        const parentInfo = buildElementInfo(currentParent, element);
+        parentInfo.siblingCount = calculateSiblingCount(currentParent);
+        parents.unshift(parentInfo);
+      }
+      currentParent = currentParent.parentElement;
+    }
+    
+    const clickedInfo = buildElementInfo(element, element);
+    clickedInfo.siblingCount = calculateSiblingCount(element);
+    
+    const children = Array.from(element.children)
+      .filter(child => child.id !== '__chromepilot-inspector-indicator')
+      .map(child => {
+        const childInfo = buildElementInfo(child, element);
+        childInfo.siblingCount = calculateSiblingCount(child);
+        return childInfo;
+      });
+    
+    return {
+      clickedElement: clickedInfo,
+      parents: parents,
+      children: children,
+      timestamp: Date.now()
+    };
+  },
+
+  /**
    * Enable click tracking for inspector mode
    */
   enableClickTracking() {
