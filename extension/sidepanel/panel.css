@@ -866,8 +866,7 @@ body {
   color: white;
 }
 
-.tree-badge-item.selected .badge-id,
-.tree-badge-item.selected .badge-class {
+.tree-badge-item.selected .badge-attrs {
   color: rgba(255,255,255,0.9);
 }
 
@@ -884,27 +883,28 @@ body {
 }
 
 .tree-badge-item.clicked.selected .badge-tag,
-.tree-badge-item.clicked.selected .badge-id,
-.tree-badge-item.clicked.selected .badge-class {
+.tree-badge-item.clicked.selected .badge-attrs {
   color: #000;
 }
 
-.badge-tag {
+.badge-attrs {
   font-family: 'Courier New', monospace;
   color: #d73a49;
   font-weight: 600;
 }
 
-.badge-id {
+.badge-attrs {
   font-family: 'Courier New', monospace;
-  color: #005cc5;
   font-size: 11px;
+  color: #6f42c1;
 }
 
-.badge-class {
-  font-family: 'Courier New', monospace;
-  color: #6f42c1;
-  font-size: 11px;
+.tree-badge-item.selected .badge-attrs {
+  color: rgba(255,255,255,0.9);
+}
+
+.tree-badge-item.clicked.selected .badge-attrs {
+  color: rgba(0,0,0,0.7);
 }
 
 .badge-label {
