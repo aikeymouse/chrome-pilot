@@ -536,13 +536,13 @@ window.__chromePilotHelper = {
       info.textContent = el.textContent ? el.textContent.trim() : '';
     }
     
-    // Collect relevant attributes
-    const relevantAttrs = ['id', 'class', 'name', 'type', 'href', 'src', 'data-test', 'data-testid', 'placeholder', 'value'];
-    relevantAttrs.forEach(attr => {
-      if (el.hasAttribute(attr)) {
-        info.attributes[attr] = el.getAttribute(attr);
+    // Collect all attributes
+    if (el.attributes) {
+      for (let i = 0; i < el.attributes.length; i++) {
+        const attr = el.attributes[i];
+        info.attributes[attr.name] = attr.value;
       }
-    });
+    }
     
     return info;
   };
