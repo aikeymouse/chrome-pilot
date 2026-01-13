@@ -39,7 +39,7 @@ async function startInspectorMode() {
     tabsSectionTitle.innerHTML = 'Page Inspector <span class="beta-badge">BETA</span>';
     inspectBtn.style.display = 'none';
     exitInspectorBtn.style.display = 'inline-flex';
-    inspectedElementContainer.style.display = 'block';
+    inspectedElementContainer.style.display = 'flex';
     inspectedElement = null;
     renderInspectedElement();
     
