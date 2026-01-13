@@ -454,14 +454,18 @@ window.__chromePilotHelper = {
       const selector = window.__chromePilotHelper.generateSelector(element);
       
       // Build element tree: parents -> clicked element -> children
-      const buildElementInfo = (el) => {
+      const buildElementInfo = (el, includeText = true) => {
         const info = {
           tagName: el.tagName.toLowerCase(),
           selector: window.__chromePilotHelper.generateSelector(el),
-          textContent: el.textContent ? el.textContent.trim() : '',
           attributes: {},
           isClickedElement: el === element
         };
+        
+        // Only include text for parents, clicked element, and children
+        if (includeText) {
+          info.textContent = el.textContent ? el.textContent.trim() : '';
+        }
         
         // Collect relevant attributes
         const relevantAttrs = ['id', 'class', 'name', 'type', 'href', 'src', 'data-test', 'data-testid', 'placeholder', 'value'];
