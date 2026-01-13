@@ -452,6 +452,9 @@ Call a predefined DOM helper function for CSP-restricted pages. This command is 
 12. **removeHighlights()** - Remove all highlights from the page (returns count)
 13. **getElementBounds(selector)** - Get position and size of all matching elements (returns array)
 14. **scrollElementIntoView(selector, index)** - Scroll element into view by index (returns bounds array)
+15. **inspectElement(selector)** - Inspect element and return tree structure with parents, clicked element, and children
+
+**Note:** Functions prefixed with `_internal_` are restricted to internal UI use only and cannot be called via the `callHelper` API. Use public functions like `inspectElement(selector)` for programmatic access.
 
 **Response:**
 ```json
@@ -683,6 +686,96 @@ Response (bounds array after scrolling):
   "error": null
 }
 ```
+
+**Inspector Mode Example:**
+
+Inspect element and get tree structure:
+```json
+{
+  "action": "callHelper",
+  "params": {
+    "functionName": "inspectElement",
+    "args": ["button.submit"]
+  },
+  "requestId": "req-012"
+}
+```
+
+Response:
+```json
+{
+  "requestId": "req-012",
+  "result": {
+    "value": {
+      "clickedElement": {
+        "tagName": "button",
+        "selector": "button.submit",
+        "attributes": {
+          "class": "submit primary-btn",
+          "type": "submit"
+        },
+        "textContent": "Submit Form",
+        "isClickedElement": true,
+        "siblingCount": 2
+      },
+      "parents": [
+        {
+          "tagName": "form",
+          "selector": "#contact-form",
+          "attributes": {
+            "id": "contact-form",
+            "class": "form-container"
+          },
+          "textContent": "...",
+          "isClickedElement": false,
+          "siblingCount": 1
+        },
+        {
+          "tagName": "div",
+          "selector": "div.form-wrapper",
+          "attributes": {
+            "class": "form-wrapper"
+          },
+          "textContent": "...",
+          "isClickedElement": false,
+          "siblingCount": 3
+        }
+      ],
+      "children": [
+        {
+          "tagName": "span",
+          "selector": "button.submit > span",
+          "attributes": {
+            "class": "icon"
+          },
+          "textContent": "✓",
+          "isClickedElement": false,
+          "siblingCount": 1
+        }
+      ],
+      "timestamp": 1736793600000
+    },
+    "type": "object"
+  },
+  "error": null
+}
+```
+
+**Notes:**
+- `inspectElement()` does not highlight the element (unlike clicking in inspector mode)
+- Works independently without requiring `enableClickTracking()` to be called first
+- Returns detailed tree structure including:
+  - `clickedElement`: The inspected element with full details
+  - `parents`: Array of parent elements up to `<body>` (ordered from outermost to innermost)
+  - `children`: Array of direct child elements
+  - `timestamp`: When the inspection occurred
+- Each element includes:
+  - `tagName`: Lowercase HTML tag name
+  - `selector`: Unique CSS selector
+  - `attributes`: Relevant attributes (id, class, name, type, href, src, data-*, placeholder, value)
+  - `textContent`: Trimmed text content
+  - `isClickedElement`: Boolean indicating if this is the inspected element
+  - `siblingCount`: Count of siblings with same tag and first class
 
 ### 8. Capture Screenshot
 

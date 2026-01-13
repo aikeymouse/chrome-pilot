@@ -136,10 +136,12 @@ body {
   font-size: 12px;
   transition: transform 0.2s;
   color: #666;
+  display: inline-block;
+  transform: rotate(-90deg);
 }
 
 .section-header.collapsed .collapse-icon {
-  transform: rotate(-90deg);
+  transform: rotate(0deg);
 }
 
 .section-header h2 {
@@ -661,3 +663,4 @@ body {
 .footer a:hover {
   text-decoration: underline;
 }
+

@@ -263,7 +263,7 @@ window.__chromePilotHelper = {
    * Called by captureScreenshot command in service-worker
    * Returns array of cropped screenshots as base64 data URLs
    */
-  async cropScreenshotToElements(fullScreenshotDataUrl, boundsArray) {
+  async _internal_cropScreenshotToElements(fullScreenshotDataUrl, boundsArray) {
     if (!boundsArray || boundsArray.length === 0) {
       return [];
     }
@@ -331,7 +331,346 @@ window.__chromePilotHelper = {
     }
     
     return results;
+  },
+
+  /**
+   * Generate a unique CSS selector for an element (internal helper)
+   */
+  _internal_generateSelector(element) {
+    // Helper to escape attribute values (only escape quotes, not the whole value)
+    const escapeAttributeValue = (value) => {
+      return value.replace(/"/g, '\\"');
+    };
+    
+    // Try ID first
+    if (element.id) {
+      const idSelector = `#${CSS.escape(element.id)}`;
+      if (document.querySelectorAll(idSelector).length === 1) {
+        return idSelector;
+      }
+    }
+    
+    // Try name attribute (common for form elements but can be on any element)
+    if (element.name) {
+      const nameSelector = `${element.tagName.toLowerCase()}[name="${escapeAttributeValue(element.name)}"]`;
+      const matches = document.querySelectorAll(nameSelector);
+      if (matches.length === 1) {
+        return nameSelector;
+      }
+      // If multiple matches and element has type attribute, try combining
+      if (element.type) {
+        const typeNameSelector = `${element.tagName.toLowerCase()}[type="${escapeAttributeValue(element.type)}"][name="${escapeAttributeValue(element.name)}"]`;
+        if (document.querySelectorAll(typeNameSelector).length === 1) {
+          return typeNameSelector;
+        }
+      }
+    }
+    
+    // Try any data-* attributes
+    for (const attr of element.attributes) {
+      if (attr.name.startsWith('data-')) {
+        const dataSelector = `[${attr.name}="${escapeAttributeValue(attr.value)}"]`;
+        if (document.querySelectorAll(dataSelector).length === 1) {
+          return dataSelector;
+        }
+      }
+    }
+    
+    // Try unique class combination
+    const classes = Array.from(element.classList);
+    if (classes.length > 0) {
+      const classSelector = '.' + classes.map(c => CSS.escape(c)).join('.');
+      if (document.querySelectorAll(classSelector).length === 1) {
+        return classSelector;
+      }
+    }
+    
+    // Try unique attribute combinations for specific elements
+    if (element.tagName === 'A' && element.href) {
+      const hrefSelector = `a[href="${escapeAttributeValue(element.getAttribute('href'))}"]`;
+      if (document.querySelectorAll(hrefSelector).length === 1) {
+        return hrefSelector;
+      }
+    }
+    
+    if (element.tagName === 'IMG' && element.src) {
+      const srcSelector = `img[src="${escapeAttributeValue(element.getAttribute('src'))}"]`;
+      if (document.querySelectorAll(srcSelector).length === 1) {
+        return srcSelector;
+      }
+    }
+    
+    // For option elements, try value attribute combined with parent select
+    if (element.tagName === 'OPTION' && element.value) {
+      const parent = element.closest('select');
+      if (parent) {
+        let parentSelector = '';
+        if (parent.id) {
+          parentSelector = `#${CSS.escape(parent.id)}`;
+        } else if (parent.name) {
+          parentSelector = `select[name="${escapeAttributeValue(parent.name)}"]`;
+        } else if (parent.classList.length > 0) {
+          parentSelector = 'select.' + Array.from(parent.classList).map(c => CSS.escape(c)).join('.');
+        }
+        
+        if (parentSelector) {
+          const optionSelector = `${parentSelector} option[value="${escapeAttributeValue(element.value)}"]`;
+          if (document.querySelectorAll(optionSelector).length === 1) {
+            return optionSelector;
+          }
+        }
+      }
+    }
+    
+    // Build nth-child path as last resort
+    const path = [];
+    let current = element;
+    while (current && current !== document.body) {
+      let selector = current.tagName.toLowerCase();
+      const parent = current.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.children);
+        const index = siblings.indexOf(current) + 1;
+        selector += `:nth-child(${index})`;
+      }
+      path.unshift(selector);
+      current = parent;
+    }
+    return path.join(' > ');
+  },
+
+  /**
+   * Inspect an element by selector and return its tree data
+   * Returns element information including parents, clicked element, and children
+   */
+  inspectElement(selector) {
+    const element = document.querySelector(selector);
+    if (!element) throw new Error(`Element not found: ${selector}`);
+    
+    return window.__chromePilotBuildElementTree(element, false);
+  },
+
+  /**
+   * Enable click tracking for inspector mode (Internal UI only - not available via callHelper)
+   */
+  _internal_enableClickTracking() {
+    // Click handler uses the globally stored buildElementTree
+    const buildElementTree = window.__chromePilotBuildElementTree;
+    
+    // Store click handler so we can remove it later
+    window.__chromePilotClickHandler = (event) => {
+
+      // Don't prevent default to avoid breaking page functionality
+      event.stopPropagation();
+      
+      const element = event.target;
+      const elementData = buildElementTree(element, true);
+      
+      // Send message via custom event (since we're in MAIN world, chrome.runtime is not available)
+      console.log('Dispatching element clicked event:', elementData);
+      window.dispatchEvent(new CustomEvent('__chromepilot_element_clicked', {
+        detail: elementData
+      }));
+    };
+    
+    // Add click listener to document
+    document.addEventListener('click', window.__chromePilotClickHandler, true);
+    
+    // Add visual indicator that inspector is active
+    const inspectorIndicator = document.createElement('div');
+    inspectorIndicator.id = '__chromepilot-inspector-indicator';
+    inspectorIndicator.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #1a73e8;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      z-index: 2147483647;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      pointer-events: none;
+    `;
+    inspectorIndicator.textContent = '🔍 Inspector Mode Active';
+    document.body.appendChild(inspectorIndicator);
+    
+    return { enabled: true };
+  },
+
+  /**
+   * Disable click tracking for inspector mode (Internal UI only - not available via callHelper)
+   */
+  _internal_disableClickTracking() {
+    // Remove click handler
+    if (window.__chromePilotClickHandler) {
+      document.removeEventListener('click', window.__chromePilotClickHandler, true);
+      window.__chromePilotClickHandler = null;
+    }
+    
+    // Remove visual indicator
+    const indicator = document.getElementById('__chromepilot-inspector-indicator');
+    if (indicator) {
+      indicator.remove();
+    }
+    
+    return { disabled: true };
   }
 };
 
+// Initialize helper functions for inspector mode
+// These are available globally so inspectElement can work without enableClickTracking
+(function() {
+  // Helper function to build element info
+  const buildElementInfo = (el, clickedElement = null, includeText = true) => {
+    const info = {
+      tagName: el.tagName.toLowerCase(),
+      selector: window.__chromePilotHelper._internal_generateSelector(el),
+      attributes: {},
+      isClickedElement: el === clickedElement
+    };
+    
+    // Only include text for parents, clicked element, and children
+    if (includeText) {
+      info.textContent = el.textContent ? el.textContent.trim() : '';
+    }
+    
+    // Collect all attributes
+    if (el.attributes) {
+      for (let i = 0; i < el.attributes.length; i++) {
+        const attr = el.attributes[i];
+        info.attributes[attr.name] = attr.value;
+      }
+    }
+    
+    return info;
+  };
+  
+  // Helper function to calculate sibling count
+  const calculateSiblingCount = (el) => {
+    if (!el.parentElement) return 0;
+    
+    const siblings = Array.from(el.parentElement.children);
+    const tagName = el.tagName.toLowerCase();
+    const firstClass = el.classList.length > 0 ? el.classList[0] : null;
+    
+    // Count siblings with same tag and first class (exclude inspector indicator)
+    return siblings.filter(sibling => {
+      if (sibling.id === '__chromepilot-inspector-indicator') return false;
+      if (sibling.tagName.toLowerCase() !== tagName) return false;
+      if (firstClass) {
+        return sibling.classList.contains(firstClass);
+      }
+      return sibling.classList.length === 0;
+    }).length;
+  };
+  
+  // Shared function to build element tree and optionally highlight
+  const buildElementTree = (element, shouldHighlight = true) => {
+    // Build element tree data
+    const parents = [];
+    let currentParent = element.parentElement;
+    while (currentParent && currentParent !== document.body) {
+      if (currentParent.id !== '__chromepilot-inspector-indicator') {
+        const parentInfo = buildElementInfo(currentParent, element);
+        parentInfo.siblingCount = calculateSiblingCount(currentParent);
+        parents.unshift(parentInfo);
+      }
+      currentParent = currentParent.parentElement;
+    }
+    
+    const clickedInfo = buildElementInfo(element, element);
+    clickedInfo.siblingCount = calculateSiblingCount(element);
+    
+    const children = Array.from(element.children)
+      .filter(child => child.id !== '__chromepilot-inspector-indicator')
+      .map(child => {
+        const childInfo = buildElementInfo(child, element);
+        childInfo.siblingCount = calculateSiblingCount(child);
+        return childInfo;
+      });
+    
+    // Highlight element if requested
+    if (shouldHighlight) {
+      // Clear any existing highlight timeout for this element
+      if (window.__chromePilotHighlightTimeout) {
+        clearTimeout(window.__chromePilotHighlightTimeout);
+      }
+      
+      // Clear any previously highlighted element
+      if (window.__chromePilotHighlightedElement) {
+        const prev = window.__chromePilotHighlightedElement;
+        prev.element.style.outline = prev.originalOutline;
+        prev.element.style.outlineOffset = prev.originalOutlineOffset;
+        if (!prev.originalOutline) {
+          prev.element.style.removeProperty('outline');
+        }
+        if (!prev.originalOutlineOffset) {
+          prev.element.style.removeProperty('outline-offset');
+        }
+      }
+      
+      // Store original styles
+      const originalStyles = {
+        element: element,
+        originalOutline: element.style.outline,
+        originalOutlineOffset: element.style.outlineOffset
+      };
+      window.__chromePilotHighlightedElement = originalStyles;
+      
+      // Apply highlight
+      element.style.setProperty('outline', '2px solid #1a73e8', 'important');
+      element.style.setProperty('outline-offset', '2px', 'important');
+      
+      // Set timeout to remove highlight
+      window.__chromePilotHighlightTimeout = setTimeout(() => {
+        element.style.outline = originalStyles.originalOutline;
+        element.style.outlineOffset = originalStyles.originalOutlineOffset;
+        if (!originalStyles.originalOutline) {
+          element.style.removeProperty('outline');
+        }
+        if (!originalStyles.originalOutlineOffset) {
+          element.style.removeProperty('outline-offset');
+        }
+        window.__chromePilotHighlightedElement = null;
+        window.__chromePilotHighlightTimeout = null;
+      }, 3000);
+    }
+    
+    return {
+      clickedElement: clickedInfo,
+      parents: parents,
+      children: children,
+      timestamp: Date.now()
+    };
+  };
+  
+  // Store helpers globally
+  window.__chromePilotBuildElementInfo = buildElementInfo;
+  window.__chromePilotCalculateSiblingCount = calculateSiblingCount;
+  window.__chromePilotBuildElementTree = buildElementTree;
+})();
+
+// Listen for simulate click events from inspector bridge
+window.addEventListener('__chromepilot_simulate_click', (event) => {
+  const { selector } = event.detail;
+  if (selector && window.__chromePilotBuildElementTree) {
+    try {
+      const element = document.querySelector(selector);
+      if (element) {
+        const elementData = window.__chromePilotBuildElementTree(element, true);
+        
+        // Dispatch the element data
+        window.dispatchEvent(new CustomEvent('__chromepilot_element_clicked', {
+          detail: elementData
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to simulate inspector click:', err);
+    }
+  }
+});
+
 console.log('ChromePilot DOM Helper loaded');
+

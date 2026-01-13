@@ -24,9 +24,14 @@ const sessionDetails = document.getElementById('session-details');
 const sessionId = document.getElementById('session-id');
 const sessionTimeout = document.getElementById('session-timeout');
 const tabsHeader = document.getElementById('tabs-header');
+const tabsSectionTitle = document.getElementById('tabs-section-title');
 const tabsCount = document.getElementById('tabs-count');
 const refreshTabsBtn = document.getElementById('refresh-tabs');
 const tabsList = document.getElementById('tabs-list');
+const inspectBtn = document.getElementById('inspect-btn');
+const exitInspectorBtn = document.getElementById('exit-inspector-btn');
+const inspectedElementContainer = document.getElementById('inspected-element-container');
+const inspectedElementContent = document.getElementById('inspected-element-content');
 const logRetentionInput = document.getElementById('log-retention');
 const clearLogsBtn = document.getElementById('clear-logs');
 const logsContainer = document.getElementById('logs-container');
@@ -60,6 +65,8 @@ function init() {
     e.stopPropagation(); // Prevent collapse toggle
     refreshTabs();
   });
+  inspectBtn.addEventListener('click', startInspectorMode);
+  exitInspectorBtn.addEventListener('click', exitInspectorMode);
   logRetentionInput.addEventListener('change', onLogRetentionChange);
   clearLogsBtn.addEventListener('click', clearLogs);
   
@@ -143,6 +150,11 @@ function handleBackgroundMessage(message) {
       
     case 'logEntry':
       handleLogEntry(message);
+      break;
+      
+    case 'elementClicked':
+      console.log('📍 Element clicked message received!', message);
+      handleElementClicked(message);
       break;
       
     default:
@@ -499,15 +511,28 @@ async function refreshTabs() {
  * Render tabs list
  */
 function renderTabs() {
-  // Update tab count
-  tabsCount.textContent = tabs.length;
+  const { isInspectorMode, inspectorTabId } = getInspectorState();
   
-  if (tabs.length === 0) {
+  // In inspector mode, show only the current inspected tab
+  let displayTabs = tabs;
+  if (isInspectorMode && inspectorTabId) {
+    displayTabs = tabs.filter(tab => tab.id === inspectorTabId);
+    if (displayTabs.length === 0) {
+      // Tab was closed, exit inspector mode
+      exitInspectorMode();
+      return;
+    }
+  }
+  
+  // Update tab count
+  tabsCount.textContent = displayTabs.length;
+  
+  if (displayTabs.length === 0) {
     tabsList.innerHTML = '<div class="empty-state">No tabs in current window</div>';
     return;
   }
   
-  const sortedTabs = [...tabs].sort((a, b) => a.index - b.index);
+  const sortedTabs = [...displayTabs].sort((a, b) => a.index - b.index);
   
   tabsList.innerHTML = sortedTabs.map(tab => `
     <div class="tab-item ${tab.active ? 'active' : ''}">
@@ -700,3 +725,4 @@ document.addEventListener('DOMContentLoaded', init);
 
 // Initial refresh of tabs
 setTimeout(refreshTabs, 500);
+

@@ -89,7 +89,9 @@ tests/
 │   ├── switch-tab.test.js    # Switch tab command
 │   ├── close-tab.test.js     # Close tab command
 │   ├── execute-js.test.js    # Execute JavaScript command
-│   └── call-helper.test.js   # Call helper function command
+│   ├── call-helper.test.js   # Call helper function command
+│   ├── inspect.test.js       # inspectElement helper function tests
+│   └── screenshot.test.js    # Screenshot capture tests
 ├── integration/               # Integration tests
 │   ├── session-lifecycle.test.js   # Session creation/management
 │   ├── chunked-responses.test.js   # Large data handling
@@ -122,8 +124,10 @@ tests/
 - Tab cleanup after each test
 - TAB_NOT_FOUND error validation
 - Timeout handling
+- inspectElement validation with detailed element tree inspection
+- Custom attribute collection for CSS selector generation
 
-**Duration:** ~5-10 seconds
+**Duration:** ~2-3 minutes (includes inspect.test.js which opens/closes test pages)
 
 ### Integration Tests
 - Session lifecycle management
@@ -391,11 +395,11 @@ Example GitHub Actions:
 ## Coverage
 
 Current test coverage:
-- **Unit Tests:** 7 files, ~60 assertions
-- **Integration Tests:** 5 files, ~50 assertions
+- **Unit Tests:** 9 files, ~180+ assertions
+- **Integration Tests:** 4 files, ~50 assertions
 - **UI Tests:** 1 file, ~10 assertions
 
-**Total:** 13 test files, ~120 assertions
+**Total:** 14 test files, ~240+ assertions
 
 ## Contributing
 

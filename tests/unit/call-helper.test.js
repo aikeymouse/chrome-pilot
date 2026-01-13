@@ -314,5 +314,46 @@ describe('callHelper command', function() {
       client.assertValidExecutionResponse(result);
       expect(result.value).to.be.false;
     });
+
+    it('should block calls to _internal_ prefixed functions', async function() {
+      try {
+        await client.callHelper('_internal_enableClickTracking', [], testTabId);
+        expect.fail('Should have thrown PERMISSION_DENIED error');
+      } catch (err) {
+        expect(err.message).to.include('PERMISSION_DENIED');
+        expect(err.message).to.include('_internal_enableClickTracking');
+        expect(err.message).to.include('restricted to internal use only');
+      }
+    });
+
+    it('should block calls to _internal_disableClickTracking', async function() {
+      try {
+        await client.callHelper('_internal_disableClickTracking', [], testTabId);
+        expect.fail('Should have thrown PERMISSION_DENIED error');
+      } catch (err) {
+        expect(err.message).to.include('PERMISSION_DENIED');
+        expect(err.message).to.include('_internal_disableClickTracking');
+      }
+    });
+
+    it('should block calls to _internal_cropScreenshotToElements', async function() {
+      try {
+        await client.callHelper('_internal_cropScreenshotToElements', ['data:image/png;base64,fake', []], testTabId);
+        expect.fail('Should have thrown PERMISSION_DENIED error');
+      } catch (err) {
+        expect(err.message).to.include('PERMISSION_DENIED');
+        expect(err.message).to.include('_internal_cropScreenshotToElements');
+      }
+    });
+
+    it('should block calls to _internal_generateSelector', async function() {
+      try {
+        await client.callHelper('_internal_generateSelector', [null], testTabId);
+        expect.fail('Should have thrown PERMISSION_DENIED error');
+      } catch (err) {
+        expect(err.message).to.include('PERMISSION_DENIED');
+        expect(err.message).to.include('_internal_generateSelector');
+      }
+    });
   });
 });

@@ -6,6 +6,7 @@
   <title>ChromePilot Panel</title>
   <link rel="stylesheet" href="material-symbols.css">
   <link rel="stylesheet" href="panel.css">
+  <link rel="stylesheet" href="inspector.css">
 </head>
 <body>
   <div class="container">
@@ -19,7 +20,7 @@
     </header>
 
     <!-- Connected Clients Section -->
-    <section class="section">
+    <section class="section" id="clients-section">
       <div class="section-header">
         <h2>Connected Clients</h2>
         <div class="section-header-right">
@@ -51,13 +52,19 @@
     </section>
 
     <!-- Current Window Tabs Section -->
-    <section class="section">
+    <section class="section" id="tabs-section">
       <div class="section-header collapsible" id="tabs-header">
         <div class="section-header-left">
           <span class="collapse-icon">▼</span>
-          <h2>Current Window Tabs</h2>
+          <h2 id="tabs-section-title">Current Window Tabs</h2>
         </div>
         <div class="section-header-right">
+          <button id="inspect-btn" class="inspect-btn" title="Start inspector mode">
+            INSPECT
+          </button>
+          <button id="exit-inspector-btn" class="exit-inspector-btn" style="display: none;" title="Exit inspector mode">
+            EXIT
+          </button>
           <button id="refresh-tabs" class="icon-btn" title="Refresh tabs">
             <span class="material-symbols-outlined">refresh</span>
           </button>
@@ -68,10 +75,19 @@
       <div id="tabs-list" class="tabs-list collapsed">
         <div class="empty-state">No tabs loaded</div>
       </div>
+      
+      <div id="inspected-element-container" style="display: none;">
+        <div class="inspected-element-header">
+          <h3>Element Details</h3>
+        </div>
+        <div id="inspected-element-content" class="inspected-element-content">
+          <div class="empty-state">Click an element on the page to inspect it</div>
+        </div>
+      </div>
     </section>
 
     <!-- Logs Section -->
-    <section class="section">
+    <section class="section" id="logs-section">
       <div class="section-header">
         <h2>Session Logs</h2>
         <div class="log-controls">
@@ -92,6 +108,7 @@
     </footer>
   </div>
 
+  <script src="inspector.js"></script>
   <script src="panel.js"></script>
 </body>
 </html>
