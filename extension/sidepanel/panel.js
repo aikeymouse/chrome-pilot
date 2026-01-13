@@ -858,13 +858,13 @@ function renderInspectedElement() {
     newTreeContainer.scrollLeft = scrollLeft;
   }
   
-  // Add click handlers to tree nodes
-  const treeNodes = inspectedElementContent.querySelectorAll('.tree-node');
-  treeNodes.forEach(node => {
-    node.addEventListener('click', (e) => {
+  // Add click handlers to tree badge items
+  const treeBadges = inspectedElementContent.querySelectorAll('.tree-badge-item');
+  treeBadges.forEach(badge => {
+    badge.addEventListener('click', (e) => {
       e.stopPropagation();
-      const elementType = node.dataset.elementType;
-      const elementIndex = parseInt(node.dataset.elementIndex);
+      const elementType = badge.dataset.elementType;
+      const elementIndex = parseInt(badge.dataset.elementIndex);
       
       // Update selected element based on type
       if (elementType === 'parent') {
@@ -889,54 +889,54 @@ function renderInspectedElement() {
 function buildElementTree() {
   const { parents, clickedElement, children } = inspectedElement;
   
-  let html = '<div class="tree-structure">';
+  let html = '<div class="tree-breadcrumb">';
   
-  // Render parents
+  // Render parents as badges
   parents.forEach((parent, index) => {
     const isSelected = selectedTreeElement === parent;
-    const indent = index * 16;
     html += `
-      <div class="tree-node ${isSelected ? 'selected' : ''}" 
+      <div class="tree-badge-item ${isSelected ? 'selected' : ''}" 
            data-element-type="parent" 
-           data-element-index="${index}"
-           style="padding-left: ${indent}px">
-        <span class="tree-tag">&lt;${escapeHtml(parent.tagName)}&gt;</span>
-        ${parent.attributes.id ? `<span class="tree-id">#${escapeHtml(parent.attributes.id)}</span>` : ''}
-        ${parent.attributes.class ? `<span class="tree-class">.${escapeHtml(parent.attributes.class.split(' ')[0])}</span>` : ''}
+           data-element-index="${index}">
+        <span class="badge-tag">&lt;${escapeHtml(parent.tagName)}&gt;</span>
+        ${parent.attributes.id ? `<span class="badge-id">#${escapeHtml(parent.attributes.id)}</span>` : ''}
+        ${parent.attributes.class ? `<span class="badge-class">.${escapeHtml(parent.attributes.class.split(' ')[0])}</span>` : ''}
       </div>
+      <span class="badge-separator">›</span>
     `;
   });
   
   // Render clicked element (highlighted)
   const isClickedSelected = selectedTreeElement === clickedElement;
-  const clickedIndent = parents.length * 16;
   html += `
-    <div class="tree-node clicked ${isClickedSelected ? 'selected' : ''}" 
+    <div class="tree-badge-item clicked ${isClickedSelected ? 'selected' : ''}" 
          data-element-type="clicked" 
-         data-element-index="0"
-         style="padding-left: ${clickedIndent}px">
-      <span class="tree-tag">&lt;${escapeHtml(clickedElement.tagName)}&gt;</span>
-      ${clickedElement.attributes.id ? `<span class="tree-id">#${escapeHtml(clickedElement.attributes.id)}</span>` : ''}
-      ${clickedElement.attributes.class ? `<span class="tree-class">.${escapeHtml(clickedElement.attributes.class.split(' ')[0])}</span>` : ''}
-      <span class="tree-badge">CLICKED</span>
+         data-element-index="0">
+      <span class="badge-tag">&lt;${escapeHtml(clickedElement.tagName)}&gt;</span>
+      ${clickedElement.attributes.id ? `<span class="badge-id">#${escapeHtml(clickedElement.attributes.id)}</span>` : ''}
+      ${clickedElement.attributes.class ? `<span class="badge-class">.${escapeHtml(clickedElement.attributes.class.split(' ')[0])}</span>` : ''}
+      <span class="badge-label">CLICKED</span>
     </div>
   `;
   
-  // Render children
-  const childIndent = (parents.length + 1) * 16;
-  children.forEach((child, index) => {
-    const isSelected = selectedTreeElement === child;
-    html += `
-      <div class="tree-node child ${isSelected ? 'selected' : ''}" 
-           data-element-type="child" 
-           data-element-index="${index}"
-           style="padding-left: ${childIndent}px">
-        <span class="tree-tag">&lt;${escapeHtml(child.tagName)}&gt;</span>
-        ${child.attributes.id ? `<span class="tree-id">#${escapeHtml(child.attributes.id)}</span>` : ''}
-        ${child.attributes.class ? `<span class="tree-class">.${escapeHtml(child.attributes.class.split(' ')[0])}</span>` : ''}
-      </div>
-    `;
-  });
+  // Render children section if there are any
+  if (children.length > 0) {
+    html += '<span class="badge-separator">›</span>';
+    html += '<div class="children-badges">';
+    children.forEach((child, index) => {
+      const isSelected = selectedTreeElement === child;
+      html += `
+        <div class="tree-badge-item child ${isSelected ? 'selected' : ''}" 
+             data-element-type="child" 
+             data-element-index="${index}">
+          <span class="badge-tag">&lt;${escapeHtml(child.tagName)}&gt;</span>
+          ${child.attributes.id ? `<span class="badge-id">#${escapeHtml(child.attributes.id)}</span>` : ''}
+          ${child.attributes.class ? `<span class="badge-class">.${escapeHtml(child.attributes.class.split(' ')[0])}</span>` : ''}
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
   
   html += '</div>';
   return html;
