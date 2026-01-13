@@ -739,6 +739,10 @@ async function startInspectorMode() {
     inspectorTabId = activeTab.id;
     isInspectorMode = true;
     
+    // Hide other sections
+    document.getElementById('clients-section').style.display = 'none';
+    document.getElementById('logs-section').style.display = 'none';
+    
     // Update UI
     tabsSectionTitle.textContent = 'Current Tab';
     inspectBtn.style.display = 'none';
@@ -780,6 +784,11 @@ function exitInspectorMode() {
   isInspectorMode = false;
   inspectorTabId = null;
   inspectedElement = null;
+  selectedTreeElement = null;
+  
+  // Show other sections
+  document.getElementById('clients-section').style.display = 'block';
+  document.getElementById('logs-section').style.display = 'block';
   
   // Update UI
   tabsSectionTitle.textContent = 'Current Window Tabs';
