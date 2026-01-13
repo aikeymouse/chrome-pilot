@@ -972,7 +972,7 @@ function buildElementDetails(element) {
       ${textContent ? `
         <div class="element-row">
           <label>Text:</label>
-          <span class="element-text">${escapeHtml(textContent.substring(0, 100))}${textContent.length > 100 ? '...' : ''}</span>
+          <span class="element-text" title="${escapeHtml(textContent)}">${escapeHtml(textContent.substring(0, 100))}${textContent.length > 100 ? '...' : ''}</span>
         </div>
       ` : ''}
       ${attributes && Object.keys(attributes).length > 0 ? `

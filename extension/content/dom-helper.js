@@ -458,9 +458,7 @@ window.__chromePilotHelper = {
         const info = {
           tagName: el.tagName.toLowerCase(),
           selector: window.__chromePilotHelper.generateSelector(el),
-          textContent: el.childNodes.length > 0 && el.childNodes[0].nodeType === 3 
-            ? el.childNodes[0].textContent.trim() 
-            : '',
+          textContent: el.textContent ? el.textContent.trim() : '',
           attributes: {},
           isClickedElement: el === element
         };

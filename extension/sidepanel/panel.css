@@ -787,8 +787,14 @@ body {
 
 .element-text {
   font-size: 13px;
-  color: #333;
+  color: #2e7d32;
   line-height: 1.5;
+  background: #e8f5e9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  cursor: help;
+  display: inline-block;
 }
 
 .element-attributes {
