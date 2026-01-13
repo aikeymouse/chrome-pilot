@@ -33,7 +33,7 @@ async function startInspectorMode() {
     const exitInspectorBtn = document.getElementById('exit-inspector-btn');
     const inspectedElementContainer = document.getElementById('inspected-element-container');
     
-    tabsSectionTitle.textContent = 'Current Tab';
+    tabsSectionTitle.innerHTML = 'Page Inspector <span class="beta-badge">BETA</span>';
     inspectBtn.style.display = 'none';
     exitInspectorBtn.style.display = 'inline-flex';
     inspectedElementContainer.style.display = 'block';
@@ -87,7 +87,7 @@ function exitInspectorMode() {
   const exitInspectorBtn = document.getElementById('exit-inspector-btn');
   const inspectedElementContainer = document.getElementById('inspected-element-container');
   
-  tabsSectionTitle.textContent = 'Current Window Tabs';
+  tabsSectionTitle.innerHTML = 'Current Window Tabs';
   inspectBtn.style.display = 'inline-flex';
   exitInspectorBtn.style.display = 'none';
   inspectedElementContainer.style.display = 'none';
