@@ -51,11 +51,11 @@
     </section>
 
     <!-- Current Window Tabs Section -->
-    <section class="section">
+    <section class="section" id="tabs-section">
       <div class="section-header collapsible" id="tabs-header">
         <div class="section-header-left">
           <span class="collapse-icon">▼</span>
-          <h2>Current Window Tabs</h2>
+          <h2 id="tabs-section-title">Current Window Tabs</h2>
         </div>
         <div class="section-header-right">
           <button id="refresh-tabs" class="icon-btn" title="Refresh tabs">
@@ -65,8 +65,28 @@
         </div>
       </div>
       
+      <div class="inspector-controls">
+        <button id="inspect-btn" class="inspect-btn" title="Start inspector mode">
+          <span class="material-symbols-outlined">search</span>
+          Inspect
+        </button>
+        <button id="exit-inspector-btn" class="exit-inspector-btn" style="display: none;" title="Exit inspector mode">
+          <span class="material-symbols-outlined">close</span>
+          Exit Inspector
+        </button>
+      </div>
+      
       <div id="tabs-list" class="tabs-list collapsed">
         <div class="empty-state">No tabs loaded</div>
+      </div>
+      
+      <div id="inspected-element-container" style="display: none;">
+        <div class="inspected-element-header">
+          <h3>Inspected Element</h3>
+        </div>
+        <div id="inspected-element-content" class="inspected-element-content">
+          <div class="empty-state">Click an element on the page to inspect it</div>
+        </div>
       </div>
     </section>
 

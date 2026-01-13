@@ -661,3 +661,152 @@ body {
 .footer a:hover {
   text-decoration: underline;
 }
+
+/* Inspector Mode Styles */
+.inspector-controls {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.inspect-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.inspect-btn:hover {
+  background: #1557b0;
+}
+
+.inspect-btn:active {
+  background: #0d47a1;
+}
+
+.inspect-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.exit-inspector-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #5f6368;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exit-inspector-btn:hover {
+  background: #4a4d50;
+}
+
+.exit-inspector-btn:active {
+  background: #3c4043;
+}
+
+.exit-inspector-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+#inspected-element-container {
+  margin-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.inspected-element-header {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.inspected-element-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.inspected-element-content {
+  padding: 12px 16px;
+}
+
+.element-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.element-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.element-row label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #5f6368;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.element-tag {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #d73a49;
+  font-weight: 600;
+}
+
+.element-selector {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  background: #f6f8fa;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #e1e4e8;
+  color: #24292e;
+  word-break: break-all;
+  display: block;
+}
+
+.element-text {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.element-attributes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attribute-item {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  padding: 4px 8px;
+  background: #f6f8fa;
+  border-radius: 3px;
+  color: #24292e;
+}
+
+.attribute-item strong {
+  color: #005cc5;
+}
+

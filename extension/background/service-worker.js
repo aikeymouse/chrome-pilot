@@ -222,6 +222,12 @@ async function handleCommand(sessionId, command) {
       case 'captureScreenshot':
         result = await captureScreenshot(params);
         break;
+      case 'enableInspector':
+        result = await enableInspector(params);
+        break;
+      case 'disableInspector':
+        result = await disableInspector(params);
+        break;
       default:
         throw new Error(`Unknown action: ${action}`);
     }
@@ -738,6 +744,77 @@ function broadcastSessionUpdate() {
 }
 
 /**
+ * Inspector Mode Functions
+ */
+
+/**
+ * Enable inspector mode on a tab
+ */
+async function enableInspector(params) {
+  let { tabId } = params;
+  
+  // If no tabId, use active tab
+  if (!tabId) {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length === 0) {
+      throw { code: 'TAB_NOT_FOUND', message: 'No active tab found' };
+    }
+    tabId = tabs[0].id;
+  }
+  
+  try {
+    // Inject dom-helper.js if not already injected
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['content/dom-helper.js'],
+      world: 'MAIN'
+    });
+    
+    // Enable click tracking
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => window.__chromePilotHelper.enableClickTracking(),
+      world: 'MAIN'
+    });
+    
+    return { enabled: true, tabId };
+  } catch (error) {
+    throw { code: 'INSPECTOR_ERROR', message: `Failed to enable inspector: ${error.message}` };
+  }
+}
+
+/**
+ * Disable inspector mode on a tab
+ */
+async function disableInspector(params) {
+  let { tabId } = params;
+  
+  // If no tabId, use active tab
+  if (!tabId) {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length === 0) {
+      throw { code: 'TAB_NOT_FOUND', message: 'No active tab found' };
+    }
+    tabId = tabs[0].id;
+  }
+  
+  try {
+    // Disable click tracking
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => window.__chromePilotHelper.disableClickTracking(),
+      world: 'MAIN'
+    });
+    
+    return { disabled: true, tabId };
+  } catch (error) {
+    // Ignore errors if script not injected or tab closed
+    console.warn('Failed to disable inspector:', error);
+    return { disabled: true, tabId };
+  }
+}
+
+/**
  * Tab event listeners
  */
 chrome.tabs.onCreated.addListener((tab) => {
@@ -882,9 +959,36 @@ chrome.runtime.onConnect.addListener((port) => {
           type: 'status',
           connected: !!nativePort
         });
+      } else if (message.action === 'enableInspector') {
+        try {
+          await enableInspector({ tabId: message.tabId });
+        } catch (error) {
+          console.error('Failed to enable inspector:', error);
+        }
+      } else if (message.action === 'disableInspector') {
+        try {
+          await disableInspector({ tabId: message.tabId });
+        } catch (error) {
+          console.error('Failed to disable inspector:', error);
+        }
       }
     });
   }
+});
+
+/**
+ * Handle messages from content scripts
+ */
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'elementClicked') {
+    // Forward element clicked event to side panel
+    broadcastToSidePanel({
+      type: 'elementClicked',
+      element: message.element,
+      tabId: sender.tab?.id
+    });
+  }
+  return false;
 });
 
 /**

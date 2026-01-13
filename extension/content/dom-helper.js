@@ -331,7 +331,140 @@ window.__chromePilotHelper = {
     }
     
     return results;
+  },
+
+  /**
+   * Generate a unique CSS selector for an element
+   */
+  generateSelector(element) {
+    // Try ID first
+    if (element.id) {
+      const idSelector = `#${CSS.escape(element.id)}`;
+      if (document.querySelectorAll(idSelector).length === 1) {
+        return idSelector;
+      }
+    }
+    
+    // Try unique class combination
+    const classes = Array.from(element.classList);
+    if (classes.length > 0) {
+      const classSelector = '.' + classes.map(c => CSS.escape(c)).join('.');
+      if (document.querySelectorAll(classSelector).length === 1) {
+        return classSelector;
+      }
+    }
+    
+    // Build nth-child path
+    const path = [];
+    let current = element;
+    while (current && current !== document.body) {
+      let selector = current.tagName.toLowerCase();
+      const parent = current.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.children);
+        const index = siblings.indexOf(current) + 1;
+        selector += `:nth-child(${index})`;
+      }
+      path.unshift(selector);
+      current = parent;
+    }
+    return path.join(' > ');
+  },
+
+  /**
+   * Enable click tracking for inspector mode
+   */
+  enableClickTracking() {
+    // Store click handler so we can remove it later
+    window.__chromePilotClickHandler = (event) => {
+      // Don't prevent default to avoid breaking page functionality
+      event.stopPropagation();
+      
+      const element = event.target;
+      
+      // Generate selector
+      const selector = window.__chromePilotHelper.generateSelector(element);
+      
+      // Get element details
+      const elementData = {
+        tagName: element.tagName.toLowerCase(),
+        selector: selector,
+        textContent: element.textContent ? element.textContent.trim() : '',
+        attributes: {}
+      };
+      
+      // Collect relevant attributes
+      const relevantAttrs = ['id', 'class', 'name', 'type', 'href', 'src', 'data-test', 'data-testid'];
+      relevantAttrs.forEach(attr => {
+        if (element.hasAttribute(attr)) {
+          elementData.attributes[attr] = element.getAttribute(attr);
+        }
+      });
+      
+      // Highlight element for 1 second
+      const originalStyles = {
+        outline: element.style.outline,
+        outlineOffset: element.style.outlineOffset
+      };
+      element.style.outline = '2px solid #1a73e8';
+      element.style.outlineOffset = '2px';
+      setTimeout(() => {
+        element.style.outline = originalStyles.outline;
+        element.style.outlineOffset = originalStyles.outlineOffset;
+      }, 1000);
+      
+      // Send message to background
+      chrome.runtime.sendMessage({
+        type: 'elementClicked',
+        element: elementData
+      });
+    };
+    
+    // Add click listener to document
+    document.addEventListener('click', window.__chromePilotClickHandler, true);
+    
+    // Add visual indicator that inspector is active
+    const inspectorIndicator = document.createElement('div');
+    inspectorIndicator.id = '__chromepilot-inspector-indicator';
+    inspectorIndicator.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #1a73e8;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      z-index: 2147483647;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      pointer-events: none;
+    `;
+    inspectorIndicator.textContent = '🔍 Inspector Mode Active';
+    document.body.appendChild(inspectorIndicator);
+    
+    return { enabled: true };
+  },
+
+  /**
+   * Disable click tracking for inspector mode
+   */
+  disableClickTracking() {
+    // Remove click handler
+    if (window.__chromePilotClickHandler) {
+      document.removeEventListener('click', window.__chromePilotClickHandler, true);
+      window.__chromePilotClickHandler = null;
+    }
+    
+    // Remove visual indicator
+    const indicator = document.getElementById('__chromepilot-inspector-indicator');
+    if (indicator) {
+      indicator.remove();
+    }
+    
+    return { disabled: true };
   }
 };
 
 console.log('ChromePilot DOM Helper loaded');
+

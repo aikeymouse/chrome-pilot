@@ -10,6 +10,9 @@ let tabs = [];
 let allLogs = new Map(); // Store logs per session: sessionId -> logs array
 let logRetention = 100;
 let countdownInterval = null;
+let isInspectorMode = false;
+let inspectorTabId = null;
+let inspectedElement = null;
 
 // DOM Elements
 const statusBadge = document.getElementById('status-badge');
@@ -24,9 +27,14 @@ const sessionDetails = document.getElementById('session-details');
 const sessionId = document.getElementById('session-id');
 const sessionTimeout = document.getElementById('session-timeout');
 const tabsHeader = document.getElementById('tabs-header');
+const tabsSectionTitle = document.getElementById('tabs-section-title');
 const tabsCount = document.getElementById('tabs-count');
 const refreshTabsBtn = document.getElementById('refresh-tabs');
 const tabsList = document.getElementById('tabs-list');
+const inspectBtn = document.getElementById('inspect-btn');
+const exitInspectorBtn = document.getElementById('exit-inspector-btn');
+const inspectedElementContainer = document.getElementById('inspected-element-container');
+const inspectedElementContent = document.getElementById('inspected-element-content');
 const logRetentionInput = document.getElementById('log-retention');
 const clearLogsBtn = document.getElementById('clear-logs');
 const logsContainer = document.getElementById('logs-container');
@@ -60,6 +68,8 @@ function init() {
     e.stopPropagation(); // Prevent collapse toggle
     refreshTabs();
   });
+  inspectBtn.addEventListener('click', startInspectorMode);
+  exitInspectorBtn.addEventListener('click', exitInspectorMode);
   logRetentionInput.addEventListener('change', onLogRetentionChange);
   clearLogsBtn.addEventListener('click', clearLogs);
   
@@ -143,6 +153,10 @@ function handleBackgroundMessage(message) {
       
     case 'logEntry':
       handleLogEntry(message);
+      break;
+      
+    case 'elementClicked':
+      handleElementClicked(message);
       break;
       
     default:
@@ -499,15 +513,26 @@ async function refreshTabs() {
  * Render tabs list
  */
 function renderTabs() {
-  // Update tab count
-  tabsCount.textContent = tabs.length;
+  // In inspector mode, show only the current inspected tab
+  let displayTabs = tabs;
+  if (isInspectorMode && inspectorTabId) {
+    displayTabs = tabs.filter(tab => tab.id === inspectorTabId);
+    if (displayTabs.length === 0) {
+      // Tab was closed, exit inspector mode
+      exitInspectorMode();
+      return;
+    }
+  }
   
-  if (tabs.length === 0) {
+  // Update tab count
+  tabsCount.textContent = displayTabs.length;
+  
+  if (displayTabs.length === 0) {
     tabsList.innerHTML = '<div class="empty-state">No tabs in current window</div>';
     return;
   }
   
-  const sortedTabs = [...tabs].sort((a, b) => a.index - b.index);
+  const sortedTabs = [...displayTabs].sort((a, b) => a.index - b.index);
   
   tabsList.innerHTML = sortedTabs.map(tab => `
     <div class="tab-item ${tab.active ? 'active' : ''}">
@@ -694,9 +719,134 @@ function escapeHtml(text) {
 }
 
 /**
+ * Inspector Mode Functions
+ */
+
+/**
+ * Start inspector mode
+ */
+async function startInspectorMode() {
+  try {
+    // Get active tab
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!activeTab) {
+      console.error('No active tab found');
+      return;
+    }
+    
+    inspectorTabId = activeTab.id;
+    isInspectorMode = true;
+    
+    // Update UI
+    tabsSectionTitle.textContent = 'Current Tab';
+    inspectBtn.style.display = 'none';
+    exitInspectorBtn.style.display = 'inline-flex';
+    inspectedElementContainer.style.display = 'block';
+    inspectedElement = null;
+    renderInspectedElement();
+    
+    // Filter tabs to show only current tab
+    renderTabs();
+    
+    // Send message to background to enable inspector
+    port.postMessage({
+      action: 'enableInspector',
+      tabId: inspectorTabId
+    });
+    
+    console.log('Inspector mode started for tab:', inspectorTabId);
+  } catch (error) {
+    console.error('Failed to start inspector mode:', error);
+  }
+}
+
+/**
+ * Exit inspector mode
+ */
+function exitInspectorMode() {
+  if (!isInspectorMode) return;
+  
+  // Send message to background to disable inspector
+  if (inspectorTabId) {
+    port.postMessage({
+      action: 'disableInspector',
+      tabId: inspectorTabId
+    });
+  }
+  
+  // Reset state
+  isInspectorMode = false;
+  inspectorTabId = null;
+  inspectedElement = null;
+  
+  // Update UI
+  tabsSectionTitle.textContent = 'Current Window Tabs';
+  inspectBtn.style.display = 'inline-flex';
+  exitInspectorBtn.style.display = 'none';
+  inspectedElementContainer.style.display = 'none';
+  
+  // Restore full tabs list
+  renderTabs();
+  
+  console.log('Inspector mode exited');
+}
+
+/**
+ * Handle element clicked message from background
+ */
+function handleElementClicked(message) {
+  if (!isInspectorMode) return;
+  
+  inspectedElement = message.element;
+  renderInspectedElement();
+}
+
+/**
+ * Render inspected element
+ */
+function renderInspectedElement() {
+  if (!inspectedElement) {
+    inspectedElementContent.innerHTML = '<div class="empty-state">Click an element on the page to inspect it</div>';
+    return;
+  }
+  
+  const { tagName, selector, textContent, attributes } = inspectedElement;
+  
+  inspectedElementContent.innerHTML = `
+    <div class="element-detail">
+      <div class="element-row">
+        <label>Tag:</label>
+        <span class="element-tag">${escapeHtml(tagName)}</span>
+      </div>
+      <div class="element-row">
+        <label>Selector:</label>
+        <code class="element-selector">${escapeHtml(selector)}</code>
+      </div>
+      ${textContent ? `
+        <div class="element-row">
+          <label>Text:</label>
+          <span class="element-text">${escapeHtml(textContent.substring(0, 100))}${textContent.length > 100 ? '...' : ''}</span>
+        </div>
+      ` : ''}
+      ${attributes && Object.keys(attributes).length > 0 ? `
+        <div class="element-row">
+          <label>Attributes:</label>
+          <div class="element-attributes">
+            ${Object.entries(attributes).map(([key, value]) => 
+              `<div class="attribute-item"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</div>`
+            ).join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+/**
  * Initialize on load
  */
 document.addEventListener('DOMContentLoaded', init);
 
 // Initial refresh of tabs
 setTimeout(refreshTabs, 500);
+
