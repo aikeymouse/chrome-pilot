@@ -2,6 +2,10 @@
 
 Cross-platform installation tool for ChromePilot native host.
 
+## Extension Panel
+
+![ChromePilot Extension Panel](../docs/chromepilot_extensions.png)
+
 ## Requirements
 
 - Node.js 18+ and npm

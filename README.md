@@ -2,12 +2,24 @@
 
 Remote Chrome tab control via WebSocket API with session management and side panel UI.
 
+[![Patreon](https://img.shields.io/badge/Support-Patreon-orange?logo=patreon)](https://www.patreon.com/aikeymouse)
+
+## Screenshots
+
+### Session Logs
+![Session Logs](docs/chromepilot_session_logs.png)
+
+### Inspector Mode
+![Inspector Mode](docs/chromepilot_inspector_mode.png)
+
 ## Features
 
 - **WebSocket API**: Control Chrome tabs remotely via WebSocket connection
 - **Session Management**: Create sessions with configurable timeouts, resume existing sessions
 - **Tab Operations**: List, open, navigate, switch tabs in current active window
 - **JavaScript Execution**: Execute JavaScript in tabs with configurable timeout and result return
+- **Inspector Mode**: Interactive element inspection with detailed DOM tree analysis and CSS selectors
+- **Helper Functions**: Execute CSP-safe helper functions for screenshots, element inspection, and DOM manipulation
 - **Side Panel UI**: Monitor connected clients, view session details, track logs in real-time
 - **Per-Session Logging**: All requests/responses logged to dedicated session files
 - **Chunked Messages**: Handle large results with automatic 1MB chunking
@@ -23,37 +35,7 @@ Client App (WebSocket) ←→ Node.js Native Host ←→ Chrome Extension (Servi
 
 ## Installation
 
-### Prerequisites
-
-- Node.js 18+ installed
-- Google Chrome browser
-- macOS, Linux, or Windows
-
-### Install Steps
-
-1. **Clone the repository**
-   ```bash
-   cd chrome-driver-extension
-   ```
-
-2. **Run installation script**
-   
-   **All Platforms:**
-   ```bash
-   cd install-scripts
-   node install.js
-   ```
-
-3. **Load extension in Chrome**
-   - Open Chrome and go to `chrome://extensions/`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select the `extension/` folder
-   - Note the extension ID and update it in native host manifest if needed
-
-4. **Open Side Panel**
-   - Click the extension icon in Chrome toolbar
-   - Side panel will open showing connection status
+See [INSTALL.md](INSTALL.md) for complete installation instructions.
 
 ## Usage
 
@@ -159,21 +141,6 @@ For large results (>1MB), responses are chunked:
 }
 ```
 
-## Updating
-
-To update to the latest version:
-
-```bash
-cd install-scripts
-node install.js
-```
-
-This will:
-- Preserve existing session logs during upgrade
-- Update the native host
-- Restore logs from backup
-- Reinstall dependencies
-
 ## Configuration
 
 ### Log Retention
@@ -192,59 +159,11 @@ Set per-session when creating connection:
 
 ## Development
 
-### Run Native Host Locally
-
-```bash
-cd native-host
-npm install
-npm start
-```
-
-### Debug
-
-View native host logs:
-```bash
-tail -f native-host/logs/session-*.log
-```
-
-Chrome extension console:
-- Right-click extension icon → "Inspect popup"
-- Or view service worker in `chrome://extensions/`
+See [docs/dev/DEVELOPMENT.md](docs/dev/DEVELOPMENT.md) for development setup and guidelines.
 
 ## Protocol Documentation
 
 See [docs/PROTOCOL.md](docs/PROTOCOL.md) for complete API documentation.
-
-## Troubleshooting
-
-### Extension can't connect to native host
-
-1. Check native host is installed:
-   ```bash
-   ls -la ~/.chrome-driver-extension/
-   ```
-
-2. Verify native messaging manifest:
-   - macOS: `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.chromepilot.extension.json`
-   - Linux: `~/.config/google-chrome/NativeMessagingHosts/`
-   - Windows: Check registry key
-
-3. Check extension ID matches in native host manifest
-
-### WebSocket connection fails
-
-1. Verify native host is running:
-   ```bash
-   lsof -i :9000
-   ```
-
-2. Check firewall settings allow localhost:9000
-
-### Commands not executing
-
-1. Check Side Panel for error messages
-2. Verify tab still exists (returns error if closed)
-3. Check session hasn't expired
 
 ## License
 
