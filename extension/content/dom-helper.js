@@ -447,42 +447,11 @@ window.__chromePilotHelper = {
     const element = document.querySelector(selector);
     if (!element) throw new Error(`Element not found: ${selector}`);
     
-    if (!window.__chromePilotBuildElementInfo || !window.__chromePilotCalculateSiblingCount) {
+    if (!window.__chromePilotBuildElementTree) {
       throw new Error('Inspector mode not initialized. Call enableClickTracking() first.');
     }
     
-    const buildElementInfo = window.__chromePilotBuildElementInfo;
-    const calculateSiblingCount = window.__chromePilotCalculateSiblingCount;
-    
-    // Build element tree data
-    const parents = [];
-    let currentParent = element.parentElement;
-    while (currentParent && currentParent !== document.body) {
-      if (currentParent.id !== '__chromepilot-inspector-indicator') {
-        const parentInfo = buildElementInfo(currentParent, element);
-        parentInfo.siblingCount = calculateSiblingCount(currentParent);
-        parents.unshift(parentInfo);
-      }
-      currentParent = currentParent.parentElement;
-    }
-    
-    const clickedInfo = buildElementInfo(element, element);
-    clickedInfo.siblingCount = calculateSiblingCount(element);
-    
-    const children = Array.from(element.children)
-      .filter(child => child.id !== '__chromepilot-inspector-indicator')
-      .map(child => {
-        const childInfo = buildElementInfo(child, element);
-        childInfo.siblingCount = calculateSiblingCount(child);
-        return childInfo;
-      });
-    
-    return {
-      clickedElement: clickedInfo,
-      parents: parents,
-      children: children,
-      timestamp: Date.now()
-    };
+    return window.__chromePilotBuildElementTree(element, false);
   },
 
   /**
@@ -533,37 +502,23 @@ window.__chromePilotHelper = {
       }).length;
     };
     
-    // Store helpers globally so simulate click can use them
-    window.__chromePilotBuildElementInfo = buildElementInfo;
-    window.__chromePilotCalculateSiblingCount = calculateSiblingCount;
-    
-    // Store click handler so we can remove it later
-    window.__chromePilotClickHandler = (event) => {
-      // Don't prevent default to avoid breaking page functionality
-      event.stopPropagation();
-      
-      const element = event.target;
-      
-      // Get parent chain (up to body)
+    // Shared function to build element tree and optionally highlight
+    const buildElementTree = (element, shouldHighlight = true) => {
+      // Build element tree data
       const parents = [];
       let currentParent = element.parentElement;
       while (currentParent && currentParent !== document.body) {
-        // Skip inspector indicator
-        if (currentParent.id === '__chromepilot-inspector-indicator') {
-          currentParent = currentParent.parentElement;
-          continue;
+        if (currentParent.id !== '__chromepilot-inspector-indicator') {
+          const parentInfo = buildElementInfo(currentParent, element);
+          parentInfo.siblingCount = calculateSiblingCount(currentParent);
+          parents.unshift(parentInfo);
         }
-        const parentInfo = buildElementInfo(currentParent, element);
-        parentInfo.siblingCount = calculateSiblingCount(currentParent);
-        parents.unshift(parentInfo);
         currentParent = currentParent.parentElement;
       }
       
-      // Get clicked element info
       const clickedInfo = buildElementInfo(element, element);
       clickedInfo.siblingCount = calculateSiblingCount(element);
       
-      // Get children (direct children only, exclude inspector indicator)
       const children = Array.from(element.children)
         .filter(child => child.id !== '__chromepilot-inspector-indicator')
         .map(child => {
@@ -572,32 +527,46 @@ window.__chromePilotHelper = {
           return childInfo;
         });
       
-      // Get element details
-      const elementData = {
+      // Highlight element if requested
+      if (shouldHighlight) {
+        const originalStyles = {
+          outline: element.style.outline,
+          outlineOffset: element.style.outlineOffset
+        };
+        element.style.setProperty('outline', '2px solid #1a73e8', 'important');
+        element.style.setProperty('outline-offset', '2px', 'important');
+        setTimeout(() => {
+          element.style.outline = originalStyles.outline;
+          element.style.outlineOffset = originalStyles.outlineOffset;
+          if (!originalStyles.outline) {
+            element.style.removeProperty('outline');
+          }
+          if (!originalStyles.outlineOffset) {
+            element.style.removeProperty('outline-offset');
+          }
+        }, 3000);
+      }
+      
+      return {
         clickedElement: clickedInfo,
         parents: parents,
         children: children,
         timestamp: Date.now()
       };
+    };
+    
+    // Store helpers globally so they can be reused
+    window.__chromePilotBuildElementInfo = buildElementInfo;
+    window.__chromePilotCalculateSiblingCount = calculateSiblingCount;
+    window.__chromePilotBuildElementTree = buildElementTree;
+    
+    // Store click handler so we can remove it later
+    window.__chromePilotClickHandler = (event) => {
+      // Don't prevent default to avoid breaking page functionality
+      event.stopPropagation();
       
-      // Highlight element for 3 seconds
-      const originalStyles = {
-        outline: element.style.outline,
-        outlineOffset: element.style.outlineOffset
-      };
-      element.style.setProperty('outline', '2px solid #1a73e8', 'important');
-      element.style.setProperty('outline-offset', '2px', 'important');
-      setTimeout(() => {
-        element.style.outline = originalStyles.outline;
-        element.style.outlineOffset = originalStyles.outlineOffset;
-        // Remove important flag by resetting
-        if (!originalStyles.outline) {
-          element.style.removeProperty('outline');
-        }
-        if (!originalStyles.outlineOffset) {
-          element.style.removeProperty('outline-offset');
-        }
-      }, 3000);
+      const element = event.target;
+      const elementData = buildElementTree(element, true);
       
       // Send message via custom event (since we're in MAIN world, chrome.runtime is not available)
       console.log('Dispatching element clicked event:', elementData);
@@ -655,60 +624,11 @@ window.__chromePilotHelper = {
 // Listen for simulate click events from inspector bridge
 window.addEventListener('__chromepilot_simulate_click', (event) => {
   const { selector } = event.detail;
-  if (selector && window.__chromePilotBuildElementInfo && window.__chromePilotCalculateSiblingCount) {
+  if (selector && window.__chromePilotBuildElementTree) {
     try {
       const element = document.querySelector(selector);
       if (element) {
-        const buildElementInfo = window.__chromePilotBuildElementInfo;
-        const calculateSiblingCount = window.__chromePilotCalculateSiblingCount;
-        
-        // Build element tree data directly
-        const parents = [];
-        let currentParent = element.parentElement;
-        while (currentParent && currentParent !== document.body) {
-          if (currentParent.id !== '__chromepilot-inspector-indicator') {
-            const parentInfo = buildElementInfo(currentParent, element);
-            parentInfo.siblingCount = calculateSiblingCount(currentParent);
-            parents.unshift(parentInfo);
-          }
-          currentParent = currentParent.parentElement;
-        }
-        
-        const clickedInfo = buildElementInfo(element, element);
-        clickedInfo.siblingCount = calculateSiblingCount(element);
-        
-        const children = Array.from(element.children)
-          .filter(child => child.id !== '__chromepilot-inspector-indicator')
-          .map(child => {
-            const childInfo = buildElementInfo(child, element);
-            childInfo.siblingCount = calculateSiblingCount(child);
-            return childInfo;
-          });
-        
-        const elementData = {
-          clickedElement: clickedInfo,
-          parents: parents,
-          children: children,
-          timestamp: Date.now()
-        };
-        
-        // Highlight element
-        const originalStyles = {
-          outline: element.style.outline,
-          outlineOffset: element.style.outlineOffset
-        };
-        element.style.setProperty('outline', '2px solid #1a73e8', 'important');
-        element.style.setProperty('outline-offset', '2px', 'important');
-        setTimeout(() => {
-          element.style.outline = originalStyles.outline;
-          element.style.outlineOffset = originalStyles.outlineOffset;
-          if (!originalStyles.outline) {
-            element.style.removeProperty('outline');
-          }
-          if (!originalStyles.outlineOffset) {
-            element.style.removeProperty('outline-offset');
-          }
-        }, 3000);
+        const elementData = window.__chromePilotBuildElementTree(element, true);
         
         // Dispatch the element data
         window.dispatchEvent(new CustomEvent('__chromepilot_element_clicked', {
