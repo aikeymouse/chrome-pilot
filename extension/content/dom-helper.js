@@ -413,11 +413,11 @@ window.__chromePilotHelper = {
         element.style.outlineOffset = originalStyles.outlineOffset;
       }, 1000);
       
-      // Send message to background
-      chrome.runtime.sendMessage({
-        type: 'elementClicked',
-        element: elementData
-      });
+      // Send message via custom event (since we're in MAIN world, chrome.runtime is not available)
+      console.log('Dispatching element clicked event:', elementData);
+      window.dispatchEvent(new CustomEvent('__chromepilot_element_clicked', {
+        detail: elementData
+      }));
     };
     
     // Add click listener to document

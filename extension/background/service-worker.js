@@ -763,7 +763,14 @@ async function enableInspector(params) {
   }
   
   try {
-    // Inject dom-helper.js if not already injected
+    // Inject inspector bridge (ISOLATED world) to relay messages
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['content/inspector-bridge.js'],
+      world: 'ISOLATED'
+    });
+    
+    // Inject dom-helper.js (MAIN world) if not already injected
     await chrome.scripting.executeScript({
       target: { tabId },
       files: ['content/dom-helper.js'],
@@ -777,8 +784,10 @@ async function enableInspector(params) {
       world: 'MAIN'
     });
     
+    console.log('Inspector enabled on tab:', tabId);
     return { enabled: true, tabId };
   } catch (error) {
+    console.error('Failed to enable inspector:', error);
     throw { code: 'INSPECTOR_ERROR', message: `Failed to enable inspector: ${error.message}` };
   }
 }
@@ -980,7 +989,9 @@ chrome.runtime.onConnect.addListener((port) => {
  * Handle messages from content scripts
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Message from content script:', message, 'sender:', sender);
   if (message.type === 'elementClicked') {
+    console.log('Element clicked, forwarding to side panel');
     // Forward element clicked event to side panel
     broadcastToSidePanel({
       type: 'elementClicked',

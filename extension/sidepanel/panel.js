@@ -156,6 +156,7 @@ function handleBackgroundMessage(message) {
       break;
       
     case 'elementClicked':
+      console.log('📍 Element clicked message received!', message);
       handleElementClicked(message);
       break;
       
@@ -795,9 +796,14 @@ function exitInspectorMode() {
  * Handle element clicked message from background
  */
 function handleElementClicked(message) {
-  if (!isInspectorMode) return;
+  console.log('Element clicked received:', message);
+  if (!isInspectorMode) {
+    console.warn('Not in inspector mode, ignoring element click');
+    return;
+  }
   
   inspectedElement = message.element;
+  console.log('Inspected element set:', inspectedElement);
   renderInspectedElement();
 }
 
@@ -805,12 +811,14 @@ function handleElementClicked(message) {
  * Render inspected element
  */
 function renderInspectedElement() {
+  console.log('Rendering inspected element:', inspectedElement);
   if (!inspectedElement) {
     inspectedElementContent.innerHTML = '<div class="empty-state">Click an element on the page to inspect it</div>';
     return;
   }
   
   const { tagName, selector, textContent, attributes } = inspectedElement;
+  console.log('Element details:', { tagName, selector, textContent, attributes });
   
   inspectedElementContent.innerHTML = `
     <div class="element-detail">
@@ -840,6 +848,7 @@ function renderInspectedElement() {
       ` : ''}
     </div>
   `;
+  console.log('Element rendered to DOM');
 }
 
 /**
