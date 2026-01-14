@@ -92,12 +92,17 @@ class FormAnalyzer {
    * Generate stable selector for an element (from executeJS result)
    */
   generateStableSelector(element) {
-    const { tagName, id, name, type, placeholder, className, dataAttributes } = element;
+    const { tagName, id, name, type, placeholder, className, dataAttributes, value } = element;
     
-    // Priority: id > name > data-testid > data-test > type+placeholder > unique class
+    // Priority: id > name (with value for radio/checkbox) > data-testid > data-test > type+placeholder > unique class
     
     if (id) {
       return `#${id}`;
+    }
+    
+    // For radio/checkbox groups, use name + value to differentiate
+    if (name && (type === 'radio' || type === 'checkbox') && value) {
+      return `input[name="${name}"][value="${value}"]`;
     }
     
     if (name) {
