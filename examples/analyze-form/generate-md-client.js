@@ -21,12 +21,14 @@ class MarkdownReportGenerator {
   constructor(outputFile = null) {
     this.client = new ChromePilotClient();
     this.sessionId = null;
-    // Set screenshot dir based on output file location, or use default
+    // Set screenshot dir and base dir based on output file location, or use default
     if (outputFile) {
       const outputDir = path.dirname(outputFile);
       this.screenshotDir = path.join(outputDir, 'screenshots');
+      this.outputBaseDir = outputDir;
     } else {
       this.screenshotDir = path.join(__dirname, 'output', 'screenshots');
+      this.outputBaseDir = path.join(__dirname, 'output');
     }
   }
 
@@ -88,7 +90,7 @@ class MarkdownReportGenerator {
         const screenshot = captureResult.screenshots[0];
         const filepath = this.saveScreenshot(screenshot.dataUrl, filename);
         console.log(`  ${c.success('✓')} Saved screenshot: ${c.dim(filename)}`);
-        return path.relative(path.join(__dirname, 'output'), filepath);
+        return path.relative(this.outputBaseDir, filepath);
       } else {
         console.log(`  ${c.warning('⚠')} No screenshot captured for: ${c.dim(selector)}`);
         return null;
@@ -127,7 +129,7 @@ class MarkdownReportGenerator {
       // Save screenshot
       const filepath = this.saveScreenshot(captureResult.dataUrl, filename);
       console.log(`  ${c.success('✓')} Saved container screenshot: ${c.dim(filename)}`);
-      return path.relative(path.join(__dirname, 'output'), filepath);
+      return path.relative(this.outputBaseDir, filepath);
     } catch (error) {
       console.log(`  ${c.warning('⚠')} Failed to capture container screenshot: ${error.message}`);
       return null;
@@ -268,7 +270,7 @@ class MarkdownReportGenerator {
           const screenshot = captureResult.screenshots[0];
           const filepath = this.saveScreenshot(screenshot.dataUrl, filename);
           console.log(`  ${c.success('✓')} Saved screenshot: ${c.dim(filename)}`);
-          return path.relative(path.join(__dirname, 'output'), filepath);
+          return path.relative(this.outputBaseDir, filepath);
         } else {
           // Multiple screenshots - save all and return array
           const paths = [];
@@ -276,7 +278,7 @@ class MarkdownReportGenerator {
             const screenshot = captureResult.screenshots[i];
             const filenamePart = filename.replace('.png', `-${i}.png`);
             const filepath = this.saveScreenshot(screenshot.dataUrl, filenamePart);
-            paths.push(path.relative(path.join(__dirname, 'output'), filepath));
+            paths.push(path.relative(this.outputBaseDir, filepath));
           }
           console.log(`  ${c.success('✓')} Saved ${paths.length} screenshots: ${c.dim(filename)}`);
           return paths;
