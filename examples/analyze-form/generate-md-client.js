@@ -18,10 +18,16 @@ const fs = require('fs');
 const path = require('path');
 
 class MarkdownReportGenerator {
-  constructor() {
+  constructor(outputFile = null) {
     this.client = new ChromePilotClient();
     this.sessionId = null;
-    this.screenshotDir = path.join(__dirname, 'output', 'screenshots');
+    // Set screenshot dir based on output file location, or use default
+    if (outputFile) {
+      const outputDir = path.dirname(outputFile);
+      this.screenshotDir = path.join(outputDir, 'screenshots');
+    } else {
+      this.screenshotDir = path.join(__dirname, 'output', 'screenshots');
+    }
   }
 
   async connect() {
@@ -592,7 +598,7 @@ Examples:
     if (args[i] === '--input' && args[i + 1]) {
       inputFile = path.resolve(args[i + 1]);
       i++;
-    } else if (args[i] === '--output' && args[i + 1]) {
+    } else if ((args[i] === '--output' || args[i] === '--markdown-output') && args[i + 1]) {
       outputFile = path.resolve(args[i + 1]);
       i++;
     }
@@ -612,7 +618,7 @@ async function main() {
     process.exit(1);
   }
 
-  const generator = new MarkdownReportGenerator();
+  const generator = new MarkdownReportGenerator(outputFile);
 
   try {
     await generator.connect();
