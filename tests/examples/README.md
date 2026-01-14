@@ -15,7 +15,6 @@ npm test
 - **test-client.js** - Comprehensive test suite for all ChromePilot features
 - **google-search-client.js** - Google search automation example
 - **screenshot-client.js** - Screenshot capture example
-- **gemini-client.js** - AI integration example with Gemini
 
 ## Running Examples
 
@@ -33,9 +32,6 @@ npm run google
 
 # Run screenshot example
 npm run screenshot
-
-# Run Gemini example
-npm run gemini
 ```
 
 ## Prerequisites

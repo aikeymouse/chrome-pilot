@@ -6,8 +6,7 @@
   "scripts": {
     "test": "node test-client.js",
     "google": "node google-search-client.js",
-    "screenshot": "node screenshot-client.js",
-    "gemini": "node gemini-client.js"
+    "screenshot": "node screenshot-client.js"
   },
   "keywords": [
     "chromepilot",
