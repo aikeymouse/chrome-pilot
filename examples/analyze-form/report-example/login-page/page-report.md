@@ -10,7 +10,7 @@
 
 
 ## Full Page View
-![Container highlighted](../output-github/screenshots/container-full-page.png)
+![Container highlighted](screenshots/container-full-page.png)
 
 ## Table of Contents
 - [INPUT-HIDDEN](#input-hidden)
@@ -23,7 +23,7 @@
 Found 12 item(s)
 
 ### authenticity_token
-![[data-csrf="true"]](../output-github/screenshots/element-001.png)
+![[data-csrf="true"]](screenshots/element-001.png)
 
 **Selector:**
 ```css
@@ -40,7 +40,7 @@ Found 12 item(s)
 ---
 
 ### add_account
-![#add_account](../output-github/screenshots/element-002.png)
+![#add_account](screenshots/element-002.png)
 
 **Selector:**
 ```css
@@ -57,7 +57,7 @@ Found 12 item(s)
 ---
 
 ### webauthn-conditional
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(4)](../output-github/screenshots/element-003.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(4)](screenshots/element-003.png)
 
 **Selector:**
 ```css
@@ -74,7 +74,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### javascript-support
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(5)](../output-github/screenshots/element-004.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(5)](screenshots/element-004.png)
 
 **Selector:**
 ```css
@@ -91,7 +91,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### webauthn-support
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(6)](../output-github/screenshots/element-005.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(6)](screenshots/element-005.png)
 
 **Selector:**
 ```css
@@ -108,7 +108,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### webauthn-iuvpaa-support
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(7)](../output-github/screenshots/element-006.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(7)](screenshots/element-006.png)
 
 **Selector:**
 ```css
@@ -125,7 +125,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### return_to
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(8)](../output-github/screenshots/element-007.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(8)](screenshots/element-007.png)
 
 **Selector:**
 ```css
@@ -143,7 +143,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### allow_signup
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(9)](../output-github/screenshots/element-008.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(9)](screenshots/element-008.png)
 
 **Selector:**
 ```css
@@ -160,7 +160,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### client_id
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(10)](../output-github/screenshots/element-009.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(10)](screenshots/element-009.png)
 
 **Selector:**
 ```css
@@ -177,7 +177,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### integration
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(11)](../output-github/screenshots/element-010.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(11)](screenshots/element-010.png)
 
 **Selector:**
 ```css
@@ -194,7 +194,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### timestamp
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(13)](../output-github/screenshots/element-011.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(13)](screenshots/element-011.png)
 
 **Selector:**
 ```css
@@ -211,7 +211,7 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 ---
 
 ### timestamp_secret
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(14)](../output-github/screenshots/element-012.png)
+![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(14)](screenshots/element-012.png)
 
 **Selector:**
 ```css
@@ -231,8 +231,8 @@ div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div
 Found 2 item(s)
 
 ### Username or email address
-![#login_field](../output-github/screenshots/element-013-0.png)
-![#login_field](../output-github/screenshots/element-013-1.png)
+![#login_field](screenshots/element-013-0.png)
+![#login_field](screenshots/element-013-1.png)
 
 **Label Selector:**
 ```css
@@ -272,8 +272,8 @@ input[name="required_field_a73d"]
 Found 1 item(s)
 
 ### Password
-![#password](../output-github/screenshots/element-015-0.png)
-![#password](../output-github/screenshots/element-015-1.png)
+![#password](screenshots/element-015-0.png)
+![#password](screenshots/element-015-1.png)
 
 **Label Selector:**
 ```css
@@ -298,7 +298,7 @@ label[for="password"]
 Found 1 item(s)
 
 ### Forgot password?
-![#forgot-password](../output-github/screenshots/element-016.png)
+![#forgot-password](screenshots/element-016.png)
 
 **Selector:**
 ```css
@@ -318,7 +318,7 @@ Found 1 item(s)
 Found 1 item(s)
 
 ### commit
-![input[name="commit"]](../output-github/screenshots/element-017.png)
+![input[name="commit"]](screenshots/element-017.png)
 
 **Selector:**
 ```css
