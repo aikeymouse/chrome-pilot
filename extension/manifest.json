@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ChromePilot",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Remote Chrome tab control via WebSocket API with session management",
   "permissions": [
     "nativeMessaging",

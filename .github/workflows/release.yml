@@ -102,6 +102,10 @@ jobs:
           # Copy install scripts
           cp -r install-scripts release-tmp/
           
+          # Copy examples
+          mkdir -p release-tmp/examples
+          cp -r tests/examples/* release-tmp/examples/
+          
           # Copy documentation
           cp README.md release-tmp/
           cp QUICKSTART.md release-tmp/ || true
