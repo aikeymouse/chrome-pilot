@@ -425,6 +425,39 @@ window.__chromePilotHelper = {
     }
     
     // Try unique attribute combinations for specific elements
+    if (element.tagName === 'LABEL') {
+      // First try 'for' attribute if it exists
+      if (element.htmlFor) {
+        const forSelector = `label[for="${escapeAttributeValue(element.htmlFor)}"]`;
+        if (document.querySelectorAll(forSelector).length === 1) {
+          return forSelector;
+        }
+      }
+      // Otherwise, check if label wraps an input/textarea/select
+      else {
+        const wrappedInput = element.querySelector('input, textarea, select');
+        if (wrappedInput) {
+          let childSelector = '';
+          if (wrappedInput.id) {
+            childSelector = `#${CSS.escape(wrappedInput.id)}`;
+          } else if (wrappedInput.name) {
+            childSelector = `${wrappedInput.tagName.toLowerCase()}[name="${escapeAttributeValue(wrappedInput.name)}"]`;
+          }
+          
+          if (childSelector) {
+            const hasSelector = `label:has(${childSelector})`;
+            try {
+              if (document.querySelectorAll(hasSelector).length === 1) {
+                return hasSelector;
+              }
+            } catch (e) {
+              // :has() might not be supported in older browsers, skip
+            }
+          }
+        }
+      }
+    }
+    
     if (element.tagName === 'A' && element.href) {
       const hrefSelector = `a[href="${escapeAttributeValue(element.getAttribute('href'))}"]`;
       if (document.querySelectorAll(hrefSelector).length === 1) {
