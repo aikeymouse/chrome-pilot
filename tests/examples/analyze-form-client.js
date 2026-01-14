@@ -17,6 +17,40 @@
 
 const ChromePilotClient = require('./chromepilot-client');
 
+// ANSI color codes for terminal output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  
+  // Foreground colors
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  white: '\x1b[37m',
+  gray: '\x1b[90m',
+  
+  // Background colors
+  bgRed: '\x1b[41m',
+  bgGreen: '\x1b[42m',
+  bgYellow: '\x1b[43m',
+  bgBlue: '\x1b[44m'
+};
+
+const c = {
+  success: (str) => `${colors.green}${str}${colors.reset}`,
+  error: (str) => `${colors.red}${str}${colors.reset}`,
+  warning: (str) => `${colors.yellow}${str}${colors.reset}`,
+  info: (str) => `${colors.cyan}${str}${colors.reset}`,
+  dim: (str) => `${colors.gray}${str}${colors.reset}`,
+  bold: (str) => `${colors.bright}${str}${colors.reset}`,
+  code: (str) => `${colors.magenta}${str}${colors.reset}`,
+  highlight: (str) => `${colors.bgBlue}${colors.white}${str}${colors.reset}`
+};
+
 class FormAnalyzer {
   constructor() {
     this.client = new ChromePilotClient();
@@ -39,7 +73,7 @@ class FormAnalyzer {
       
       // 1. Form elements (highest priority)
       if (parent.tagName === 'form') {
-        console.log(`  ✓ Found FORM container: ${parent.selector}`);
+        console.log(`  ${c.success('✓')} Found FORM container: ${c.code(parent.selector)}`);
         return parent;
       }
     }
@@ -133,11 +167,11 @@ class FormAnalyzer {
    * Analyze form starting from a specific element
    */
   async analyzeForm(tabId, startSelector = 'form input, form button, form select, form textarea, form a, form label') {
-    console.log('\n🔍 Starting form analysis...\n');
-    console.log(`📍 Start selector: ${startSelector}\n`);
+    console.log(`\n${c.bold('🔍 Starting form analysis...')}\n`);
+    console.log(`${c.info('📍 Start selector:')} ${c.dim(startSelector)}\n`);
     
     // Step 1: Inspect starting element to get tree structure
-    console.log('Step 1: Inspecting element tree...');
+    console.log(c.bold('Step 1: Inspecting element tree...'));
     const inspectResult = await this.client.sendRequest('callHelper', {
       tabId,
       functionName: 'inspectElement',
@@ -149,17 +183,17 @@ class FormAnalyzer {
     }
     
     const tree = inspectResult.value;
-    console.log(`  ✓ Clicked element: <${tree.clickedElement.tagName}> ${tree.clickedElement.selector}`);
-    console.log(`  ✓ Found ${tree.parents.length} parent(s)`);
-    console.log(`  ✓ Found ${tree.children.length} child(ren)\n`);
+    console.log(`  ${c.success('✓')} Clicked element: ${c.dim('<' + tree.clickedElement.tagName + '>')} ${c.code(tree.clickedElement.selector)}`);
+    console.log(`  ${c.success('✓')} Found ${c.info(tree.parents.length)} parent(s)`);
+    console.log(`  ${c.success('✓')} Found ${c.info(tree.children.length)} child(ren)\n`);
     
     // Step 2: Find semantic container
-    console.log('Step 2: Finding semantic container...');
+    console.log(c.bold('Step 2: Finding semantic container...'));
     const container = this.findSemanticContainer(tree.parents);
     console.log('');
     
     // Step 3: Extract all form elements from container
-    console.log('Step 3: Extracting form elements...');
+    console.log(c.bold('Step 3: Extracting form elements...'));
     
     let elements = [];
     
@@ -189,10 +223,10 @@ class FormAnalyzer {
       throw new Error(`No form elements found in container: ${container.selector}`);
     }
     
-    console.log(`  ✓ Found ${elements.length} form element(s)\n`);
+    console.log(`  ${c.success('✓')} Found ${c.highlight(' ' + elements.length + ' ')} form element(s)\n`);
     
     // Step 4: Generate stable selectors and organize by type
-    console.log('Step 4: Generating stable selectors...\n');
+    console.log(c.bold('Step 4: Generating stable selectors...\n'));
     
     const analyzed = {
       container: {
@@ -224,7 +258,7 @@ class FormAnalyzer {
     };
     
     // Step 5: Validate selectors by testing with highlightElement
-    console.log('Step 5: Validating selectors...');
+    console.log(c.bold('Step 5: Validating selectors...'));
     const validationResults = [];
     
     for (const [index, element] of analyzed.elements.entries()) {
@@ -246,14 +280,14 @@ class FormAnalyzer {
       });
       
       if (!isValid) {
-        console.log(`  ⚠ ${element.selector} matches ${matchCount} elements (expected 1)`);
+        console.log(`  ${c.warning('⚠')} ${c.code(element.selector)} matches ${c.warning(matchCount)} elements (expected 1)`);
       }
     }
     
     const validCount = validationResults.filter(r => r.isValid).length;
     const totalCount = validationResults.length;
-    console.log(`  ✓ Validated ${totalCount} selectors: ${validCount} unique, ${totalCount - validCount} ambiguous`);
-    console.log(`  ⏳ Keeping highlights visible for 5 seconds...\n`);
+    console.log(`  ${c.success('✓')} Validated ${c.info(totalCount)} selectors: ${c.success(validCount + ' unique')}, ${totalCount - validCount > 0 ? c.warning(totalCount - validCount + ' ambiguous') : c.dim('0 ambiguous')}`);
+    console.log(`  ${c.dim('⏳ Keeping highlights visible for 5 seconds...')}\n`);
     
     // Wait 5 seconds before clearing highlights
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -279,32 +313,32 @@ class FormAnalyzer {
    * Display analysis results
    */
   displayResults(analysis) {
-    console.log('═'.repeat(80));
-    console.log('📋 FORM ANALYSIS RESULTS');
-    console.log('═'.repeat(80));
+    console.log(c.dim('═'.repeat(80)));
+    console.log(c.bold(c.info('📋 FORM ANALYSIS RESULTS')));
+    console.log(c.dim('═'.repeat(80)));
     console.log('');
     
-    console.log('📦 Container:');
-    console.log(`   Tag:      <${analysis.container.tagName}>`);
-    console.log(`   Selector: ${analysis.container.selector}`);
-    if (analysis.container.id) console.log(`   ID:       ${analysis.container.id}`);
-    if (analysis.container.class) console.log(`   Class:    ${analysis.container.class}`);
+    console.log(c.bold('📦 Container:'));
+    console.log(`   ${c.dim('Tag:')}      ${c.code('<' + analysis.container.tagName + '>')}`);
+    console.log(`   ${c.dim('Selector:')} ${c.code(analysis.container.selector)}`);
+    if (analysis.container.id) console.log(`   ${c.dim('ID:')}       ${c.info(analysis.container.id)}`);
+    if (analysis.container.class) console.log(`   ${c.dim('Class:')}    ${c.dim(analysis.container.class)}`);
     console.log('');
     
     // Display validation summary
     if (analysis.validation) {
       const { total, unique, ambiguous } = analysis.validation;
       const percentage = ((unique / total) * 100).toFixed(1);
-      console.log('✅ Selector Validation:');
-      console.log(`   Total:     ${total}`);
-      console.log(`   Unique:    ${unique} (${percentage}%)`);
+      console.log(c.bold(percentage === '100.0' ? c.success('✅ Selector Validation:') : c.warning('✅ Selector Validation:')));
+      console.log(`   ${c.dim('Total:')}     ${c.info(total)}`);
+      console.log(`   ${c.dim('Unique:')}    ${percentage === '100.0' ? c.success(unique + ' (' + percentage + '%)') : c.info(unique + ' (' + percentage + '%)')}`);
       if (ambiguous > 0) {
-        console.log(`   Ambiguous: ${ambiguous}`);
+        console.log(`   ${c.dim('Ambiguous:')} ${c.warning(ambiguous)}`);
       }
       console.log('');
     }
     
-    console.log('📝 Form Elements:');
+    console.log(c.bold('📝 Form Elements:'));
     console.log('');
     
     // Group by type
@@ -316,39 +350,39 @@ class FormAnalyzer {
     }
     
     for (const [type, elements] of Object.entries(grouped)) {
-      console.log(`  ${type.toUpperCase()} (${elements.length}):`);
+      console.log(`  ${c.info(type.toUpperCase())} ${c.dim('(' + elements.length + ')')}:`);
       for (const el of elements) {
         // Check if selector is validated
         const validation = analysis.validation?.results.find(r => r.selector === el.selector);
-        const validationMark = validation ? (validation.isValid ? '✓' : `⚠(${validation.matchCount})`) : '';
+        const validationMark = validation ? (validation.isValid ? c.success('✓') : c.warning(`⚠(${validation.matchCount})`)) : '';
         
-        console.log(`    ${validationMark ? validationMark + ' ' : ''}• ${el.selector}`);
-        if (el.label) console.log(`      Label: ${el.label}`);
-        if (el.name) console.log(`      Name: ${el.name}`);
-        if (el.placeholder) console.log(`      Placeholder: ${el.placeholder}`);
-        if (el.required) console.log(`      ⚠ Required`);
-        if (el.disabled) console.log(`      🚫 Disabled`);
-        if (!el.visible) console.log(`      👁️ Hidden`);
-        if (el.value) console.log(`      Value: ${el.value}`);
-        if (el.textContent && el.tagName === 'button') console.log(`      Text: ${el.textContent}`);
+        console.log(`    ${validationMark ? validationMark + ' ' : ''}${c.dim('•')} ${c.code(el.selector)}`);
+        if (el.label) console.log(`      ${c.dim('Label:')} ${el.label}`);
+        if (el.name) console.log(`      ${c.dim('Name:')} ${el.name}`);
+        if (el.placeholder) console.log(`      ${c.dim('Placeholder:')} ${el.placeholder}`);
+        if (el.required) console.log(`      ${c.warning('⚠ Required')}`);
+        if (el.disabled) console.log(`      ${c.dim('🚫 Disabled')}`);
+        if (!el.visible) console.log(`      ${c.dim('👁️ Hidden')}`);
+        if (el.value) console.log(`      ${c.dim('Value:')} ${el.value}`);
+        if (el.textContent && el.tagName === 'button') console.log(`      ${c.dim('Text:')} ${el.textContent}`);
         console.log('');
       }
     }
     
-    console.log('═'.repeat(80));
+    console.log(c.dim('═'.repeat(80)));
     console.log('');
-    console.log('💡 Usage Example:');
+    console.log(c.bold('💡 Usage Example:'));
     console.log('');
-    console.log('```javascript');
-    console.log('// Fill form using stable selectors:');
+    console.log(c.dim('```javascript'));
+    console.log(c.dim('// Fill form using stable selectors:'));
     for (const el of analysis.elements.slice(0, 5)) {
       if (el.tagName === 'input' && el.type !== 'submit' && el.type !== 'button') {
-        console.log(`await client.callHelper('typeText', ['${el.selector}', 'value', true]);`);
+        console.log(c.dim(`await client.callHelper('typeText', ['${el.selector}', 'value', true]);`));
       } else if (el.tagName === 'button' || el.type === 'submit') {
-        console.log(`await client.callHelper('clickElement', ['${el.selector}']);`);
+        console.log(c.dim(`await client.callHelper('clickElement', ['${el.selector}']);`));
       }
     }
-    console.log('```');
+    console.log(c.dim('```'));
     console.log('');
   }
 
@@ -365,23 +399,23 @@ async function main() {
   
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     console.log('');
-    console.log('ChromePilot Form Analyzer');
-    console.log('═'.repeat(80));
+    console.log(c.bold(c.info('ChromePilot Form Analyzer')));
+    console.log(c.dim('═'.repeat(80)));
     console.log('');
     console.log('Analyzes web page forms and generates stable CSS selectors for automation.');
     console.log('');
-    console.log('Usage:');
-    console.log('  node analyze-form-client.js <url> [startSelector]');
+    console.log(c.bold('Usage:'));
+    console.log(c.dim('  node analyze-form-client.js <url> [startSelector]'));
     console.log('');
-    console.log('Arguments:');
-    console.log('  url            URL to analyze');
-    console.log('  startSelector  CSS selector to start analysis from (optional)');
-    console.log('                 Default: "form input, form button, form select, form textarea"');
+    console.log(c.bold('Arguments:'));
+    console.log(`  ${c.info('url')}            URL to analyze`);
+    console.log(`  ${c.info('startSelector')}  CSS selector to start analysis from (optional)`);
+    console.log(`                 ${c.dim('Default: "form input, form button, form select, form textarea"')}`);
     console.log('');
-    console.log('Examples:');
-    console.log('  node analyze-form-client.js https://www.selenium.dev/selenium/web/web-form.html');
-    console.log('  node analyze-form-client.js https://example.com "button.submit"');
-    console.log('  node analyze-form-client.js https://example.com "input[type=email]"');
+    console.log(c.bold('Examples:'));
+    console.log(c.dim('  node analyze-form-client.js https://www.selenium.dev/selenium/web/web-form.html'));
+    console.log(c.dim('  node analyze-form-client.js https://example.com "button.submit"'));
+    console.log(c.dim('  node analyze-form-client.js https://example.com "input[type=email]"'));
     console.log('');
     process.exit(0);
   }
@@ -393,27 +427,27 @@ async function main() {
   
   try {
     console.log('');
-    console.log('🚀 ChromePilot Form Analyzer');
-    console.log('═'.repeat(80));
+    console.log(c.bold(c.info('🚀 ChromePilot Form Analyzer')));
+    console.log(c.dim('═'.repeat(80)));
     
     // Connect to ChromePilot
-    console.log('\n📡 Connecting to ChromePilot...');
+    console.log(`\n${c.info('📡 Connecting to ChromePilot...')}`);
     await analyzer.connect();
-    console.log('✓ Connected\n');
+    console.log(c.success('✓ Connected\n'));
     
     // Open tab
-    console.log(`🌐 Opening URL: ${url}`);
+    console.log(`${c.info('🌐 Opening URL:')} ${c.dim(url)}`);
     const openResult = await analyzer.client.sendRequest('openTab', {
       url,
       focus: true
     });
     const tabId = openResult.tab.id;
-    console.log(`✓ Tab opened (ID: ${tabId})\n`);
+    console.log(`${c.success('✓ Tab opened')} ${c.dim('(ID: ' + tabId + ')\n')}`);
     
     // Wait for page to load
-    console.log('⏳ Waiting for page to load...');
+    console.log(c.info('⏳ Waiting for page to load...'));
     await new Promise(resolve => setTimeout(resolve, 2000));
-    console.log('✓ Page loaded\n');
+    console.log(c.success('✓ Page loaded\n'));
     
     // Analyze form
     const analysis = await analyzer.analyzeForm(tabId, startSelector);
@@ -422,18 +456,18 @@ async function main() {
     analyzer.displayResults(analysis);
     
     // Output JSON for programmatic use
-    console.log('📄 JSON Output:');
-    console.log(JSON.stringify(analysis, null, 2));
+    console.log(c.bold('📄 JSON Output:'));
+    console.log(c.dim(JSON.stringify(analysis, null, 2)));
     console.log('');
     
     // Close the tab
-    console.log('🧹 Closing tab...');
+    console.log(c.info('🧹 Closing tab...'));
     await analyzer.client.sendRequest('closeTab', { tabId });
-    console.log('✓ Tab closed\n');
+    console.log(c.success('✓ Tab closed\n'));
     
   } catch (error) {
-    console.error('\n❌ Error:', error.message);
-    console.error(error.stack);
+    console.error(`\n${c.error('❌ Error:')} ${error.message}`);
+    console.error(c.dim(error.stack));
     process.exit(1);
   } finally {
     analyzer.close();
