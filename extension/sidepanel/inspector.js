@@ -85,7 +85,7 @@ function exitInspectorMode() {
   
   // Show other sections
   document.getElementById('clients-section').style.display = 'block';
-  document.getElementById('logs-section').style.display = 'block';
+  document.getElementById('logs-section').style.display = '';
   
   // Update UI
   const tabsSectionTitle = document.getElementById('tabs-section-title');
