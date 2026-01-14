@@ -376,32 +376,33 @@ class MarkdownReportGenerator {
           lines.push(field.selector + '\n');
           lines.push('```\n');
 
-          // Properties table
-          lines.push('\n**Properties:**\n');
-          lines.push('| Property | Value |\n');
-          lines.push('|----------|-------|\n');
-          lines.push(`| Label Text | ${label.textContent} |\n`);
-          lines.push(`| Tag Name | \`${field.tagName}\` |\n`);
-          
+          // Key properties for automation
+          lines.push('\n**Field Details:**\n\n');
+          lines.push(`- **Label:** ${label.textContent}\n`);
+          lines.push(`- **Type:** \`${field.tagName}\``);
           if (field.type) {
-            lines.push(`| Type | \`${field.type}\` |\n`);
+            lines.push(` (\`${field.type}\`)`);
+          }
+          lines.push('\n');
+          
+          if (field.name) {
+            lines.push(`- **Name:** \`${field.name}\`\n`);
           }
           if (field.id) {
-            lines.push(`| ID | \`${field.id}\` |\n`);
-          }
-          if (field.name) {
-            lines.push(`| Name | \`${field.name}\` |\n`);
+            lines.push(`- **ID:** \`${field.id}\`\n`);
           }
           if (field.placeholder) {
-            lines.push(`| Placeholder | ${field.placeholder} |\n`);
+            lines.push(`- **Placeholder:** "${field.placeholder}"\n`);
           }
           if (field.value) {
-            lines.push(`| Value | ${field.value} |\n`);
+            lines.push(`- **Default Value:** "${field.value}"\n`);
           }
-          
-          lines.push(`| Required | ${field.required ? 'Yes' : 'No'} |\n`);
-          lines.push(`| Disabled | ${field.disabled ? 'Yes' : 'No'} |\n`);
-          lines.push(`| Visible | ${field.visible ? 'Yes' : 'No'} |\n`);
+          if (field.required) {
+            lines.push(`- **Required:** Yes\n`);
+          }
+          if (field.disabled) {
+            lines.push(`- **Disabled:** Yes\n`);
+          }
 
         } else {
           // Handle single element
@@ -430,37 +431,38 @@ class MarkdownReportGenerator {
           lines.push(element.selector + '\n');
           lines.push('```\n');
 
-          // Properties table
-          lines.push('\n**Properties:**\n');
-          lines.push('| Property | Value |\n');
-          lines.push('|----------|-------|\n');
-          lines.push(`| Tag Name | \`${element.tagName}\` |\n`);
-          
+          // Key properties for automation
+          lines.push('\n**Element Details:**\n\n');
+          lines.push(`- **Type:** \`${element.tagName}\``);
           if (element.type) {
-            lines.push(`| Type | \`${element.type}\` |\n`);
+            lines.push(` (\`${element.type}\`)`);
+          }
+          lines.push('\n');
+          
+          if (element.name) {
+            lines.push(`- **Name:** \`${element.name}\`\n`);
           }
           if (element.id) {
-            lines.push(`| ID | \`${element.id}\` |\n`);
-          }
-          if (element.name) {
-            lines.push(`| Name | \`${element.name}\` |\n`);
-          }
-          if (element.placeholder) {
-            lines.push(`| Placeholder | ${element.placeholder} |\n`);
-          }
-          if (element.value) {
-            lines.push(`| Value | ${element.value} |\n`);
-          }
-          if (element.label) {
-            lines.push(`| Label | \`${element.label}\` |\n`);
+            lines.push(`- **ID:** \`${element.id}\`\n`);
           }
           if (element.textContent) {
-            lines.push(`| Text Content | ${element.textContent} |\n`);
+            lines.push(`- **Text:** "${element.textContent}"\n`);
           }
-          
-          lines.push(`| Required | ${element.required ? 'Yes' : 'No'} |\n`);
-          lines.push(`| Disabled | ${element.disabled ? 'Yes' : 'No'} |\n`);
-          lines.push(`| Visible | ${element.visible ? 'Yes' : 'No'} |\n`);
+          if (element.placeholder) {
+            lines.push(`- **Placeholder:** "${element.placeholder}"\n`);
+          }
+          if (element.value) {
+            lines.push(`- **Value:** "${element.value}"\n`);
+          }
+          if (element.label) {
+            lines.push(`- **Label Selector:** \`${element.label}\`\n`);
+          }
+          if (element.required) {
+            lines.push(`- **Required:** Yes\n`);
+          }
+          if (element.disabled) {
+            lines.push(`- **Disabled:** Yes\n`);
+          }
         }
 
         lines.push('\n---\n');

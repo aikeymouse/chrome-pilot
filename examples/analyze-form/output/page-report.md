@@ -43,17 +43,12 @@ label:has(#my-text-id)
 #my-text-id
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Text input |
-| Tag Name | `input` |
-| Type | `text` |
-| ID | `my-text-id` |
-| Name | `my-text` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Text input
+- **Type:** `input` (`text`)
+- **Name:** `my-text`
+- **ID:** `my-text-id`
 
 ---
 
@@ -70,17 +65,13 @@ label:has(input[name="my-disabled"])
 input[name="my-disabled"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Disabled input |
-| Tag Name | `input` |
-| Type | `text` |
-| Name | `my-disabled` |
-| Placeholder | Disabled input |
-| Required | No |
-| Disabled | Yes |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Disabled input
+- **Type:** `input` (`text`)
+- **Name:** `my-disabled`
+- **Placeholder:** "Disabled input"
+- **Disabled:** Yes
 
 ---
 
@@ -97,17 +88,12 @@ label:has(input[name="my-readonly"])
 input[name="my-readonly"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Readonly input |
-| Tag Name | `input` |
-| Type | `text` |
-| Name | `my-readonly` |
-| Value | Readonly input |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Readonly input
+- **Type:** `input` (`text`)
+- **Name:** `my-readonly`
+- **Default Value:** "Readonly input"
 
 ---
 
@@ -124,16 +110,11 @@ label:has(input[name="my-date"])
 input[name="my-date"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Date picker |
-| Tag Name | `input` |
-| Type | `text` |
-| Name | `my-date` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Date picker
+- **Type:** `input` (`text`)
+- **Name:** `my-date`
 
 ---
 
@@ -153,16 +134,11 @@ label:has(input[name="my-password"])
 input[name="my-password"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Password |
-| Tag Name | `input` |
-| Type | `password` |
-| Name | `my-password` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Password
+- **Type:** `input` (`password`)
+- **Name:** `my-password`
 
 ---
 
@@ -182,15 +158,11 @@ label:has(textarea[name="my-textarea"])
 textarea[name="my-textarea"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Textarea |
-| Tag Name | `textarea` |
-| Name | `my-textarea` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Textarea
+- **Type:** `textarea`
+- **Name:** `my-textarea`
 
 ---
 
@@ -205,14 +177,10 @@ Found 1 item(s)
 a[href="./index.html"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Tag Name | `a` |
-| Text Content | Return to index |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Element Details:**
+
+- **Type:** `a`
+- **Text:** "Return to index"
 
 ---
 
@@ -234,17 +202,13 @@ label:has(select[name="my-select"])
 select[name="my-select"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Dropdown (select)
+**Field Details:**
+
+- **Label:** Dropdown (select)
               
-                O... |
-| Tag Name | `select` |
-| Name | `my-select` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+                O...
+- **Type:** `select`
+- **Name:** `my-select`
 
 ---
 
@@ -264,16 +228,12 @@ label:has(input[name="my-datalist"])
 input[name="my-datalist"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Dropdown (datalist) |
-| Tag Name | `input` |
-| Name | `my-datalist` |
-| Placeholder | Type to search... |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Dropdown (datalist)
+- **Type:** `input`
+- **Name:** `my-datalist`
+- **Placeholder:** "Type to search..."
 
 ---
 
@@ -293,16 +253,11 @@ label:has(input[name="my-file"])
 input[name="my-file"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | File input |
-| Tag Name | `input` |
-| Type | `file` |
-| Name | `my-file` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** File input
+- **Type:** `input` (`file`)
+- **Name:** `my-file`
 
 ---
 
@@ -322,17 +277,12 @@ label:has(#my-check-1)
 #my-check-1
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Checked checkbox |
-| Tag Name | `input` |
-| Type | `checkbox` |
-| ID | `my-check-1` |
-| Name | `my-check` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Checked checkbox
+- **Type:** `input` (`checkbox`)
+- **Name:** `my-check`
+- **ID:** `my-check-1`
 
 ---
 
@@ -349,17 +299,12 @@ label:has(#my-check-2)
 #my-check-2
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Default checkbox |
-| Tag Name | `input` |
-| Type | `checkbox` |
-| ID | `my-check-2` |
-| Name | `my-check` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Default checkbox
+- **Type:** `input` (`checkbox`)
+- **Name:** `my-check`
+- **ID:** `my-check-2`
 
 ---
 
@@ -379,17 +324,12 @@ label:has(#my-radio-1)
 #my-radio-1
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Checked radio |
-| Tag Name | `input` |
-| Type | `radio` |
-| ID | `my-radio-1` |
-| Name | `my-radio` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Checked radio
+- **Type:** `input` (`radio`)
+- **Name:** `my-radio`
+- **ID:** `my-radio-1`
 
 ---
 
@@ -406,17 +346,12 @@ label:has(#my-radio-2)
 #my-radio-2
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Default radio |
-| Tag Name | `input` |
-| Type | `radio` |
-| ID | `my-radio-2` |
-| Name | `my-radio` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Default radio
+- **Type:** `input` (`radio`)
+- **Name:** `my-radio`
+- **ID:** `my-radio-2`
 
 ---
 
@@ -431,15 +366,10 @@ Found 1 item(s)
 button[type="submit"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Tag Name | `button` |
-| Type | `submit` |
-| Text Content | Submit |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Element Details:**
+
+- **Type:** `button` (`submit`)
+- **Text:** "Submit"
 
 ---
 
@@ -459,17 +389,12 @@ label:has(input[name="my-colors"])
 input[name="my-colors"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Color picker |
-| Tag Name | `input` |
-| Type | `color` |
-| Name | `my-colors` |
-| Value | #563d7c |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Color picker
+- **Type:** `input` (`color`)
+- **Name:** `my-colors`
+- **Default Value:** "#563d7c"
 
 ---
 
@@ -489,17 +414,12 @@ label:has(input[name="my-range"])
 input[name="my-range"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Label Text | Example range |
-| Tag Name | `input` |
-| Type | `range` |
-| Name | `my-range` |
-| Value | 5 |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Field Details:**
+
+- **Label:** Example range
+- **Type:** `input` (`range`)
+- **Name:** `my-range`
+- **Default Value:** "5"
 
 ---
 
@@ -514,19 +434,14 @@ Found 1 item(s)
 input[name="my-hidden"]
 ```
 
-**Properties:**
-| Property | Value |
-|----------|-------|
-| Tag Name | `input` |
-| Type | `hidden` |
-| Name | `my-hidden` |
-| Label | `my-hidden` |
-| Required | No |
-| Disabled | No |
-| Visible | Yes |
+**Element Details:**
+
+- **Type:** `input` (`hidden`)
+- **Name:** `my-hidden`
+- **Label Selector:** `my-hidden`
 
 ---
 
 ---
 
-*Generated on 1/14/2026, 1:33:48 PM*
+*Generated on 1/14/2026, 1:37:55 PM*
