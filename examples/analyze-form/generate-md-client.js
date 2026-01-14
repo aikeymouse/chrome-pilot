@@ -13,6 +13,7 @@
  */
 
 const ChromePilotClient = require('./chromepilot-client');
+const c = require('./console-utils');
 const fs = require('fs');
 const path = require('path');
 
@@ -34,7 +35,7 @@ class MarkdownReportGenerator {
   ensureScreenshotDir() {
     if (!fs.existsSync(this.screenshotDir)) {
       fs.mkdirSync(this.screenshotDir, { recursive: true });
-      console.log(`✓ Created screenshots directory: ${this.screenshotDir}`);
+      console.log(`  ${c.success('✓')} Created screenshots directory: ${c.dim(this.screenshotDir)}`);
     }
   }
 
@@ -80,14 +81,14 @@ class MarkdownReportGenerator {
       if (captureResult.screenshots && captureResult.screenshots.length > 0) {
         const screenshot = captureResult.screenshots[0];
         const filepath = this.saveScreenshot(screenshot.dataUrl, filename);
-        console.log(`  ✓ Saved screenshot: ${filename}`);
+        console.log(`  ${c.success('✓')} Saved screenshot: ${c.dim(filename)}`);
         return path.relative(path.join(__dirname, 'output'), filepath);
       } else {
-        console.log(`  ⚠ No screenshot captured for: ${selector}`);
+        console.log(`  ${c.warning('⚠')} No screenshot captured for: ${c.dim(selector)}`);
         return null;
       }
     } catch (error) {
-      console.log(`  ⚠ Failed to capture screenshot for ${selector}: ${error.message}`);
+      console.log(`  ${c.warning('⚠')} Failed to capture screenshot for ${c.dim(selector)}: ${error.message}`);
       return null;
     }
   }
@@ -119,10 +120,10 @@ class MarkdownReportGenerator {
 
       // Save screenshot
       const filepath = this.saveScreenshot(captureResult.dataUrl, filename);
-      console.log(`  ✓ Saved container screenshot: ${filename}`);
+      console.log(`  ${c.success('✓')} Saved container screenshot: ${c.dim(filename)}`);
       return path.relative(path.join(__dirname, 'output'), filepath);
     } catch (error) {
-      console.log(`  ⚠ Failed to capture container screenshot: ${error.message}`);
+      console.log(`  ${c.warning('⚠')} Failed to capture container screenshot: ${error.message}`);
       return null;
     }
   }
@@ -260,7 +261,7 @@ class MarkdownReportGenerator {
           // Single screenshot
           const screenshot = captureResult.screenshots[0];
           const filepath = this.saveScreenshot(screenshot.dataUrl, filename);
-          console.log(`  ✓ Saved screenshot: ${filename}`);
+          console.log(`  ${c.success('✓')} Saved screenshot: ${c.dim(filename)}`);
           return path.relative(path.join(__dirname, 'output'), filepath);
         } else {
           // Multiple screenshots - save all and return array
@@ -271,15 +272,15 @@ class MarkdownReportGenerator {
             const filepath = this.saveScreenshot(screenshot.dataUrl, filenamePart);
             paths.push(path.relative(path.join(__dirname, 'output'), filepath));
           }
-          console.log(`  ✓ Saved ${paths.length} screenshots: ${filename}`);
+          console.log(`  ${c.success('✓')} Saved ${paths.length} screenshots: ${c.dim(filename)}`);
           return paths;
         }
       } else {
-        console.log(`  ⚠ No screenshot captured for pair`);
+        console.log(`  ${c.warning('⚠')} No screenshot captured for pair`);
         return null;
       }
     } catch (error) {
-      console.log(`  ⚠ Failed to capture pair screenshot: ${error.message}`);
+      console.log(`  ${c.warning('⚠')} Failed to capture pair screenshot: ${error.message}`);
       return null;
     }
   }
@@ -302,7 +303,7 @@ class MarkdownReportGenerator {
     }
 
     // Capture container screenshot
-    console.log('\n📸 Capturing container screenshot...');
+    console.log(`\n${c.info('📸 Capturing container screenshot...')}`);
     const containerScreenshot = await this.captureContainerScreenshot(
       tabId,
       container.selector,
@@ -323,7 +324,7 @@ class MarkdownReportGenerator {
     }
 
     // Generate sections for each element type
-    console.log('\n📸 Capturing element screenshots...');
+    console.log(`\n${c.info('📸 Capturing element screenshots...')}`);
     let elementIndex = 0;
 
     for (const [groupKey, groupItems] of groups) {
@@ -337,7 +338,7 @@ class MarkdownReportGenerator {
         if (item.type === 'pair') {
           // Handle label+field pair
           const { label, field } = item;
-          console.log(`  [${elementIndex}] ${label.selector} + ${field.selector}`);
+          console.log(`  ${c.dim(`[${elementIndex}]`)} ${label.selector} + ${field.selector}`);
           
           // Capture combined screenshot
           const screenshotPath = await this.capturePairScreenshot(
@@ -407,7 +408,7 @@ class MarkdownReportGenerator {
         } else {
           // Handle single element
           const element = item.element;
-          console.log(`  [${elementIndex}] ${element.selector}`);
+          console.log(`  ${c.dim(`[${elementIndex}]`)} ${element.selector}`);
           
           // Capture element screenshot
           const screenshotPath = await this.captureElementScreenshot(
@@ -480,10 +481,10 @@ class MarkdownReportGenerator {
    * Clean up old output files before generating new report
    */
   cleanupOldOutput(outputFile) {
-    // Remove old markdown report if exists
+    // Remove old markdown report
     if (fs.existsSync(outputFile)) {
       fs.unlinkSync(outputFile);
-      console.log(`  ✓ Removed old report: ${outputFile}`);
+      console.log(`  ${c.success('✓')} Removed old report: ${c.dim(outputFile)}`);
     }
 
     // Remove old screenshots directory if exists
@@ -501,17 +502,17 @@ class MarkdownReportGenerator {
    * Generate report
    */
   async generateReport(url, inputFile, outputFile) {
-    console.log('\n🔍 Starting markdown report generation...\n');
+    console.log(`\n${c.bold('🔍 Starting markdown report generation...')}\n`);
     
-    // Clean up old output files
-    console.log('🧹 Cleaning up old output...');
+    // Cleanup old output
+    console.log(c.info('🧹 Cleaning up old output...'));
     this.cleanupOldOutput(outputFile);
-    console.log('  ✓ Cleanup complete\n');
+    console.log(`  ${c.success('✓')} Cleanup complete\n`);
     
     // Load analysis data
-    console.log(`📄 Loading analysis from: ${inputFile}`);
+    console.log(`${c.info('📄')} Loading analysis from: ${c.dim(inputFile)}`);
     const analysisData = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
-    console.log(`  ✓ Loaded ${analysisData.elements.length} elements\n`);
+    console.log(`  ${c.success('✓')} Loaded ${c.bold(analysisData.elements.length)} elements\n`);
 
     // Ensure screenshot directory exists
     this.ensureScreenshotDir();
