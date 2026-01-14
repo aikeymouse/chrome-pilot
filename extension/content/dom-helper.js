@@ -352,7 +352,37 @@ window.__chromePilotHelper = {
       }
     }
     
-    // 2. For radio/checkbox groups, use name + value to differentiate
+    // 2. For common semantic elements, try simple tag selector if unique
+    const semanticTags = ['form', 'nav', 'header', 'footer', 'main', 'aside', 'article', 'section'];
+    const tagLower = element.tagName.toLowerCase();
+    if (semanticTags.includes(tagLower)) {
+      const tagSelector = tagLower;
+      if (document.querySelectorAll(tagSelector).length === 1) {
+        return tagSelector;
+      }
+      
+      // If not unique, try tag + common attributes for that element type
+      if (tagLower === 'form') {
+        // Try form with action or method attributes
+        if (element.action) {
+          const actionAttr = element.getAttribute('action'); // Get original attribute value
+          if (actionAttr) {
+            const formActionSelector = `form[action="${escapeAttributeValue(actionAttr)}"]`;
+            if (document.querySelectorAll(formActionSelector).length === 1) {
+              return formActionSelector;
+            }
+          }
+        }
+        if (element.method) {
+          const formMethodSelector = `form[method="${escapeAttributeValue(element.method)}"]`;
+          if (document.querySelectorAll(formMethodSelector).length === 1) {
+            return formMethodSelector;
+          }
+        }
+      }
+    }
+    
+    // 3. For radio/checkbox groups, use name + value to differentiate
     if (element.tagName === 'INPUT' && element.name && element.value && 
         (element.type === 'radio' || element.type === 'checkbox')) {
       const radioCheckSelector = `input[name="${escapeAttributeValue(element.name)}"][value="${escapeAttributeValue(element.value)}"]`;
@@ -361,14 +391,14 @@ window.__chromePilotHelper = {
       }
     }
     
-    // 3. Try name attribute (common for form elements)
+    // 4. Try name attribute (common for form elements)
     if (element.name) {
       const nameSelector = `${element.tagName.toLowerCase()}[name="${escapeAttributeValue(element.name)}"]`;
       const matches = document.querySelectorAll(nameSelector);
       if (matches.length === 1) {
         return nameSelector;
       }
-      // 4. If multiple matches and element has type attribute, try combining
+      // 5. If multiple matches and element has type attribute, try combining
       if (element.type) {
         const typeNameSelector = `${element.tagName.toLowerCase()}[type="${escapeAttributeValue(element.type)}"][name="${escapeAttributeValue(element.name)}"]`;
         if (document.querySelectorAll(typeNameSelector).length === 1) {
@@ -377,7 +407,7 @@ window.__chromePilotHelper = {
       }
     }
     
-    // 5. Try any data-* attributes (common for test automation and component identification)
+    // 6. Try any data-* attributes (common for test automation and component identification)
     for (const attr of element.attributes) {
       if (attr.name.startsWith('data-')) {
         const dataSelector = `[${attr.name}="${escapeAttributeValue(attr.value)}"]`;
@@ -387,7 +417,7 @@ window.__chromePilotHelper = {
       }
     }
     
-    // 6. Try aria-label for accessibility-labeled elements
+    // 7. Try aria-label for accessibility-labeled elements
     if (element.hasAttribute('aria-label')) {
       const ariaSelector = `${element.tagName.toLowerCase()}[aria-label="${escapeAttributeValue(element.getAttribute('aria-label'))}"]`;
       if (document.querySelectorAll(ariaSelector).length === 1) {
@@ -395,7 +425,7 @@ window.__chromePilotHelper = {
       }
     }
     
-    // 7. For input elements, try type + placeholder combination
+    // 8. For input elements, try type + placeholder combination
     if (element.tagName === 'INPUT' && element.type && element.placeholder) {
       const typePlaceholderSelector = `input[type="${escapeAttributeValue(element.type)}"][placeholder="${escapeAttributeValue(element.placeholder)}"]`;
       if (document.querySelectorAll(typePlaceholderSelector).length === 1) {
@@ -403,7 +433,7 @@ window.__chromePilotHelper = {
       }
     }
     
-    // 8. Try unique class (filter out common utility classes)
+    // 9. Try unique class (filter out common utility classes)
     const classes = Array.from(element.classList).filter(cls => {
       // Skip generic utility classes (Bootstrap, Tailwind-like patterns)
       return !cls.match(/^(btn|button|input|form|text|label|field|container|wrapper|col|row|mt|mb|ml|mr|pt|pb|pl|pr|m-|p-|w-|h-|flex|grid|d-|align|justify)(-|\d|$)/);

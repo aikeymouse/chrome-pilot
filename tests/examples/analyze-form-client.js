@@ -8,7 +8,8 @@
  * 
  * Examples:
  *   node analyze-form-client.js https://www.selenium.dev/selenium/web/web-form.html
- *   node analyze-form-client.js https://example.com "button.submit"
+ *   node analyze-form-client.js https://www.selenium.dev/selenium/web/web-form.html "form"
+ *   node analyze-form-client.js https://github.com/login "input[type=text]"
  * 
  * Limitations:
  *   - None - works on all pages including CSP-restricted sites
@@ -431,8 +432,8 @@ async function main() {
     console.log('');
     console.log(c.bold('Examples:'));
     console.log(c.dim('  node analyze-form-client.js https://www.selenium.dev/selenium/web/web-form.html'));
-    console.log(c.dim('  node analyze-form-client.js https://example.com "button.submit"'));
-    console.log(c.dim('  node analyze-form-client.js https://example.com "input[type=email]"'));
+    console.log(c.dim('  node analyze-form-client.js https://www.selenium.dev/selenium/web/web-form.html "form"'));
+    console.log(c.dim('  node analyze-form-client.js https://github.com/login "input[type=text]"'));
     console.log('');
     process.exit(0);
   }
