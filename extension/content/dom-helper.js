@@ -458,6 +458,28 @@ window.__chromePilotHelper = {
       }
     }
     
+    if (element.tagName === 'BUTTON') {
+      // Try type attribute for buttons
+      if (element.type) {
+        const typeSelector = `button[type="${escapeAttributeValue(element.type)}"]`;
+        if (document.querySelectorAll(typeSelector).length === 1) {
+          return typeSelector;
+        }
+      }
+      // Try text content if it's reasonably short and unique
+      const text = element.textContent?.trim();
+      if (text && text.length > 0 && text.length < 50) {
+        // Find all buttons and check if text is unique
+        const allButtons = Array.from(document.querySelectorAll('button'));
+        const matchingButtons = allButtons.filter(btn => btn.textContent?.trim() === text);
+        if (matchingButtons.length === 1) {
+          // Use :is() with type to make it more specific, or fall back to filtering
+          // Since we can't directly select by text in CSS, we'll skip this
+          // and rely on other attributes or nth-child
+        }
+      }
+    }
+    
     if (element.tagName === 'A' && element.href) {
       const hrefSelector = `a[href="${escapeAttributeValue(element.getAttribute('href'))}"]`;
       if (document.querySelectorAll(hrefSelector).length === 1) {
