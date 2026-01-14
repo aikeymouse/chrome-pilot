@@ -292,13 +292,13 @@ class MarkdownReportGenerator {
     const { container, elements, validation } = analysisData;
 
     // Title and metadata
-    lines.push('# Form Analysis Report\n');
-    lines.push(`**URL:** ${url}\n`);
-    lines.push(`**Container:** \`${container.selector}\`\n`);
-    lines.push(`**Total Elements:** ${elements.length}\n`);
+    lines.push('# Form Analysis Report\n\n');
+    lines.push(`**URL:** ${url}\n\n`);
+    lines.push(`**Container:** \`${container.selector}\`\n\n`);
+    lines.push(`**Total Elements:** ${elements.length}\n\n`);
     
     if (validation) {
-      lines.push(`**Validation:** ${validation.unique} unique selectors, ${validation.ambiguous} ambiguous\n`);
+      lines.push(`**Validation:** ${validation.unique} unique selectors, ${validation.ambiguous} ambiguous\n\n`);
     }
 
     // Capture container screenshot
@@ -475,10 +475,36 @@ class MarkdownReportGenerator {
   }
 
   /**
+   * Clean up old output files before generating new report
+   */
+  cleanupOldOutput(outputFile) {
+    // Remove old markdown report if exists
+    if (fs.existsSync(outputFile)) {
+      fs.unlinkSync(outputFile);
+      console.log(`  ✓ Removed old report: ${outputFile}`);
+    }
+
+    // Remove old screenshots directory if exists
+    if (fs.existsSync(this.screenshotDir)) {
+      const files = fs.readdirSync(this.screenshotDir);
+      for (const file of files) {
+        fs.unlinkSync(path.join(this.screenshotDir, file));
+      }
+      fs.rmdirSync(this.screenshotDir);
+      console.log(`  ✓ Removed old screenshots: ${this.screenshotDir}`);
+    }
+  }
+
+  /**
    * Generate report
    */
   async generateReport(url, inputFile, outputFile) {
     console.log('\n🔍 Starting markdown report generation...\n');
+    
+    // Clean up old output files
+    console.log('🧹 Cleaning up old output...');
+    this.cleanupOldOutput(outputFile);
+    console.log('  ✓ Cleanup complete\n');
     
     // Load analysis data
     console.log(`📄 Loading analysis from: ${inputFile}`);
