@@ -271,22 +271,34 @@ class FormAnalyzer {
       const matchCount = result.value;
       const isValid = matchCount === 1;
       
+      // Check if selector is fragile (contains multiple nth-child)
+      const nthChildCount = (element.selector.match(/:nth-child\(/g) || []).length;
+      const isFragile = nthChildCount >= 3;
+      
       validationResults.push({
         selector: element.selector,
         matchCount,
         isValid,
         tagName: element.tagName,
-        type: element.type
+        type: element.type,
+        isFragile
       });
       
       if (!isValid) {
         console.log(`  ${c.warning('⚠')} ${c.code(element.selector)} matches ${c.warning(matchCount)} elements (expected 1)`);
+      } else if (isFragile) {
+        console.log(`  ${c.warning('⚠')} ${c.dim('Fragile selector:')} ${c.code(element.selector)}`);
+        console.log(`      ${c.dim('Consider adding id, name, or data-* attributes to make it more stable')}`);
       }
     }
     
     const validCount = validationResults.filter(r => r.isValid).length;
     const totalCount = validationResults.length;
+    const fragileCount = validationResults.filter(r => r.isFragile).length;
     console.log(`  ${c.success('✓')} Validated ${c.info(totalCount)} selectors: ${c.success(validCount + ' unique')}, ${totalCount - validCount > 0 ? c.warning(totalCount - validCount + ' ambiguous') : c.dim('0 ambiguous')}`);
+    if (fragileCount > 0) {
+      console.log(`  ${c.warning('⚠')} ${c.warning(fragileCount)} fragile selector(s) detected (using nth-child paths)`);
+    }
     console.log(`  ${c.dim('⏳ Keeping highlights visible for 5 seconds...')}\n`);
     
     // Wait 5 seconds before clearing highlights
@@ -303,6 +315,7 @@ class FormAnalyzer {
       total: totalCount,
       unique: validCount,
       ambiguous: totalCount - validCount,
+      fragile: fragileCount,
       results: validationResults
     };
     
@@ -327,13 +340,16 @@ class FormAnalyzer {
     
     // Display validation summary
     if (analysis.validation) {
-      const { total, unique, ambiguous } = analysis.validation;
+      const { total, unique, ambiguous, fragile } = analysis.validation;
       const percentage = ((unique / total) * 100).toFixed(1);
       console.log(c.bold(percentage === '100.0' ? c.success('✅ Selector Validation:') : c.warning('✅ Selector Validation:')));
       console.log(`   ${c.dim('Total:')}     ${c.info(total)}`);
       console.log(`   ${c.dim('Unique:')}    ${percentage === '100.0' ? c.success(unique + ' (' + percentage + '%)') : c.info(unique + ' (' + percentage + '%)')}`);
       if (ambiguous > 0) {
         console.log(`   ${c.dim('Ambiguous:')} ${c.warning(ambiguous)}`);
+      }
+      if (fragile > 0) {
+        console.log(`   ${c.dim('Fragile:')}   ${c.warning(fragile + ' (using nth-child paths)')}`);
       }
       console.log('');
     }
@@ -355,8 +371,9 @@ class FormAnalyzer {
         // Check if selector is validated
         const validation = analysis.validation?.results.find(r => r.selector === el.selector);
         const validationMark = validation ? (validation.isValid ? c.success('✓') : c.warning(`⚠(${validation.matchCount})`)) : '';
+        const fragileMark = validation?.isFragile ? c.warning(' ⚠fragile') : '';
         
-        console.log(`    ${validationMark ? validationMark + ' ' : ''}${c.dim('•')} ${c.code(el.selector)}`);
+        console.log(`    ${validationMark ? validationMark + ' ' : ''}${c.dim('•')} ${c.code(el.selector)}${fragileMark}`);
         if (el.label) console.log(`      ${c.dim('Label:')} ${el.label}`);
         if (el.name) console.log(`      ${c.dim('Name:')} ${el.name}`);
         if (el.placeholder) console.log(`      ${c.dim('Placeholder:')} ${el.placeholder}`);
