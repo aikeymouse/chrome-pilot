@@ -509,7 +509,7 @@ async function captureScreenshot(params) {
     throw { code: 'TAB_NOT_FOUND', message: `Tab with ID ${tabId} not found or was closed` };
   }
   
-  // If selector provided, get bounds and crop to elements
+  // If selector provided, get bounds and crop to combined area
   if (selector) {
     // Get element bounds
     const boundsResult = await callHelper({
@@ -519,7 +519,11 @@ async function captureScreenshot(params) {
     });
     
     if (!boundsResult.value || boundsResult.value.length === 0) {
-      return { screenshots: [] };
+      throw {
+        code: 'ELEMENTS_NOT_FOUND',
+        message: `No elements found matching selector: ${selector}`,
+        selector: selector
+      };
     }
     
     // Capture viewport
@@ -528,7 +532,7 @@ async function captureScreenshot(params) {
       quality: format === 'jpeg' ? quality : undefined
     });
     
-    // Crop to elements
+    // Crop to combined bounding box
     const cropResult = await callHelper({
       tabId,
       functionName: '_internal_cropScreenshotToElements',
@@ -536,7 +540,7 @@ async function captureScreenshot(params) {
       _internal: true
     });
     
-    return { screenshots: cropResult.value };
+    return cropResult.value;
   }
   
   // No selector - return full viewport

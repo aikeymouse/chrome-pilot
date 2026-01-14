@@ -92,24 +92,53 @@ async function main() {
       selector: 'h1'
     });
     
-    console.log(`Captured ${elementCaptureResult.screenshots.length} element screenshot(s)`);
-    if (elementCaptureResult.screenshots.length > 0) {
-      const screenshot = elementCaptureResult.screenshots[0];
-      console.log('Element screenshot:');
-      console.log('  - Index:', screenshot.index);
-      console.log('  - DataURL length:', screenshot.dataUrl.length);
-      console.log('  - Device Pixel Ratio:', screenshot.devicePixelRatio);
-      console.log('  - Bounds:', JSON.stringify(screenshot.bounds, null, 2));
-      
-      // Save element screenshot to file
-      const screenshotData = screenshot.dataUrl.replace(/^data:image\/png;base64,/, '');
-      const screenshotPath = path.join(__dirname, 'h1-screenshot.png');
-      fs.writeFileSync(screenshotPath, Buffer.from(screenshotData, 'base64'));
-      console.log(`💾 Element screenshot saved to: ${screenshotPath}`);
+    console.log('Element screenshot captured (combined bounds):');
+    console.log('  - DataURL length:', elementCaptureResult.dataUrl.length);
+    console.log('  - Device Pixel Ratio:', elementCaptureResult.devicePixelRatio);
+    console.log('  - Element Count:', elementCaptureResult.elementCount);
+    console.log('  - Bounds:', JSON.stringify(elementCaptureResult.bounds, null, 2));
+    
+    // Save element screenshot to file
+    const screenshotData = elementCaptureResult.dataUrl.replace(/^data:image\/png;base64,/, '');
+    const screenshotPath = path.join(__dirname, 'h1-screenshot.png');
+    fs.writeFileSync(screenshotPath, Buffer.from(screenshotData, 'base64'));
+    console.log(`💾 Element screenshot saved to: ${screenshotPath}`);
+    
+    // Example 8: Capture multiple elements in combined screenshot
+    console.log('\n📸 Capturing multiple labels in combined screenshot...');
+    const multiCaptureResult = await client.sendRequest('captureScreenshot', { 
+      tabId,
+      selector: 'label.form-label'
+    });
+    
+    console.log('Combined screenshot captured:');
+    console.log('  - DataURL length:', multiCaptureResult.dataUrl.length);
+    console.log('  - Element Count:', multiCaptureResult.elementCount);
+    console.log('  - Combined Bounds:', JSON.stringify(multiCaptureResult.bounds, null, 2));
+    
+    // Save combined screenshot to file
+    const multiData = multiCaptureResult.dataUrl.replace(/^data:image\/png;base64,/, '');
+    const multiPath = path.join(__dirname, 'labels-combined-screenshot.png');
+    fs.writeFileSync(multiPath, Buffer.from(multiData, 'base64'));
+    console.log(`💾 Combined screenshot saved to: ${multiPath}`);
+    
+    // Example 9: Test with non-existent element (should throw error)
+    console.log('\n🔍 Testing with non-existent element (expecting error)...');
+    try {
+      await client.sendRequest('captureScreenshot', { 
+        tabId,
+        selector: '#does-not-exist'
+      });
+      console.log('❌ Expected error but got success');
+    } catch (error) {
+      console.log('✅ Got expected error:');
+      console.log('  - Code:', error.code);
+      console.log('  - Message:', error.message);
+      console.log('  - Selector:', error.selector);
     }
     
-    // Example 8: Test with non-existent element
-    console.log('\n🔍 Testing with non-existent element...');
+    // Example 10: Test bounds helper with non-existent element
+    console.log('\n🔍 Testing getElementBounds with non-existent element...');
     const emptyResult = await client.callHelper('getElementBounds', ['#does-not-exist'], tabId);
     console.log(`Empty result (expected []): ${JSON.stringify(emptyResult.value)}`);
     

@@ -77,51 +77,44 @@ describe('Screenshot functionality', function() {
         selector: 'h1'
       });
       
-      expect(result).to.have.property('screenshots');
-      expect(result.screenshots).to.be.an('array');
-      expect(result.screenshots).to.have.lengthOf(1);
-      
-      const screenshot = result.screenshots[0];
-      expect(screenshot).to.have.property('index', 0);
-      expect(screenshot).to.have.property('dataUrl');
-      expect(screenshot.dataUrl).to.match(/^data:image\/png;base64,/);
-      expect(screenshot).to.have.property('bounds');
-      expect(screenshot.bounds).to.have.property('x');
-      expect(screenshot.bounds).to.have.property('y');
-      expect(screenshot.bounds).to.have.property('width').greaterThan(0);
-      expect(screenshot.bounds).to.have.property('height').greaterThan(0);
-      expect(screenshot).to.have.property('devicePixelRatio');
+      expect(result).to.have.property('dataUrl');
+      expect(result.dataUrl).to.match(/^data:image\/png;base64,/);
+      expect(result).to.have.property('bounds');
+      expect(result.bounds).to.have.property('x');
+      expect(result.bounds).to.have.property('y');
+      expect(result.bounds).to.have.property('width').greaterThan(0);
+      expect(result.bounds).to.have.property('height').greaterThan(0);
+      expect(result).to.have.property('elementCount', 1);
+      expect(result).to.have.property('devicePixelRatio');
     });
 
-    it('should capture multiple element screenshots', async function() {
+    it('should capture combined screenshot for multiple elements', async function() {
       const result = await client.sendRequest('captureScreenshot', {
         tabId: testTabId,
         selector: 'label.form-label'
       });
       
-      expect(result).to.have.property('screenshots');
-      expect(result.screenshots).to.be.an('array');
-      expect(result.screenshots.length).to.be.greaterThan(1);
-      
-      // Verify each screenshot
-      result.screenshots.forEach((screenshot, idx) => {
-        expect(screenshot.index).to.equal(idx);
-        expect(screenshot.dataUrl).to.match(/^data:image\/png;base64,/);
-        expect(screenshot.dataUrl.length).to.be.greaterThan(100);
-        expect(screenshot.bounds).to.be.an('object');
-        expect(screenshot.devicePixelRatio).to.be.a('number');
-      });
+      expect(result).to.have.property('dataUrl');
+      expect(result.dataUrl).to.match(/^data:image\/png;base64,/);
+      expect(result.dataUrl.length).to.be.greaterThan(100);
+      expect(result).to.have.property('bounds');
+      expect(result.bounds).to.be.an('object');
+      expect(result).to.have.property('elementCount').greaterThan(1);
+      expect(result).to.have.property('devicePixelRatio').to.be.a('number');
     });
 
-    it('should return empty array for non-existent element', async function() {
-      const result = await client.sendRequest('captureScreenshot', {
-        tabId: testTabId,
-        selector: '#nonexistent-element-12345'
-      });
-      
-      expect(result).to.have.property('screenshots');
-      expect(result.screenshots).to.be.an('array');
-      expect(result.screenshots).to.have.lengthOf(0);
+    it('should throw error for non-existent element', async function() {
+      try {
+        await client.sendRequest('captureScreenshot', {
+          tabId: testTabId,
+          selector: '#nonexistent-element-12345'
+        });
+        expect.fail('Should have thrown error');
+      } catch (error) {
+        expect(error).to.have.property('code', 'ELEMENTS_NOT_FOUND');
+        expect(error).to.have.property('message').that.includes('#nonexistent-element-12345');
+        expect(error).to.have.property('selector', '#nonexistent-element-12345');
+      }
     });
   });
 

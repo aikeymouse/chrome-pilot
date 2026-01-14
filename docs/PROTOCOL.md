@@ -898,7 +898,7 @@ Capture screenshot of the visible viewport or specific elements.
 - `tabId` (number, optional): Tab ID to capture. If omitted, uses active tab
 - `format` (string, optional): Image format - `"png"` or `"jpeg"`. Default: `"png"`
 - `quality` (number, optional): JPEG quality 0-100. Only used when format is `"jpeg"`. Default: 90
-- `selector` (string, optional): CSS selector to capture specific elements. If provided, captures and crops to matching elements
+- `selector` (string, optional): CSS selector to capture specific elements. If provided, captures all matching elements in a single combined screenshot
 
 **Response (Full Viewport):**
 ```json
@@ -911,39 +911,34 @@ Capture screenshot of the visible viewport or specific elements.
 }
 ```
 
-**Request (Element Screenshots):**
+**Request (Element Screenshot):**
 ```json
 {
   "action": "captureScreenshot",
   "params": {
     "tabId": 123,
-    "selector": "h1"
+    "selector": "h1, button.submit"
   },
   "requestId": "req-014"
 }
 ```
 
-**Response (Element Screenshots):**
+**Response (Element Screenshot - Combined):**
 ```json
 {
   "requestId": "req-014",
   "result": {
-    "screenshots": [
-      {
-        "index": 0,
-        "dataUrl": "data:image/png;base64,iVBORw0KGgo...",
-        "bounds": {
-          "index": 0,
-          "x": 113,
-          "y": 0,
-          "width": 936,
-          "height": 47,
-          "absoluteX": 113,
-          "absoluteY": 0
-        },
-        "devicePixelRatio": 2
-      }
-    ]
+    "dataUrl": "data:image/png;base64,iVBORw0KGgo...",
+    "bounds": {
+      "x": 100,
+      "y": 50,
+      "width": 800,
+      "height": 600,
+      "absoluteX": 100,
+      "absoluteY": 1050
+    },
+    "elementCount": 3,
+    "devicePixelRatio": 2
   },
   "error": null
 }
@@ -953,21 +948,27 @@ Capture screenshot of the visible viewport or specific elements.
 ```json
 {
   "requestId": "req-014",
-  "result": {
-    "screenshots": []
-  },
-  "error": null
+  "result": null,
+  "error": {
+    "code": "ELEMENTS_NOT_FOUND",
+    "message": "No elements found matching selector: h1, button.submit",
+    "selector": "h1, button.submit"
+  }
 }
 ```
 
 **Notes:**
 - Uses `chrome.tabs.captureVisibleTab` which only captures visible viewport (not full page)
 - Captures at device resolution (2x on Retina displays)
-- When `selector` is provided, automatically crops to all matching elements
+- When `selector` is provided:
+  - Finds ALL matching elements using `querySelectorAll`
+  - Calculates a bounding box that encompasses all matched elements
+  - Returns a SINGLE screenshot cropped to the combined bounding area
+  - Adds 10px padding around the combined bounds
 - Elements must be visible in current viewport
 - Device pixel ratio is automatically handled for accurate cropping
-- Adds 10px padding around each element
 - Works on CSP-restricted pages
+- For multiple separate screenshots, make multiple requests with different selectors
 
 **Example Usage:**
 
@@ -977,13 +978,23 @@ const result = await client.sendRequest('captureScreenshot', { tabId });
 // Returns: { dataUrl: "data:image/png;base64,..." }
 ```
 
-Element screenshots:
+Single element screenshot:
 ```javascript
 const result = await client.sendRequest('captureScreenshot', { 
   tabId, 
   selector: 'h1' 
 });
-// Returns: { screenshots: [{index, dataUrl, bounds, devicePixelRatio}, ...] }
+// Returns: { dataUrl: "...", bounds: {...}, elementCount: 1, devicePixelRatio: 2 }
+```
+
+Multiple elements combined screenshot:
+```javascript
+const result = await client.sendRequest('captureScreenshot', { 
+  tabId, 
+  selector: 'label[for="username"], input#username' 
+});
+// Returns single screenshot encompassing both label and input
+// { dataUrl: "...", bounds: {...}, elementCount: 2, devicePixelRatio: 2 }
 ```
 
 ## Event Messages

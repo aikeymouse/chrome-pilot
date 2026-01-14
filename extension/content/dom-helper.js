@@ -259,78 +259,88 @@ window.__chromePilotHelper = {
   },
 
   /**
-   * Crop screenshot to element bounds using Canvas API (internal helper)
+   * Crop screenshot to combined bounding box encompassing all elements
    * Called by captureScreenshot command in service-worker
-   * Returns array of cropped screenshots as base64 data URLs
+   * Returns single screenshot with combined bounds and element count
    */
   async _internal_cropScreenshotToElements(fullScreenshotDataUrl, boundsArray) {
     if (!boundsArray || boundsArray.length === 0) {
-      return [];
+      throw new Error('No bounds provided for cropping');
     }
     
-    const results = [];
     const dpr = window.devicePixelRatio || 1;
     
+    // Calculate combined bounding box
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    
     for (const bounds of boundsArray) {
-      try {
-        const croppedDataUrl = await new Promise((resolve, reject) => {
-          const img = new Image();
-          
-          img.onload = () => {
-            try {
-              const canvas = document.createElement('canvas');
-              const padding = 10; // Add 10px padding on all sides
-              
-              // Account for device pixel ratio
-              const x = Math.max(0, (bounds.x - padding) * dpr);
-              const y = Math.max(0, (bounds.y - padding) * dpr);
-              const width = Math.min((bounds.width + (padding * 2)) * dpr, img.width - x);
-              const height = Math.min((bounds.height + (padding * 2)) * dpr, img.height - y);
-              
-              // Canvas uses CSS pixels
-              canvas.width = width / dpr;
-              canvas.height = height / dpr;
-              
-              const ctx = canvas.getContext('2d');
-              // Scale context to account for device pixel ratio
-              ctx.scale(1/dpr, 1/dpr);
-              ctx.drawImage(
-                img,
-                x, y,
-                width, height,
-                0, 0,
-                width, height
-              );
-              
-              resolve(canvas.toDataURL('image/png'));
-            } catch (err) {
-              reject(new Error(`Crop failed: ${err.message}`));
-            }
-          };
-          
-          img.onerror = () => {
-            reject(new Error('Failed to load screenshot image'));
-          };
-          
-          img.src = fullScreenshotDataUrl;
-        });
-        
-        results.push({
-          index: bounds.index,
-          dataUrl: croppedDataUrl,
-          bounds: bounds,
-          devicePixelRatio: dpr
-        });
-      } catch (err) {
-        results.push({
-          index: bounds.index,
-          error: err.message,
-          bounds: bounds
-        });
-      }
+      minX = Math.min(minX, bounds.x);
+      minY = Math.min(minY, bounds.y);
+      maxX = Math.max(maxX, bounds.x + bounds.width);
+      maxY = Math.max(maxY, bounds.y + bounds.height);
     }
     
-    return results;
+    const combinedBounds = {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+      absoluteX: boundsArray[0].absoluteX + (minX - boundsArray[0].x),
+      absoluteY: boundsArray[0].absoluteY + (minY - boundsArray[0].y)
+    };
+    
+    // Crop to combined area
+    const croppedDataUrl = await new Promise((resolve, reject) => {
+      const img = new Image();
+      
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const padding = 10; // Add 10px padding on all sides
+          
+          // Account for device pixel ratio
+          const x = Math.max(0, (combinedBounds.x - padding) * dpr);
+          const y = Math.max(0, (combinedBounds.y - padding) * dpr);
+          const width = Math.min((combinedBounds.width + (padding * 2)) * dpr, img.width - x);
+          const height = Math.min((combinedBounds.height + (padding * 2)) * dpr, img.height - y);
+          
+          // Canvas uses CSS pixels
+          canvas.width = width / dpr;
+          canvas.height = height / dpr;
+          
+          const ctx = canvas.getContext('2d');
+          // Scale context to account for device pixel ratio
+          ctx.scale(1/dpr, 1/dpr);
+          ctx.drawImage(
+            img,
+            x, y,
+            width, height,
+            0, 0,
+            width, height
+          );
+          
+          resolve(canvas.toDataURL('image/png'));
+        } catch (err) {
+          reject(new Error(`Crop failed: ${err.message}`));
+        }
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load screenshot image'));
+      };
+      
+      img.src = fullScreenshotDataUrl;
+    });
+    
+    return {
+      dataUrl: croppedDataUrl,
+      bounds: combinedBounds,
+      elementCount: boundsArray.length,
+      devicePixelRatio: dpr
+    };
   },
 
   /**

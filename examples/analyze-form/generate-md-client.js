@@ -86,9 +86,8 @@ class MarkdownReportGenerator {
       });
 
       // Save screenshot
-      if (captureResult.screenshots && captureResult.screenshots.length > 0) {
-        const screenshot = captureResult.screenshots[0];
-        const filepath = this.saveScreenshot(screenshot.dataUrl, filename);
+      if (captureResult.dataUrl) {
+        const filepath = this.saveScreenshot(captureResult.dataUrl, filename);
         console.log(`  ${c.success('✓')} Saved screenshot: ${c.dim(filename)}`);
         return path.relative(this.outputBaseDir, filepath);
       } else {
@@ -96,7 +95,11 @@ class MarkdownReportGenerator {
         return null;
       }
     } catch (error) {
-      console.log(`  ${c.warning('⚠')} Failed to capture screenshot for ${c.dim(selector)}: ${error.message}`);
+      if (error.code === 'ELEMENTS_NOT_FOUND') {
+        console.log(`  ${c.warning('⚠')} No elements found for: ${c.dim(selector)}`);
+      } else {
+        console.log(`  ${c.warning('⚠')} Failed to capture screenshot for ${c.dim(selector)}: ${error.message}`);
+      }
       return null;
     }
   }
@@ -248,7 +251,7 @@ class MarkdownReportGenerator {
           selector: labelSelector
         });
       } else {
-        // Label doesn't wrap - capture both separately
+        // Label doesn't wrap - capture both in combined screenshot
         const combinedSelector = `${labelSelector}, ${fieldSelector}`;
         captureResult = await this.client.sendRequest('captureScreenshot', {
           tabId,
@@ -263,32 +266,21 @@ class MarkdownReportGenerator {
         args: []
       });
 
-      // Handle the result
-      if (captureResult.screenshots && captureResult.screenshots.length > 0) {
-        if (captureResult.screenshots.length === 1) {
-          // Single screenshot
-          const screenshot = captureResult.screenshots[0];
-          const filepath = this.saveScreenshot(screenshot.dataUrl, filename);
-          console.log(`  ${c.success('✓')} Saved screenshot: ${c.dim(filename)}`);
-          return path.relative(this.outputBaseDir, filepath);
-        } else {
-          // Multiple screenshots - save all and return array
-          const paths = [];
-          for (let i = 0; i < captureResult.screenshots.length; i++) {
-            const screenshot = captureResult.screenshots[i];
-            const filenamePart = filename.replace('.png', `-${i}.png`);
-            const filepath = this.saveScreenshot(screenshot.dataUrl, filenamePart);
-            paths.push(path.relative(this.outputBaseDir, filepath));
-          }
-          console.log(`  ${c.success('✓')} Saved ${paths.length} screenshots: ${c.dim(filename)}`);
-          return paths;
-        }
+      // Handle the result (now returns single screenshot with combined bounds)
+      if (captureResult.dataUrl) {
+        const filepath = this.saveScreenshot(captureResult.dataUrl, filename);
+        console.log(`  ${c.success('✓')} Saved screenshot: ${c.dim(filename)}`);
+        return path.relative(this.outputBaseDir, filepath);
       } else {
         console.log(`  ${c.warning('⚠')} No screenshot captured for pair`);
         return null;
       }
     } catch (error) {
-      console.log(`  ${c.warning('⚠')} Failed to capture pair screenshot: ${error.message}`);
+      if (error.code === 'ELEMENTS_NOT_FOUND') {
+        console.log(`  ${c.warning('⚠')} No elements found for pair`);
+      } else {
+        console.log(`  ${c.warning('⚠')} Failed to capture pair screenshot: ${error.message}`);
+      }
       return null;
     }
   }
