@@ -1,19 +1,44 @@
-# ChromePilot Tests
+# ChromePilot Examples
 
-This directory contains test utilities for ChromePilot.
+WebSocket client examples for ChromePilot browser automation.
 
-## Test Client
-
-`test-client.js` - A comprehensive end-to-end test client that verifies all ChromePilot functionality.
-
-### Running Tests
+## Quick Start
 
 ```bash
-cd tests
-node test-client.js
+cd tests/examples
+npm install
+npm test
 ```
 
-### Prerequisites
+## Available Examples
+
+- **test-client.js** - Comprehensive test suite for all ChromePilot features
+- **google-search-client.js** - Google search automation example
+- **screenshot-client.js** - Screenshot capture example
+- **gemini-client.js** - AI integration example with Gemini
+
+## Running Examples
+
+```bash
+# Install dependencies
+npm install
+
+# Run test client
+npm test
+# or
+node test-client.js
+
+# Run Google search example
+npm run google
+
+# Run screenshot example
+npm run screenshot
+
+# Run Gemini example
+npm run gemini
+```
+
+## Prerequisites
 
 - ChromePilot extension loaded in Chrome
 - Extension side panel open (click extension icon)

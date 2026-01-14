@@ -1,0 +1,23 @@
+{
+  "name": "chromepilot-examples",
+  "version": "1.1.0",
+  "description": "ChromePilot WebSocket client examples",
+  "main": "chromepilot-client.js",
+  "scripts": {
+    "test": "node test-client.js",
+    "google": "node google-search-client.js",
+    "screenshot": "node screenshot-client.js",
+    "gemini": "node gemini-client.js"
+  },
+  "keywords": [
+    "chromepilot",
+    "websocket",
+    "chrome",
+    "automation"
+  ],
+  "author": "",
+  "license": "CC-BY-NC-ND-4.0",
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
