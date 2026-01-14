@@ -7,34 +7,6 @@
   },
   "elements": [
     {
-      "selector": "[data-csrf=\"true\"]",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "authenticity_token",
-      "id": "",
-      "label": "authenticity_token",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "cbYFJD4DuILR74taqyr0MRXBKKWeb/IB1N+sYOytCAsey3jZvN...",
-      "textContent": ""
-    },
-    {
-      "selector": "#add_account",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "add_account",
-      "id": "add_account",
-      "label": "label[for=\"add_account\"]",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "",
-      "textContent": ""
-    },
-    {
       "selector": "label[for=\"login_field\"]",
       "tagName": "label",
       "type": "",
@@ -105,157 +77,17 @@
       "textContent": "Forgot password?"
     },
     {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(4)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "webauthn-conditional",
-      "id": "",
-      "label": "webauthn-conditional",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "undefined",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(5)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "javascript-support",
-      "id": "",
-      "label": "javascript-support",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "true",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(6)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "webauthn-support",
-      "id": "",
-      "label": "webauthn-support",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "supported",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(7)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "webauthn-iuvpaa-support",
-      "id": "",
-      "label": "webauthn-iuvpaa-support",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "supported",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(8)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "return_to",
-      "id": "return_to",
-      "label": "label[for=\"return_to\"]",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "https://github.com/login",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(9)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "allow_signup",
-      "id": "allow_signup",
-      "label": "label[for=\"allow_signup\"]",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(10)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "client_id",
-      "id": "client_id",
-      "label": "label[for=\"client_id\"]",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(11)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "integration",
-      "id": "integration",
-      "label": "label[for=\"integration\"]",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "",
-      "textContent": ""
-    },
-    {
-      "selector": "input[name=\"required_field_a73d\"]",
+      "selector": "input[name=\"required_field_09f7\"]",
       "tagName": "input",
       "type": "text",
-      "name": "required_field_a73d",
+      "name": "required_field_09f7",
       "id": "",
-      "label": "required_field_a73d",
+      "label": "required_field_09f7",
       "placeholder": "",
       "required": false,
       "disabled": false,
       "visible": true,
       "value": "",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(13)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "timestamp",
-      "id": "",
-      "label": "timestamp",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "1768425411707",
-      "textContent": ""
-    },
-    {
-      "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(14)",
-      "tagName": "input",
-      "type": "hidden",
-      "name": "timestamp_secret",
-      "id": "",
-      "label": "timestamp_secret",
-      "placeholder": "",
-      "required": false,
-      "disabled": false,
-      "visible": true,
-      "value": "6de5d20f572a190070b02e27661a51761c0b7ca02e80f5ae29...",
       "textContent": ""
     },
     {
@@ -274,27 +106,11 @@
     }
   ],
   "validation": {
-    "total": 19,
-    "unique": 19,
+    "total": 7,
+    "unique": 7,
     "ambiguous": 0,
-    "fragile": 10,
+    "fragile": 0,
     "results": [
-      {
-        "selector": "[data-csrf=\"true\"]",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": false
-      },
-      {
-        "selector": "#add_account",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": false
-      },
       {
         "selector": "label[for=\"login_field\"]",
         "matchCount": 1,
@@ -336,92 +152,12 @@
         "isFragile": false
       },
       {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(4)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(5)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(6)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(7)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(8)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(9)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(10)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(11)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "input[name=\"required_field_a73d\"]",
+        "selector": "input[name=\"required_field_09f7\"]",
         "matchCount": 1,
         "isValid": true,
         "tagName": "input",
         "type": "text",
         "isFragile": false
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(13)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
-      },
-      {
-        "selector": "div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(14)",
-        "matchCount": 1,
-        "isValid": true,
-        "tagName": "input",
-        "type": "hidden",
-        "isFragile": true
       },
       {
         "selector": "input[name=\"commit\"]",

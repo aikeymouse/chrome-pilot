@@ -4,235 +4,26 @@
 
 **Container:** `div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3)`
 
-**Total Elements:** 19
+**Total Elements:** 7
 
-**Validation:** 19 unique selectors, 0 ambiguous
+**Validation:** 7 unique selectors, 0 ambiguous
 
 
 ## Full Page View
-![Container highlighted](screenshots/container-full-page.png)
+![Container highlighted](../report-example/login-page/screenshots/container-full-page.png)
 
 ## Table of Contents
-- [INPUT-HIDDEN](#input-hidden)
 - [INPUT-TEXT](#input-text)
 - [INPUT-PASSWORD](#input-password)
 - [LINK](#link)
 - [INPUT-SUBMIT](#input-submit)
 
-## INPUT-HIDDEN
-Found 12 item(s)
-
-### authenticity_token
-![[data-csrf="true"]](screenshots/element-001.png)
-
-**Selector:**
-```css
-[data-csrf="true"]
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `authenticity_token`
-- **Value:** "cbYFJD4DuILR74taqyr0MRXBKKWeb/IB1N+sYOytCAsey3jZvN..."
-- **Label Selector:** `authenticity_token`
-
----
-
-### add_account
-![#add_account](screenshots/element-002.png)
-
-**Selector:**
-```css
-#add_account
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `add_account`
-- **ID:** `add_account`
-- **Label Selector:** `label[for="add_account"]`
-
----
-
-### webauthn-conditional
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(4)](screenshots/element-003.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(4)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `webauthn-conditional`
-- **Value:** "undefined"
-- **Label Selector:** `webauthn-conditional`
-
----
-
-### javascript-support
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(5)](screenshots/element-004.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(5)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `javascript-support`
-- **Value:** "true"
-- **Label Selector:** `javascript-support`
-
----
-
-### webauthn-support
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(6)](screenshots/element-005.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(6)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `webauthn-support`
-- **Value:** "supported"
-- **Label Selector:** `webauthn-support`
-
----
-
-### webauthn-iuvpaa-support
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(7)](screenshots/element-006.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(7)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `webauthn-iuvpaa-support`
-- **Value:** "supported"
-- **Label Selector:** `webauthn-iuvpaa-support`
-
----
-
-### return_to
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(8)](screenshots/element-007.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(8)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `return_to`
-- **ID:** `return_to`
-- **Value:** "https://github.com/login"
-- **Label Selector:** `label[for="return_to"]`
-
----
-
-### allow_signup
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(9)](screenshots/element-008.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(9)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `allow_signup`
-- **ID:** `allow_signup`
-- **Label Selector:** `label[for="allow_signup"]`
-
----
-
-### client_id
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(10)](screenshots/element-009.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(10)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `client_id`
-- **ID:** `client_id`
-- **Label Selector:** `label[for="client_id"]`
-
----
-
-### integration
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(11)](screenshots/element-010.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(11)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `integration`
-- **ID:** `integration`
-- **Label Selector:** `label[for="integration"]`
-
----
-
-### timestamp
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(13)](screenshots/element-011.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(13)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `timestamp`
-- **Value:** "1768425411707"
-- **Label Selector:** `timestamp`
-
----
-
-### timestamp_secret
-![div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(14)](screenshots/element-012.png)
-
-**Selector:**
-```css
-div:nth-child(1) > div:nth-child(4) > main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > form:nth-child(3) > div:nth-child(3) > input:nth-child(14)
-```
-
-**Element Details:**
-
-- **Type:** `input` (`hidden`)
-- **Name:** `timestamp_secret`
-- **Value:** "6de5d20f572a190070b02e27661a51761c0b7ca02e80f5ae29..."
-- **Label Selector:** `timestamp_secret`
-
----
-
 ## INPUT-TEXT
 Found 2 item(s)
 
 ### Username or email address
-![#login_field](screenshots/element-013-0.png)
-![#login_field](screenshots/element-013-1.png)
+![#login_field](../report-example/login-page/screenshots/element-001-0.png)
+![#login_field](../report-example/login-page/screenshots/element-001-1.png)
 
 **Label Selector:**
 ```css
@@ -253,18 +44,18 @@ label[for="login_field"]
 
 ---
 
-### required_field_a73d
+### required_field_09f7
 
 **Selector:**
 ```css
-input[name="required_field_a73d"]
+input[name="required_field_09f7"]
 ```
 
 **Element Details:**
 
 - **Type:** `input` (`text`)
-- **Name:** `required_field_a73d`
-- **Label Selector:** `required_field_a73d`
+- **Name:** `required_field_09f7`
+- **Label Selector:** `required_field_09f7`
 
 ---
 
@@ -272,8 +63,8 @@ input[name="required_field_a73d"]
 Found 1 item(s)
 
 ### Password
-![#password](screenshots/element-015-0.png)
-![#password](screenshots/element-015-1.png)
+![#password](../report-example/login-page/screenshots/element-003-0.png)
+![#password](../report-example/login-page/screenshots/element-003-1.png)
 
 **Label Selector:**
 ```css
@@ -298,7 +89,7 @@ label[for="password"]
 Found 1 item(s)
 
 ### Forgot password?
-![#forgot-password](screenshots/element-016.png)
+![#forgot-password](../report-example/login-page/screenshots/element-004.png)
 
 **Selector:**
 ```css
@@ -318,7 +109,7 @@ Found 1 item(s)
 Found 1 item(s)
 
 ### commit
-![input[name="commit"]](screenshots/element-017.png)
+![input[name="commit"]](../report-example/login-page/screenshots/element-005.png)
 
 **Selector:**
 ```css
@@ -336,4 +127,4 @@ input[name="commit"]
 
 ---
 
-*Generated on 1/14/2026, 4:17:12 PM*
+*Generated on 1/14/2026, 4:32:44 PM*
