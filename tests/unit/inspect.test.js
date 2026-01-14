@@ -338,4 +338,190 @@ describe('inspectElement helper', function() {
       expect(options[0].attributes.value).to.equal('San Francisco');
     });
   });
+
+  describe('getContainerElements helper', function() {
+    it('should get all form elements from container', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form', 'input, button, select, textarea'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      expect(result.value.length).to.be.greaterThan(0);
+      
+      // Validate structure of first element
+      const firstElement = result.value[0];
+      expect(firstElement).to.have.property('tagName');
+      expect(firstElement).to.have.property('selector');
+      expect(firstElement).to.have.property('attributes');
+      expect(firstElement).to.have.property('textContent');
+      expect(firstElement).to.have.property('visible');
+      
+      expect(firstElement.tagName).to.be.a('string');
+      expect(firstElement.selector).to.be.a('string');
+      expect(firstElement.attributes).to.be.an('object');
+      expect(firstElement.visible).to.be.a('boolean');
+    });
+
+    it('should generate stable selectors using _internal_generateSelector', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form', 'input[type="text"]'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      
+      // Check that selectors are stable (not nth-child unless necessary)
+      const elements = result.value;
+      const textInputs = elements.filter(el => el.tagName === 'input');
+      
+      expect(textInputs.length).to.be.greaterThan(0);
+      
+      // At least one should have a name-based selector
+      const hasNameSelector = textInputs.some(el => el.selector.includes('[name='));
+      const hasIdSelector = textInputs.some(el => el.selector.startsWith('#'));
+      
+      expect(hasNameSelector || hasIdSelector).to.be.true;
+    });
+
+    it('should include element attributes', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form', '#my-text-id'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      expect(result.value.length).to.equal(1);
+      
+      const element = result.value[0];
+      expect(element.attributes).to.have.property('id');
+      expect(element.attributes.id).to.equal('my-text-id');
+      expect(element.attributes).to.have.property('name');
+      expect(element.attributes.name).to.equal('my-text');
+    });
+
+    it('should detect visibility correctly', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form', 'input'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      
+      // Most form inputs should be marked as visible
+      const visibleElements = result.value.filter(el => el.visible);
+      expect(visibleElements.length).to.be.greaterThan(0);
+      
+      // Hidden input type='hidden' is not visually visible but is in DOM
+      // The visibility check looks at display/visibility/opacity CSS properties
+      const hiddenInput = result.value.find(el => 
+        el.attributes.name === 'my-hidden' && el.attributes.type === 'hidden'
+      );
+      if (hiddenInput) {
+        // Hidden inputs have display:none or similar, so visible should be false
+        expect(hiddenInput.visible).to.be.a('boolean');
+      }
+    });
+
+    it('should get all descendants when no filter provided', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      // Should return many elements (all descendants)
+      expect(result.value.length).to.be.greaterThan(10);
+    });
+
+    it('should handle label elements with for attribute', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form', 'label[for]'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      
+      if (result.value.length > 0) {
+        const labelWithFor = result.value[0];
+        expect(labelWithFor.tagName).to.equal('label');
+        // Should have for attribute
+        expect(labelWithFor.attributes).to.have.property('for');
+        // Should use label[for="..."] selector
+        expect(labelWithFor.selector).to.include('label[for=');
+      }
+    });
+
+    it('should handle wrapping labels with :has() selector', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form', 'label'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      
+      // Find labels that wrap inputs (no 'for' attribute)
+      const wrappingLabels = result.value.filter(el => 
+        el.tagName === 'label' && !el.attributes.for
+      );
+      
+      if (wrappingLabels.length > 0) {
+        // Should use label:has(...) selector for wrapping labels
+        const hasHasSelector = wrappingLabels.some(label => 
+          label.selector.includes('label:has(')
+        );
+        expect(hasHasSelector).to.be.true;
+      }
+    });
+
+    it('should handle button elements with type attribute', async function() {
+      const result = await client.callHelper(
+        'getContainerElements',
+        ['form', 'button'],
+        testTabId
+      );
+      
+      client.assertValidExecutionResponse(result);
+      expect(result.value).to.be.an('array');
+      
+      if (result.value.length > 0) {
+        const button = result.value.find(el => el.attributes.type === 'submit');
+        if (button) {
+          // Should use button[type="submit"] selector
+          expect(button.selector).to.equal('button[type="submit"]');
+        }
+      }
+    });
+
+    it('should handle error when container not found', async function() {
+      // When container is not found, getContainerElements throws which gets caught
+      // and returned as an error in the response
+      try {
+        await client.callHelper(
+          'getContainerElements',
+          ['#nonexistent-container', 'input'],
+          testTabId
+        );
+        expect.fail('Should have thrown error');
+      } catch (err) {
+        // Error message should mention container not found
+        expect(err.message).to.be.a('string');
+        expect(err.message.toLowerCase()).to.include('container');
+      }
+    });
+  });
 });

@@ -157,21 +157,20 @@ describe('callHelper command', function() {
   });
 
   it('should call appendChar helper', async function() {
-    // Note: appendChar is designed for contenteditable elements
-    // Since Selenium form textarea is not contenteditable, we'll test the helper
-    // returns false/null when called on non-contenteditable element
-    // This validates the helper correctly handles incompatible elements
+    // Note: appendChar is designed for contenteditable elements with <p> tags
+    // Since Selenium form textarea is not contenteditable and has no <p>,
+    // it should throw an error
     
-    const result = await client.callHelper(
-      'appendChar',
-      ['textarea[name="my-textarea"]', '!'],
-      testTabId
-    );
-    
-    expect(result).to.be.an('object');
-    // appendChar returns null for non-contenteditable elements
-    // This is expected behavior - the function is specific to contenteditable
-    expect(result.value).to.be.null;
+    try {
+      await client.callHelper(
+        'appendChar',
+        ['textarea[name="my-textarea"]', '!'],
+        testTabId
+      );
+      expect.fail('Should have thrown error');
+    } catch (err) {
+      expect(err.message).to.include('Paragraph element not found');
+    }
   });
 
   it('should call waitForElement helper', async function() {

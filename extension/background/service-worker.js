@@ -622,7 +622,7 @@ async function callHelperWithTimeout(tabId, functionName, args, timeout) {
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId },
-        func: (fnName, fnArgs) => {
+        func: async (fnName, fnArgs) => {
           if (!window.__chromePilotHelper) {
             throw new Error('ChromePilot helper not loaded');
           }
@@ -632,7 +632,17 @@ async function callHelperWithTimeout(tabId, functionName, args, timeout) {
             throw new Error(`Helper function not found: ${fnName}`);
           }
           
-          return fn(...fnArgs);
+          // Call function and let errors propagate
+          try {
+            const result = fn(...fnArgs);
+            // Handle promises by checking for then method
+            const value = (result && typeof result.then === 'function') 
+              ? await result 
+              : result;
+            return { success: true, value };
+          } catch (error) {
+            return { success: false, error: error.message };
+          }
         },
         args: [functionName, args],
         world: 'MAIN'
@@ -650,9 +660,21 @@ async function callHelperWithTimeout(tabId, functionName, args, timeout) {
       
       const result = results[0].result;
       
+      // Check if the function execution failed
+      if (result && !result.success && result.error) {
+        reject({
+          code: 'EXECUTION_ERROR',
+          message: result.error
+        });
+        return;
+      }
+      
+      // Extract the actual value
+      const actualValue = result && result.success ? result.value : result;
+      
       resolve({
-        value: result,
-        type: typeof result
+        value: actualValue,
+        type: typeof actualValue
       });
       
     } catch (err) {
