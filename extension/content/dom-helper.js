@@ -436,19 +436,24 @@ window.__chromePilotHelper = {
     // 9. Try unique class (filter out common utility classes)
     const classes = Array.from(element.classList).filter(cls => {
       // Skip generic utility classes (Bootstrap, Tailwind-like patterns)
+      // But be more lenient for divs since they often only have structural classes
+      if (tagLower === 'div') {
+        // For divs, only skip very generic utility classes like spacing/sizing
+        return !cls.match(/^(mt|mb|ml|mr|pt|pb|pl|pr|m-|p-|w-|h-|flex|grid|d-|align|justify)(-|\d|$)/);
+      }
       return !cls.match(/^(btn|button|input|form|text|label|field|container|wrapper|col|row|mt|mb|ml|mr|pt|pb|pl|pr|m-|p-|w-|h-|flex|grid|d-|align|justify)(-|\d|$)/);
     });
     
     if (classes.length > 0) {
       // Try single class first
       for (const cls of classes) {
-        const singleClassSelector = '.' + CSS.escape(cls);
+        const singleClassSelector = `${tagLower}.${CSS.escape(cls)}`;
         if (document.querySelectorAll(singleClassSelector).length === 1) {
           return singleClassSelector;
         }
       }
       // Try class combination as fallback
-      const classSelector = '.' + classes.map(c => CSS.escape(c)).join('.');
+      const classSelector = `${tagLower}.${classes.map(c => CSS.escape(c)).join('.')}`;
       if (document.querySelectorAll(classSelector).length === 1) {
         return classSelector;
       }
