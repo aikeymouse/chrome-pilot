@@ -128,15 +128,55 @@ class MarkdownReportGenerator {
   }
 
   /**
-   * Group elements by type
+   * Group labels with their related fields
    */
-  groupElementsByType(elements) {
+  groupLabeledFields(elements) {
     const groups = new Map();
+    const processedIndices = new Set();
 
-    for (const element of elements) {
-      let groupKey;
+    // First pass: identify label+field pairs
+    for (let i = 0; i < elements.length; i++) {
+      if (processedIndices.has(i)) continue;
       
-      // Create group key based on tagName and type
+      const element = elements[i];
+      
+      // Check if this is a label followed by a field
+      if (element.tagName === 'label' && i + 1 < elements.length) {
+        const nextElement = elements[i + 1];
+        
+        // Check if next element is a field (input, select, textarea)
+        if (['input', 'select', 'textarea'].includes(nextElement.tagName)) {
+          // Create a field group
+          let groupKey;
+          if (nextElement.tagName === 'input' && nextElement.type) {
+            groupKey = `INPUT-${nextElement.type.toUpperCase()}`;
+          } else if (nextElement.tagName === 'select') {
+            groupKey = 'SELECT';
+          } else if (nextElement.tagName === 'textarea') {
+            groupKey = 'TEXTAREA';
+          } else {
+            groupKey = nextElement.tagName.toUpperCase();
+          }
+
+          if (!groups.has(groupKey)) {
+            groups.set(groupKey, []);
+          }
+          
+          // Add as a pair
+          groups.get(groupKey).push({
+            type: 'pair',
+            label: element,
+            field: nextElement
+          });
+          
+          processedIndices.add(i);
+          processedIndices.add(i + 1);
+          continue;
+        }
+      }
+      
+      // Handle unpaired elements
+      let groupKey;
       if (element.tagName === 'input' && element.type) {
         groupKey = `INPUT-${element.type.toUpperCase()}`;
       } else if (element.tagName === 'button') {
@@ -156,10 +196,63 @@ class MarkdownReportGenerator {
       if (!groups.has(groupKey)) {
         groups.set(groupKey, []);
       }
-      groups.get(groupKey).push(element);
+      groups.get(groupKey).push({
+        type: 'single',
+        element: element
+      });
+      processedIndices.add(i);
     }
 
     return groups;
+  }
+
+  /**
+   * Capture screenshot of label+field pair with highlighting
+   */
+  async capturePairScreenshot(tabId, labelSelector, fieldSelector, filename) {
+    try {
+      // Highlight both elements
+      await this.client.sendRequest('callHelper', {
+        tabId,
+        functionName: 'highlightElement',
+        args: [labelSelector]
+      });
+      await this.client.sendRequest('callHelper', {
+        tabId,
+        functionName: 'highlightElement',
+        args: [fieldSelector]
+      });
+
+      // Wait for highlight animation
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Capture screenshot of the field (which should include the label if they're close)
+      const captureResult = await this.client.sendRequest('captureScreenshot', {
+        tabId,
+        selector: fieldSelector
+      });
+
+      // Remove highlights
+      await this.client.sendRequest('callHelper', {
+        tabId,
+        functionName: 'removeHighlights',
+        args: []
+      });
+
+      // Save screenshot
+      if (captureResult.screenshots && captureResult.screenshots.length > 0) {
+        const screenshot = captureResult.screenshots[0];
+        const filepath = this.saveScreenshot(screenshot.dataUrl, filename);
+        console.log(`  ✓ Saved screenshot: ${filename}`);
+        return path.relative(path.join(__dirname, 'output'), filepath);
+      } else {
+        console.log(`  ⚠ No screenshot captured for pair`);
+        return null;
+      }
+    } catch (error) {
+      console.log(`  ⚠ Failed to capture pair screenshot: ${error.message}`);
+      return null;
+    }
   }
 
   /**
@@ -194,7 +287,7 @@ class MarkdownReportGenerator {
 
     // Table of contents
     lines.push('\n## Table of Contents\n');
-    const groups = this.groupElementsByType(elements);
+    const groups = this.groupLabeledFields(elements);
     for (const [groupKey] of groups) {
       const anchor = groupKey.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       lines.push(`- [${groupKey}](#${anchor})\n`);
@@ -204,69 +297,134 @@ class MarkdownReportGenerator {
     console.log('\n📸 Capturing element screenshots...');
     let elementIndex = 0;
 
-    for (const [groupKey, groupElements] of groups) {
+    for (const [groupKey, groupItems] of groups) {
       lines.push(`\n## ${groupKey}\n`);
-      lines.push(`Found ${groupElements.length} element(s)\n`);
+      lines.push(`Found ${groupItems.length} item(s)\n`);
 
-      for (const element of groupElements) {
+      for (const item of groupItems) {
         elementIndex++;
         const screenshotFilename = `element-${elementIndex.toString().padStart(3, '0')}.png`;
         
-        console.log(`  [${elementIndex}/${elements.length}] ${element.selector}`);
-        
-        // Capture element screenshot
-        const screenshotPath = await this.captureElementScreenshot(
-          tabId,
-          element.selector,
-          screenshotFilename
-        );
+        if (item.type === 'pair') {
+          // Handle label+field pair
+          const { label, field } = item;
+          console.log(`  [${elementIndex}] ${label.selector} + ${field.selector}`);
+          
+          // Capture combined screenshot
+          const screenshotPath = await this.capturePairScreenshot(
+            tabId,
+            label.selector,
+            field.selector,
+            screenshotFilename
+          );
 
-        // Element heading
-        const elementTitle = element.textContent || element.name || element.id || `Element ${elementIndex}`;
-        lines.push(`\n### ${elementTitle.substring(0, 50)}\n`);
+          // Element heading
+          const elementTitle = label.textContent || field.name || field.id || `Field ${elementIndex}`;
+          lines.push(`\n### ${elementTitle.substring(0, 50)}\n`);
 
-        // Screenshot
-        if (screenshotPath) {
-          lines.push(`![${element.selector}](${screenshotPath})\n`);
-        }
+          // Screenshot
+          if (screenshotPath) {
+            lines.push(`![${field.selector}](${screenshotPath})\n`);
+          }
 
-        // Selector
-        lines.push('\n**Selector:**\n');
-        lines.push('```css\n');
-        lines.push(element.selector + '\n');
-        lines.push('```\n');
+          // Label Selector
+          lines.push('\n**Label Selector:**\n');
+          lines.push('```css\n');
+          lines.push(label.selector + '\n');
+          lines.push('```\n');
 
-        // Properties table
-        lines.push('\n**Properties:**\n');
-        lines.push('| Property | Value |\n');
-        lines.push('|----------|-------|\n');
-        lines.push(`| Tag Name | \`${element.tagName}\` |\n`);
-        
-        if (element.type) {
-          lines.push(`| Type | \`${element.type}\` |\n`);
+          // Field Selector
+          lines.push('\n**Field Selector:**\n');
+          lines.push('```css\n');
+          lines.push(field.selector + '\n');
+          lines.push('```\n');
+
+          // Properties table
+          lines.push('\n**Properties:**\n');
+          lines.push('| Property | Value |\n');
+          lines.push('|----------|-------|\n');
+          lines.push(`| Label Text | ${label.textContent} |\n`);
+          lines.push(`| Tag Name | \`${field.tagName}\` |\n`);
+          
+          if (field.type) {
+            lines.push(`| Type | \`${field.type}\` |\n`);
+          }
+          if (field.id) {
+            lines.push(`| ID | \`${field.id}\` |\n`);
+          }
+          if (field.name) {
+            lines.push(`| Name | \`${field.name}\` |\n`);
+          }
+          if (field.placeholder) {
+            lines.push(`| Placeholder | ${field.placeholder} |\n`);
+          }
+          if (field.value) {
+            lines.push(`| Value | ${field.value} |\n`);
+          }
+          
+          lines.push(`| Required | ${field.required ? 'Yes' : 'No'} |\n`);
+          lines.push(`| Disabled | ${field.disabled ? 'Yes' : 'No'} |\n`);
+          lines.push(`| Visible | ${field.visible ? 'Yes' : 'No'} |\n`);
+
+        } else {
+          // Handle single element
+          const element = item.element;
+          console.log(`  [${elementIndex}] ${element.selector}`);
+          
+          // Capture element screenshot
+          const screenshotPath = await this.captureElementScreenshot(
+            tabId,
+            element.selector,
+            screenshotFilename
+          );
+
+          // Element heading
+          const elementTitle = element.textContent || element.name || element.id || `Element ${elementIndex}`;
+          lines.push(`\n### ${elementTitle.substring(0, 50)}\n`);
+
+          // Screenshot
+          if (screenshotPath) {
+            lines.push(`![${element.selector}](${screenshotPath})\n`);
+          }
+
+          // Selector
+          lines.push('\n**Selector:**\n');
+          lines.push('```css\n');
+          lines.push(element.selector + '\n');
+          lines.push('```\n');
+
+          // Properties table
+          lines.push('\n**Properties:**\n');
+          lines.push('| Property | Value |\n');
+          lines.push('|----------|-------|\n');
+          lines.push(`| Tag Name | \`${element.tagName}\` |\n`);
+          
+          if (element.type) {
+            lines.push(`| Type | \`${element.type}\` |\n`);
+          }
+          if (element.id) {
+            lines.push(`| ID | \`${element.id}\` |\n`);
+          }
+          if (element.name) {
+            lines.push(`| Name | \`${element.name}\` |\n`);
+          }
+          if (element.placeholder) {
+            lines.push(`| Placeholder | ${element.placeholder} |\n`);
+          }
+          if (element.value) {
+            lines.push(`| Value | ${element.value} |\n`);
+          }
+          if (element.label) {
+            lines.push(`| Label | \`${element.label}\` |\n`);
+          }
+          if (element.textContent) {
+            lines.push(`| Text Content | ${element.textContent} |\n`);
+          }
+          
+          lines.push(`| Required | ${element.required ? 'Yes' : 'No'} |\n`);
+          lines.push(`| Disabled | ${element.disabled ? 'Yes' : 'No'} |\n`);
+          lines.push(`| Visible | ${element.visible ? 'Yes' : 'No'} |\n`);
         }
-        if (element.id) {
-          lines.push(`| ID | \`${element.id}\` |\n`);
-        }
-        if (element.name) {
-          lines.push(`| Name | \`${element.name}\` |\n`);
-        }
-        if (element.placeholder) {
-          lines.push(`| Placeholder | ${element.placeholder} |\n`);
-        }
-        if (element.value) {
-          lines.push(`| Value | ${element.value} |\n`);
-        }
-        if (element.label) {
-          lines.push(`| Label | \`${element.label}\` |\n`);
-        }
-        if (element.textContent) {
-          lines.push(`| Text Content | ${element.textContent} |\n`);
-        }
-        
-        lines.push(`| Required | ${element.required ? 'Yes' : 'No'} |\n`);
-        lines.push(`| Disabled | ${element.disabled ? 'Yes' : 'No'} |\n`);
-        lines.push(`| Visible | ${element.visible ? 'Yes' : 'No'} |\n`);
 
         lines.push('\n---\n');
       }
