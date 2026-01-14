@@ -2,13 +2,13 @@
  * Global test hooks and utilities
  */
 
-const TestClient = require('./test-client');
+const ChromePilotClient = require('./chromepilot-client');
 
 /**
  * Create a test client instance
  */
 function createClient() {
-  return new TestClient();
+  return new ChromePilotClient();
 }
 
 module.exports = {

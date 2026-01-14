@@ -4,10 +4,11 @@ Complete test suite for ChromePilot extension with unit, integration, and UI tes
 
 ## Prerequisites
 
-1. **ChromePilot Server Running** (or tests will start it)
+1. **ChromePilot Server Running** (for unit and integration tests)
    ```bash
    # Server must be running on ws://localhost:9000
    # Check DEVELOPMENT.md for installation instructions
+   # Note: UI tests do not require the server (they test UI in disconnected state)
    ```
 
 2. **Chrome Extension Loaded**
@@ -103,14 +104,14 @@ tests/
 │   └── ui-fixtures.js        # Playwright custom fixtures
 ├── helpers/                   # Test utilities
 │   ├── hooks.js              # Global hooks and client factory
-│   ├── test-client.js        # Enhanced test client
+│   ├── chromepilot-client.js # Enhanced WebSocket client with test helpers
 │   ├── test-data.js          # Test URLs and selectors
 │   ├── server-helper.js      # Server lifecycle management
 │   └── session-helper.js     # Session utilities
 ├── examples/                  # Example client scripts
-│   ├── chromepilot-client.js # Base WebSocket client
+│   ├── chromepilot-client.js # WebSocket client (symlinked/copied from helpers)
 │   ├── google-search-client.js
-│   └── test-client.js
+│   └── analyze-form-client.js # Form analyzer tool
 ├── .mocharc.json             # Mocha configuration
 └── playwright.config.js      # Playwright configuration
 ```
@@ -150,8 +151,8 @@ tests/
 **Duration:** ~15-25 seconds
 
 ### Test Helpers
-- `TestClient` - Enhanced client with helper methods
-- `createClient()` - Factory for test clients
+- `ChromePilotClient` - Enhanced WebSocket client with test helper methods
+- `createClient()` - Factory for test clients (returns ChromePilotClient instance)
 - `test-data.js` - Test URLs and selectors
 - `ui-fixtures.js` - Playwright custom fixtures
 - Automatic tab cleanup
@@ -160,7 +161,7 @@ tests/
 
 ### Response Validation
 
-The `TestClient` provides validation helpers to ensure responses match protocol specifications:
+The `ChromePilotClient` provides validation helpers to ensure responses match protocol specifications:
 
 #### `assertValidResponse(response, options)`
 Comprehensive validation with configurable options:

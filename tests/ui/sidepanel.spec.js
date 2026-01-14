@@ -5,6 +5,13 @@
 
 const { test, expect } = require('../fixtures/ui-fixtures');
 const { TEST_URLS } = require('../helpers/test-data');
+const fs = require('fs');
+const path = require('path');
+
+// Read version from manifest
+const manifestPath = path.join(__dirname, '../../extension/manifest.json');
+const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+const EXPECTED_VERSION = manifest.version;
 
 test.describe('ChromePilot Sidepanel UI', () => {
   
@@ -24,7 +31,7 @@ test.describe('ChromePilot Sidepanel UI', () => {
     // Check header elements
     const header = page.locator('header.header');
     await expect(header).toBeVisible();
-    await expect(header.locator('h1')).toHaveText('ChromePilot');
+    await expect(header.locator('h1')).toHaveText(`ChromePilot v${EXPECTED_VERSION}`);
     
     // Check status badge
     const statusBadge = page.locator('#status-badge');

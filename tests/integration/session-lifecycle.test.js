@@ -3,11 +3,11 @@
  */
 
 const { expect } = require('chai');
-const TestClient = require('../helpers/test-client');
+const ChromePilotClient = require('../helpers/chromepilot-client');
 
 describe('Session Lifecycle', function() {
   it('should create session on connection', async function() {
-    const client = new TestClient();
+    const client = new ChromePilotClient();
     await client.connect();
     await client.waitForConnection();
     
@@ -21,7 +21,7 @@ describe('Session Lifecycle', function() {
   });
 
   it('should handle multiple sequential connections', async function() {
-    const client1 = new TestClient();
+    const client1 = new ChromePilotClient();
     await client1.connect();
     await client1.waitForConnection();
     const sessionId1 = client1.sessionId;
@@ -29,7 +29,7 @@ describe('Session Lifecycle', function() {
     
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    const client2 = new TestClient();
+    const client2 = new ChromePilotClient();
     await client2.connect();
     await client2.waitForConnection();
     const sessionId2 = client2.sessionId;
@@ -40,7 +40,7 @@ describe('Session Lifecycle', function() {
   });
 
   it('should maintain session across multiple commands', async function() {
-    const client = new TestClient();
+    const client = new ChromePilotClient();
     await client.connect();
     await client.waitForConnection();
     
@@ -59,7 +59,7 @@ describe('Session Lifecycle', function() {
   });
 
   it('should handle connection errors gracefully', async function() {
-    const client = new TestClient();
+    const client = new ChromePilotClient();
     
     try {
       await client.connect('ws://localhost:9999'); // Wrong port
@@ -71,7 +71,7 @@ describe('Session Lifecycle', function() {
 
   it('should resume session when reconnecting with same session ID', async function() {
     // Create initial connection and get session ID
-    const client1 = new TestClient();
+    const client1 = new ChromePilotClient();
     await client1.connect();
     await client1.waitForConnection();
     const originalSessionId = client1.sessionId;
@@ -88,7 +88,7 @@ describe('Session Lifecycle', function() {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Reconnect with the same session ID via query parameter
-    const client2 = new TestClient();
+    const client2 = new ChromePilotClient();
     await client2.connect(`ws://localhost:9000?sessionId=${originalSessionId}`);
     
     // Wait for session resumed message
@@ -111,7 +111,7 @@ describe('Session Lifecycle', function() {
     this.timeout(15000); // Test needs 10+ seconds to run
     
     // Create session with very short timeout (5 seconds)
-    const client1 = new TestClient();
+    const client1 = new ChromePilotClient();
     await client1.connect('ws://localhost:9000', 5000);
     await client1.waitForConnection();
     const sessionId = client1.sessionId;
@@ -130,7 +130,7 @@ describe('Session Lifecycle', function() {
     await new Promise(resolve => setTimeout(resolve, 6000));
     
     // Try to reconnect with expired session ID - should fail
-    const client2 = new TestClient();
+    const client2 = new ChromePilotClient();
     let connectionError = null;
     try {
       await client2.connect(`ws://localhost:9000?sessionId=${sessionId}`);
@@ -144,7 +144,7 @@ describe('Session Lifecycle', function() {
     expect(connectionError.message).to.include('Session not found or expired');
     
     // Create a new session (without sessionId) to clean up the tab
-    const client3 = new TestClient();
+    const client3 = new ChromePilotClient();
     await client3.connect('ws://localhost:9000');
     await client3.waitForConnection();
     
@@ -169,7 +169,7 @@ describe('Session Lifecycle', function() {
     
     // Try to connect with a fake session ID that never existed
     const fakeSessionId = '00000000-0000-0000-0000-000000000000';
-    const client = new TestClient();
+    const client = new ChromePilotClient();
     
     let connectionError = null;
     try {
