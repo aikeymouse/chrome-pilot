@@ -10,7 +10,7 @@
 
 
 ## Full Page View
-![Container highlighted](../report-example/login-page/screenshots/container-full-page.png)
+![Container highlighted](screenshots/container-full-page.png)
 
 ## Table of Contents
 - [INPUT-TEXT](#input-text)
@@ -22,8 +22,8 @@
 Found 2 item(s)
 
 ### Username or email address
-![#login_field](../report-example/login-page/screenshots/element-001-0.png)
-![#login_field](../report-example/login-page/screenshots/element-001-1.png)
+![#login_field](screenshots/element-001-0.png)
+![#login_field](screenshots/element-001-1.png)
 
 **Label Selector:**
 ```css
@@ -44,18 +44,18 @@ label[for="login_field"]
 
 ---
 
-### required_field_09f7
+### required_field_2d1d
 
 **Selector:**
 ```css
-input[name="required_field_09f7"]
+input[name="required_field_2d1d"]
 ```
 
 **Element Details:**
 
 - **Type:** `input` (`text`)
-- **Name:** `required_field_09f7`
-- **Label Selector:** `required_field_09f7`
+- **Name:** `required_field_2d1d`
+- **Label Selector:** `required_field_2d1d`
 
 ---
 
@@ -63,8 +63,8 @@ input[name="required_field_09f7"]
 Found 1 item(s)
 
 ### Password
-![#password](../report-example/login-page/screenshots/element-003-0.png)
-![#password](../report-example/login-page/screenshots/element-003-1.png)
+![#password](screenshots/element-003-0.png)
+![#password](screenshots/element-003-1.png)
 
 **Label Selector:**
 ```css
@@ -89,7 +89,7 @@ label[for="password"]
 Found 1 item(s)
 
 ### Forgot password?
-![#forgot-password](../report-example/login-page/screenshots/element-004.png)
+![#forgot-password](screenshots/element-004.png)
 
 **Selector:**
 ```css
@@ -109,7 +109,7 @@ Found 1 item(s)
 Found 1 item(s)
 
 ### commit
-![input[name="commit"]](../report-example/login-page/screenshots/element-005.png)
+![input[name="commit"]](screenshots/element-005.png)
 
 **Selector:**
 ```css
@@ -127,4 +127,4 @@ input[name="commit"]
 
 ---
 
-*Generated on 1/14/2026, 4:32:44 PM*
+*Generated on 1/14/2026, 4:36:20 PM*
