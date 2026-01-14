@@ -15,6 +15,7 @@ let countdownInterval = null;
 const statusBadge = document.getElementById('status-badge');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
+const versionElement = document.getElementById('version');
 const clientCount = document.getElementById('client-count');
 const removeExpiredBtn = document.getElementById('remove-expired-sessions');
 const sessionSelectorWrapper = document.getElementById('session-selector-wrapper');
@@ -40,6 +41,10 @@ const logsContainer = document.getElementById('logs-container');
  * Initialize
  */
 function init() {
+  // Display extension version
+  const manifest = chrome.runtime.getManifest();
+  versionElement.textContent = `v${manifest.version}`;
+  
   // Load saved log retention
   chrome.storage.local.get(['logRetention'], (result) => {
     if (result.logRetention) {

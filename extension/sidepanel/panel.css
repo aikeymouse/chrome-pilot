@@ -40,6 +40,13 @@ body {
   color: #1a73e8;
 }
 
+.header h1 .version {
+  font-size: 12px;
+  font-weight: 600;
+  color: #757575;
+  margin-left: 4px;
+}
+
 .status-badge {
   display: flex;
   align-items: center;
