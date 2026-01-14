@@ -39,17 +39,20 @@ See [INSTALL.md](INSTALL.md) for complete installation instructions.
 
 ### Create a Session
 
-Send a POST request to create a new session:
-
 ```bash
-curl -X POST "http://localhost:9000/session?timeout=300000" \
-  -H "Connection: Upgrade" \
-  -H "Upgrade: websocket"
+curl -X POST "http://localhost:9000/session?timeout=300000"
+```
+
+Response:
+```json
+{"status":"ready","message":"Upgrade to WebSocket"}
 ```
 
 Parameters:
 - `timeout`: Session timeout in milliseconds (default: 300000 = 5 minutes)
 - `sessionId`: (Optional) Resume existing session if not expired
+
+Then connect via WebSocket client (see `tests/examples/` for Node.js client examples).
 
 ### WebSocket Commands
 
