@@ -89,7 +89,7 @@ async function main() {
     console.log('\n📸 Capturing h1 element screenshot (with auto-crop)...');
     const elementCaptureResult = await client.sendRequest('captureScreenshot', { 
       tabId,
-      selector: 'h1'
+      selectors: 'h1'
     });
     
     console.log('Element screenshot captured (combined bounds):');
@@ -104,11 +104,14 @@ async function main() {
     fs.writeFileSync(screenshotPath, Buffer.from(screenshotData, 'base64'));
     console.log(`💾 Element screenshot saved to: ${screenshotPath}`);
     
+    // Wait to avoid Chrome rate limit (MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND = 2/sec)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     // Example 8: Capture multiple elements in combined screenshot
     console.log('\n📸 Capturing multiple labels in combined screenshot...');
     const multiCaptureResult = await client.sendRequest('captureScreenshot', { 
       tabId,
-      selector: 'label.form-label'
+      selectors: 'label.form-label'
     });
     
     console.log('Combined screenshot captured:');
@@ -122,19 +125,58 @@ async function main() {
     fs.writeFileSync(multiPath, Buffer.from(multiData, 'base64'));
     console.log(`💾 Combined screenshot saved to: ${multiPath}`);
     
+    // Wait to avoid Chrome rate limit (MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND = 2/sec)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Example 8b: Capture using array of different selectors
+    console.log('\n📸 Capturing h1 and first label using selector array...');
+    const arraySelectorsResult = await client.sendRequest('captureScreenshot', { 
+      tabId,
+      selectors: ['h1', 'label.form-label:first-of-type']
+    });
+    
+    console.log('Array selectors screenshot captured:');
+    console.log('  - DataURL length:', arraySelectorsResult.dataUrl.length);
+    console.log('  - Element Count:', arraySelectorsResult.elementCount);
+    console.log('  - Combined Bounds:', JSON.stringify(arraySelectorsResult.bounds, null, 2));
+    
+    // Save array selectors screenshot to file
+    const arrayData = arraySelectorsResult.dataUrl.replace(/^data:image\/png;base64,/, '');
+    const arrayPath = path.join(__dirname, 'array-selectors-screenshot.png');
+    fs.writeFileSync(arrayPath, Buffer.from(arrayData, 'base64'));
+    console.log(`💾 Array selectors screenshot saved to: ${arrayPath}`);
+    
+    // Wait to avoid Chrome rate limit (MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND = 2/sec)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     // Example 9: Test with non-existent element (should throw error)
     console.log('\n🔍 Testing with non-existent element (expecting error)...');
     try {
       await client.sendRequest('captureScreenshot', { 
         tabId,
-        selector: '#does-not-exist'
+        selectors: '#does-not-exist'
       });
       console.log('❌ Expected error but got success');
     } catch (error) {
       console.log('✅ Got expected error:');
       console.log('  - Code:', error.code);
       console.log('  - Message:', error.message);
-      console.log('  - Selector:', error.selector);
+      console.log('  - Selectors:', error.selectors);
+    }
+    
+    // Example 10: Test array of non-existent selectors
+    console.log('\n🔍 Testing with array of non-existent selectors (expecting error)...');
+    try {
+      await client.sendRequest('captureScreenshot', { 
+        tabId,
+        selectors: ['#does-not-exist-1', '#does-not-exist-2']
+      });
+      console.log('❌ Expected error but got success');
+    } catch (error) {
+      console.log('✅ Got expected error:');
+      console.log('  - Code:', error.code);
+      console.log('  - Message:', error.message);
+      console.log('  - Selectors:', error.selectors);
     }
     
     // Example 10: Test bounds helper with non-existent element

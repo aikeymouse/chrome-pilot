@@ -898,7 +898,10 @@ Capture screenshot of the visible viewport or specific elements.
 - `tabId` (number, optional): Tab ID to capture. If omitted, uses active tab
 - `format` (string, optional): Image format - `"png"` or `"jpeg"`. Default: `"png"`
 - `quality` (number, optional): JPEG quality 0-100. Only used when format is `"jpeg"`. Default: 90
-- `selector` (string, optional): CSS selector to capture specific elements. If provided, captures all matching elements in a single combined screenshot
+- `selectors` (string | string[], optional): CSS selector(s) to capture specific elements
+  - Single selector string: `"h1"` - captures all matching elements
+  - Array of selectors: `["h1", "button.submit"]` - captures all elements matching any selector
+  - If provided, captures all matching elements in a single combined screenshot
 
 **Response (Full Viewport):**
 ```json
@@ -917,7 +920,7 @@ Capture screenshot of the visible viewport or specific elements.
   "action": "captureScreenshot",
   "params": {
     "tabId": 123,
-    "selector": "h1, button.submit"
+    "selectors": ["h1", "button.submit"]
   },
   "requestId": "req-014"
 }
@@ -951,8 +954,20 @@ Capture screenshot of the visible viewport or specific elements.
   "result": null,
   "error": {
     "code": "ELEMENTS_NOT_FOUND",
-    "message": "No elements found matching selector: h1, button.submit",
-    "selector": "h1, button.submit"
+    "message": "No elements found matching selectors: h1, button.submit",
+    "selectors": ["h1", "button.submit"]
+  }
+}
+```
+
+**Response (Rate Limit Exceeded):**
+```json
+{
+  "requestId": "req-015",
+  "result": null,
+  "error": {
+    "code": "EXECUTION_ERROR",
+    "message": "This request exceeds the MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND quota."
   }
 }
 ```
@@ -960,8 +975,9 @@ Capture screenshot of the visible viewport or specific elements.
 **Notes:**
 - Uses `chrome.tabs.captureVisibleTab` which only captures visible viewport (not full page)
 - Captures at device resolution (2x on Retina displays)
-- When `selector` is provided:
-  - Finds ALL matching elements using `querySelectorAll`
+- When `selectors` is provided:
+  - Accepts either a single selector string or an array of selector strings
+  - Finds ALL matching elements using `querySelectorAll` for each selector
   - Calculates a bounding box that encompasses all matched elements
   - Returns a SINGLE screenshot cropped to the combined bounding area
   - Adds 10px padding around the combined bounds
@@ -969,6 +985,10 @@ Capture screenshot of the visible viewport or specific elements.
 - Device pixel ratio is automatically handled for accurate cropping
 - Works on CSP-restricted pages
 - For multiple separate screenshots, make multiple requests with different selectors
+- **Rate Limiting**: Chrome enforces `MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND` quota (2 calls/second)
+  - Exceeding this quota results in `EXECUTION_ERROR`
+  - Add 500ms delays between consecutive screenshot requests
+  - Using array selectors helps reduce API calls by combining multiple selectors into one request
 
 **Example Usage:**
 
@@ -982,7 +1002,7 @@ Single element screenshot:
 ```javascript
 const result = await client.sendRequest('captureScreenshot', { 
   tabId, 
-  selector: 'h1' 
+  selectors: 'h1' 
 });
 // Returns: { dataUrl: "...", bounds: {...}, elementCount: 1, devicePixelRatio: 2 }
 ```
@@ -991,10 +1011,19 @@ Multiple elements combined screenshot:
 ```javascript
 const result = await client.sendRequest('captureScreenshot', { 
   tabId, 
-  selector: 'label[for="username"], input#username' 
+  selectors: ['label[for="username"]', 'input#username']
 });
 // Returns single screenshot encompassing both label and input
 // { dataUrl: "...", bounds: {...}, elementCount: 2, devicePixelRatio: 2 }
+```
+
+Using CSS selector grouping (alternative):
+```javascript
+const result = await client.sendRequest('captureScreenshot', { 
+  tabId, 
+  selectors: 'label[for="username"], input#username' 
+});
+// Same result as above
 ```
 
 ## Event Messages

@@ -479,7 +479,7 @@ async function executeJS(params) {
 }
 
 async function captureScreenshot(params) {
-  let { tabId, format = 'png', quality = 90, selector } = params;
+  let { tabId, format = 'png', quality = 90, selectors, selector } = params;
   
   // If no tabId, use active tab
   if (!tabId) {
@@ -509,20 +509,33 @@ async function captureScreenshot(params) {
     throw { code: 'TAB_NOT_FOUND', message: `Tab with ID ${tabId} not found or was closed` };
   }
   
-  // If selector provided, get bounds and crop to combined area
-  if (selector) {
-    // Get element bounds
-    const boundsResult = await callHelper({
-      tabId,
-      functionName: 'getElementBounds',
-      args: [selector]
-    });
+  // Support both 'selectors' and 'selector' parameters (backward compatibility)
+  const selectorsParam = selectors || selector;
+  
+  // If selectors provided, get bounds and crop to combined area
+  if (selectorsParam) {
+    // Normalize to array
+    const selectorsArray = Array.isArray(selectorsParam) ? selectorsParam : [selectorsParam];
     
-    if (!boundsResult.value || boundsResult.value.length === 0) {
+    // Get element bounds for all selectors
+    const allBounds = [];
+    for (const sel of selectorsArray) {
+      const boundsResult = await callHelper({
+        tabId,
+        functionName: 'getElementBounds',
+        args: [sel]
+      });
+      
+      if (boundsResult.value && boundsResult.value.length > 0) {
+        allBounds.push(...boundsResult.value);
+      }
+    }
+    
+    if (allBounds.length === 0) {
       throw {
         code: 'ELEMENTS_NOT_FOUND',
-        message: `No elements found matching selector: ${selector}`,
-        selector: selector
+        message: `No elements found matching selectors: ${selectorsArray.join(', ')}`,
+        selectors: selectorsArray
       };
     }
     
@@ -536,7 +549,7 @@ async function captureScreenshot(params) {
     const cropResult = await callHelper({
       tabId,
       functionName: '_internal_cropScreenshotToElements',
-      args: [dataUrl, boundsResult.value],
+      args: [dataUrl, allBounds],
       _internal: true
     });
     

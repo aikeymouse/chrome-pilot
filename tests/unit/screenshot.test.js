@@ -103,6 +103,21 @@ describe('Screenshot functionality', function() {
       expect(result).to.have.property('devicePixelRatio').to.be.a('number');
     });
 
+    it('should capture combined screenshot using array of selectors', async function() {
+      const result = await client.sendRequest('captureScreenshot', {
+        tabId: testTabId,
+        selector: ['h1', 'label.form-label']
+      });
+      
+      expect(result).to.have.property('dataUrl');
+      expect(result.dataUrl).to.match(/^data:image\/png;base64,/);
+      expect(result.dataUrl.length).to.be.greaterThan(100);
+      expect(result).to.have.property('bounds');
+      expect(result.bounds).to.be.an('object');
+      expect(result).to.have.property('elementCount').greaterThan(1);
+      expect(result).to.have.property('devicePixelRatio').to.be.a('number');
+    });
+
     it('should throw error for non-existent element', async function() {
       try {
         await client.sendRequest('captureScreenshot', {
@@ -113,7 +128,22 @@ describe('Screenshot functionality', function() {
       } catch (error) {
         expect(error).to.have.property('code', 'ELEMENTS_NOT_FOUND');
         expect(error).to.have.property('message').that.includes('#nonexistent-element-12345');
-        expect(error).to.have.property('selector', '#nonexistent-element-12345');
+        expect(error).to.have.property('selectors');
+      }
+    });
+
+    it('should throw error when all selectors in array find no elements', async function() {
+      try {
+        await client.sendRequest('captureScreenshot', {
+          tabId: testTabId,
+          selector: ['#nonexistent-1', '#nonexistent-2']
+        });
+        expect.fail('Should have thrown error');
+      } catch (error) {
+        expect(error).to.have.property('code', 'ELEMENTS_NOT_FOUND');
+        expect(error).to.have.property('selectors').that.is.an('array');
+        expect(error.selectors).to.include('#nonexistent-1');
+        expect(error.selectors).to.include('#nonexistent-2');
       }
     });
   });
