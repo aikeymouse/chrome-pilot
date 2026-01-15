@@ -86,8 +86,7 @@ class ChromePilotClient {
         this.pendingRequests.delete(requestId);
 
         if (error) {
-          const errorMsg = typeof error === 'object' ? JSON.stringify(error) : error;
-          reject(new Error(errorMsg));
+          reject(error);
         } else {
           resolve(result);
         }
