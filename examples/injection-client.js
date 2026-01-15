@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+/**
+ * ChromePilot Script Injection Example
+ * Demonstrates registerInjection API for WebView2 testing
+ * 
+ * This example injects a badge on Google pages to show the injection is working.
+ */
+
+const ChromePilotClient = require('./chromepilot-client');
+
+async function main() {
+  const client = new ChromePilotClient();
+  
+  try {
+    // Connect to ChromePilot
+    console.log('Connecting to ChromePilot...');
+    await client.connect('ws://localhost:9000', 600000); // 10 minute timeout
+    
+    // Register injection for Selenium pages
+    console.log('\nRegistering script injection for Selenium...');
+    const injectionCode = `
+      // Create a badge to show injection is active
+      (function() {
+        const badge = document.createElement('div');
+        badge.id = 'chromepilot-injection-badge';
+        badge.textContent = '🚀 ChromePilot Injected';
+        badge.style.cssText = \`
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          z-index: 999999;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        \`;
+        
+        badge.onmouseenter = () => {
+          badge.style.transform = 'scale(1.05)';
+        };
+        
+        badge.onmouseleave = () => {
+          badge.style.transform = 'scale(1)';
+        };
+        
+        badge.onclick = () => {
+          badge.textContent = badge.textContent === '🚀 ChromePilot Injected' 
+            ? '✓ Injection Active' 
+            : '🚀 ChromePilot Injected';
+        };
+        
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            document.body.appendChild(badge);
+          });
+        } else {
+          document.body.appendChild(badge);
+        }
+        
+        console.log('%c[ChromePilot] Script injection active', 'color: #667eea; font-weight: bold;');
+      })();
+    `;
+    
+    const result = await client.sendRequest('registerInjection', {
+      id: 'selenium-badge',
+      code: injectionCode,
+      matches: ['https://www.selenium.dev/*'],
+      runAt: 'document_start'
+    });
+    
+    console.log('✓ Injection registered:', result);
+    console.log('\n📌 Instructions:');
+    console.log('   1. Navigate to https://www.selenium.dev in Chrome');
+    console.log('   2. You should see a "🚀 ChromePilot Injected" badge in the top-right');
+    console.log('   3. Click the badge to toggle the text');
+    console.log('   4. The badge will appear on all Selenium pages automatically');
+    console.log('\n⏸  Press Ctrl+C to unregister injection and exit\n');
+    
+    // Handle graceful shutdown
+    const cleanup = async () => {
+      console.log('\n\nCleaning up...');
+      try {
+        const unregisterResult = await client.sendRequest('unregisterInjection', {
+          id: 'selenium-badge'
+        });
+        console.log('✓ Injection unregistered:', unregisterResult);
+        console.log('   Note: Already loaded pages will keep the badge until refreshed');
+      } catch (err) {
+        console.error('Failed to unregister:', err.message);
+      }
+      await client.close();
+      process.exit(0);
+    };
+    
+    process.on('SIGINT', cleanup);
+    process.on('SIGTERM', cleanup);
+    
+  } catch (error) {
+    console.error('Error:', error.message);
+    await client.close();
+    process.exit(1);
+  }
+}
+
+main();

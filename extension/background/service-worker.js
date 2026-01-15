@@ -228,6 +228,12 @@ async function handleCommand(sessionId, command) {
       case 'disableInspector':
         result = await disableInspector(params);
         break;
+      case 'registerInjection':
+        result = await registerInjection(params);
+        break;
+      case 'unregisterInjection':
+        result = await unregisterInjection(params);
+        break;
       default:
         throw new Error(`Unknown action: ${action}`);
     }
@@ -870,6 +876,101 @@ async function disableInspector(params) {
     // Ignore errors if script not injected or tab closed
     console.warn('Failed to disable inspector:', error);
     return { disabled: true, tabId };
+  }
+}
+
+// Track registered injections
+const registeredInjections = new Map();
+
+/**
+ * Register early script injection for WebView2 testing and page mocking
+ */
+async function registerInjection(params) {
+  const { id, code, matches = ['<all_urls>'], runAt = 'document_start' } = params;
+  
+  if (!id || !code) {
+    throw { code: 'MISSING_PARAMS', message: 'Missing required parameters: id, code' };
+  }
+  
+  try {
+    // Store the code for later injection
+    registeredInjections.set(id, {
+      code,
+      matches,
+      runAt,
+      active: true
+    });
+    
+    // Listen for tab updates to inject the script
+    const listener = async (tabId, changeInfo, tab) => {
+      const injection = registeredInjections.get(id);
+      if (!injection || !injection.active) return;
+      
+      // Check if URL matches
+      const urlMatches = injection.matches.some(pattern => {
+        const regex = new RegExp('^' + pattern.replace(/\*/g, '.*').replace(/\//g, '\\/') + '$');
+        return regex.test(tab.url || '');
+      });
+      
+      // Inject on both 'loading' status and when URL changes (for SPAs and client-side navigation)
+      if (urlMatches && tab.url && (changeInfo.status === 'loading' || changeInfo.url)) {
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId, allFrames: true },
+            world: 'MAIN',
+            injectImmediately: true,
+            func: (injectedCode) => {
+              eval(injectedCode);
+            },
+            args: [injection.code]
+          });
+          console.log('Injected script into tab', tabId, tab.url);
+        } catch (err) {
+          console.warn('Injection failed for tab', tabId, err.message);
+        }
+      }
+    };
+    
+    // Store listener reference for cleanup
+    registeredInjections.get(id).listener = listener;
+    chrome.tabs.onUpdated.addListener(listener);
+    
+    console.log('Registered script injection:', id, 'for', matches);
+    return { registered: true, id };
+  } catch (error) {
+    console.error('Failed to register injection:', error);
+    throw { code: 'INJECTION_ERROR', message: `Failed to register injection: ${error.message}` };
+  }
+}
+
+/**
+ * Unregister script injection
+ */
+async function unregisterInjection(params) {
+  const { id } = params;
+  
+  if (!id) {
+    throw { code: 'MISSING_PARAMS', message: 'Missing required parameter: id' };
+  }
+  
+  try {
+    const injection = registeredInjections.get(id);
+    if (!injection) {
+      throw new Error(`Content script with ID '${id}' not found`);
+    }
+    
+    // Mark as inactive and remove listener
+    injection.active = false;
+    if (injection.listener) {
+      chrome.tabs.onUpdated.removeListener(injection.listener);
+    }
+    registeredInjections.delete(id);
+    
+    console.log('Unregistered script injection:', id);
+    return { unregistered: true, id };
+  } catch (error) {
+    console.error('Failed to unregister injection:', error);
+    throw { code: 'INJECTION_ERROR', message: `Failed to unregister injection: ${error.message}` };
   }
 }
 

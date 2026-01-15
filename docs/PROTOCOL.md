@@ -1025,6 +1025,190 @@ const result = await client.sendRequest('captureScreenshot', {
 // Same result as above
 ```
 
+
+### 9. Register Script Injection
+
+Register early script injection for WebView2 testing and page mocking. Scripts are injected before page load into the main world, allowing you to mock browser APIs, inject test data, or modify page behavior.
+
+**Request:**
+```json
+{
+  "action": "registerInjection",
+  "params": {
+    "id": "webview2-mock",
+    "code": "window.chrome = window.chrome || {}; window.chrome.webview = { postMessage: () => {} };",
+    "matches": ["https://your-app.com/*"],
+    "runAt": "document_start"
+  },
+  "requestId": "req-016"
+}
+```
+
+**Parameters:**
+- `id` (string, required): Unique identifier for this injection
+- `code` (string, required): JavaScript code to inject
+- `matches` (string[], optional): URL patterns to inject on. Default: `["<all_urls>"]`
+  - Supports Chrome match patterns: `https://example.com/*`, `*://*.google.com/*`, etc.
+- `runAt` (string, optional): When to inject. Default: `"document_start"`
+  - `"document_start"` - Before any page scripts run (recommended for mocking)
+  - `"document_end"` - After DOM is loaded but before images/resources
+  - `"document_idle"` - After page is fully loaded
+
+**Response:**
+```json
+{
+  "requestId": "req-016",
+  "result": {
+    "registered": true,
+    "id": "webview2-mock"
+  },
+  "error": null
+}
+```
+
+**Error Cases:**
+
+Missing parameters:
+```json
+{
+  "requestId": "req-016",
+  "result": null,
+  "error": {
+    "code": "MISSING_PARAMS",
+    "message": "Missing required parameters: id, code"
+  }
+}
+```
+
+Registration failed:
+```json
+{
+  "requestId": "req-016",
+  "result": null,
+  "error": {
+    "code": "INJECTION_ERROR",
+    "message": "Failed to register injection: Content script with ID 'webview2-mock' already exists"
+  }
+}
+```
+
+**Scope:**
+- Applies to **all tabs and windows** (current and future) matching URL patterns
+- Persists across tab navigations if URL still matches
+- Automatic injection - no need to track individual tabs
+- Injected into MAIN world (page context), not isolated extension context
+
+**Example Use Cases:**
+
+Mock WebView2 API:
+```json
+{
+  "action": "registerInjection",
+  "params": {
+    "id": "webview2-api",
+    "code": "window.chrome = window.chrome || {}; window.chrome.webview = { postMessage: (msg) => console.log('Mock:', msg), addEventListener: (evt, handler) => { setTimeout(() => handler({ data: JSON.stringify({ token: 'test-token-123' }) }), 100); } };",
+    "matches": ["https://my-webview-app.com/*"]
+  },
+  "requestId": "req-017"
+}
+```
+
+Inject test configuration:
+```json
+{
+  "action": "registerInjection",
+  "params": {
+    "id": "test-config",
+    "code": "window.__TEST_MODE__ = true; window.__API_URL__ = 'https://staging-api.example.com';",
+    "matches": ["https://app.example.com/*", "https://staging.example.com/*"]
+  },
+  "requestId": "req-018"
+}
+```
+
+Override fetch for testing:
+```json
+{
+  "action": "registerInjection",
+  "params": {
+    "id": "fetch-mock",
+    "code": "const originalFetch = window.fetch; window.fetch = async (...args) => { console.log('Fetch intercepted:', args[0]); return originalFetch(...args); };",
+    "matches": ["<all_urls>"],
+    "runAt": "document_start"
+  },
+  "requestId": "req-019"
+}
+```
+
+**Notes:**
+- No warning banner (unlike chrome.debugger API)
+- Code executes in page context, has full access to page APIs
+- Multiple injections can be registered with different IDs
+- Registering with an existing ID will fail - unregister first
+- Code is injected as-is, ensure it's valid JavaScript
+- Use `runAt: "document_start"` for API mocking to ensure code runs before page scripts
+
+### 10. Unregister Script Injection
+
+Remove a previously registered script injection.
+
+**Request:**
+```json
+{
+  "action": "unregisterInjection",
+  "params": {
+    "id": "webview2-mock"
+  },
+  "requestId": "req-020"
+}
+```
+
+**Parameters:**
+- `id` (string, required): ID of the injection to remove
+
+**Response:**
+```json
+{
+  "requestId": "req-020",
+  "result": {
+    "unregistered": true,
+    "id": "webview2-mock"
+  },
+  "error": null
+}
+```
+
+**Error Cases:**
+
+Missing parameter:
+```json
+{
+  "requestId": "req-020",
+  "result": null,
+  "error": {
+    "code": "MISSING_PARAMS",
+    "message": "Missing required parameter: id"
+  }
+}
+```
+
+Unregistration failed:
+```json
+{
+  "requestId": "req-020",
+  "result": null,
+  "error": {
+    "code": "INJECTION_ERROR",
+    "message": "Failed to unregister injection: Content script with ID 'webview2-mock' not found"
+  }
+}
+```
+
+**Notes:**
+- Only affects future page loads - already loaded pages keep the injected code
+- Does not remove code from currently running pages
+- Use when test session is complete or switching to different test configuration
+
 ## Event Messages
 
 Events are sent from the server to the client without a corresponding request.

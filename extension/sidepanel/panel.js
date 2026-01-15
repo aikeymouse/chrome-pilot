@@ -701,6 +701,10 @@ function clearLogs() {
  * Utility: Format duration
  */
 function formatDuration(ms) {
+  if (ms === null || ms === undefined || isNaN(ms)) {
+    return 'N/A';
+  }
+  
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
