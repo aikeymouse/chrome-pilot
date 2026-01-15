@@ -56,6 +56,9 @@ function init() {
   // Connect to background worker
   connectToBackground();
   
+  // Setup injection modal
+  setupInjectionModal();
+  
   // Event listeners
   sessionSelectorTrigger.addEventListener('click', toggleSessionSelector);
   removeExpiredBtn.addEventListener('click', removeExpiredSessions);
@@ -162,6 +165,18 @@ function handleBackgroundMessage(message) {
       handleElementClicked(message);
       break;
       
+    case 'injectionRegistered':
+      handleInjectionRegistered(message);
+      break;
+      
+    case 'injectionTriggered':
+      handleInjectionTriggered(message);
+      break;
+      
+    case 'injectionUnregistered':
+      handleInjectionUnregistered(message);
+      break;
+      
     default:
       console.warn('Unknown message type:', message.type);
   }
@@ -266,6 +281,9 @@ function handleSessionExpired(message) {
   
   console.log('Session expired:', sessionId);
   
+  // Clean up injections for expired session
+  cleanupSessionInjections(sessionId);
+  
   // Mark session as expired
   if (sessions.has(sessionId)) {
     const session = sessions.get(sessionId);
@@ -344,12 +362,24 @@ function updateSessionsUI() {
       option.appendChild(sessionName);
       option.appendChild(sessionStatus);
       
+      // Add injection indicator to dropdown option
+      const optionIndicator = createInjectionIndicator(id);
+      option.appendChild(optionIndicator);
+      
       if (id === currentSessionId) {
         option.classList.add('selected');
         // Update trigger display
         sessionSelectorTrigger.querySelector('.session-name').textContent = sessionName.textContent;
         sessionSelectorTrigger.querySelector('.session-status').textContent = sessionStatus.textContent;
         sessionSelectorTrigger.querySelector('.session-status').className = 'session-status ' + sessionStatus.className.replace('session-status', '').trim();
+        
+        // Add injection indicator to trigger
+        const existingIndicator = sessionSelectorTrigger.querySelector('.injection-indicator');
+        if (existingIndicator) {
+          existingIndicator.remove();
+        }
+        const triggerIndicator = createInjectionIndicator(id);
+        sessionSelectorTrigger.appendChild(triggerIndicator);
       }
       
       option.addEventListener('click', () => selectSession(id));
@@ -435,6 +465,9 @@ function removeExpiredSessions() {
         allLogs.delete(sessionId);
       }
       
+      // Clean up injections
+      cleanupSessionInjections(sessionId);
+      
       removedCount++;
     }
   }
@@ -466,6 +499,9 @@ function removeExpiredSessions() {
 function selectSession(sessionId) {
   currentSessionId = sessionId;
   sessionSelectorWrapper.classList.remove('open');
+  
+  // Close injection modal when switching sessions
+  closeInjectionModal();
   
   // Render logs for the selected session
   renderLogs();

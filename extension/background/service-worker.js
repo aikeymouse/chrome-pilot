@@ -902,7 +902,8 @@ async function registerInjection(params) {
       matches,
       runAt,
       active: true,
-      sessionId: sessionId || null
+      sessionId: sessionId || null,
+      triggerCount: 0
     });
     
     // Listen for tab updates to inject the script
@@ -929,6 +930,19 @@ async function registerInjection(params) {
             args: [injection.code]
           });
           console.log('Injected script into tab', tabId, tab.url);
+          
+          // Increment trigger count
+          injection.triggerCount = (injection.triggerCount || 0) + 1;
+          
+          // Broadcast to side panel
+          if (injection.sessionId) {
+            broadcastToSidePanel({
+              type: 'injectionTriggered',
+              sessionId: injection.sessionId,
+              id: id,
+              triggerCount: injection.triggerCount
+            });
+          }
         } catch (err) {
           console.warn('Injection failed for tab', tabId, err.message);
         }
@@ -940,6 +954,22 @@ async function registerInjection(params) {
     chrome.tabs.onUpdated.addListener(listener);
     
     console.log('Registered script injection:', id, 'for', matches);
+    
+    // Broadcast to side panel
+    if (sessionId) {
+      broadcastToSidePanel({
+        type: 'injectionRegistered',
+        sessionId: sessionId,
+        injection: {
+          id,
+          code,
+          matches,
+          runAt,
+          triggerCount: 0
+        }
+      });
+    }
+    
     return { registered: true, id };
   } catch (error) {
     console.error('Failed to register injection:', error);
@@ -969,6 +999,15 @@ async function unregisterInjection(params) {
       chrome.tabs.onUpdated.removeListener(injection.listener);
     }
     registeredInjections.delete(id);
+    
+    // Broadcast to side panel
+    if (injection.sessionId) {
+      broadcastToSidePanel({
+        type: 'injectionUnregistered',
+        sessionId: injection.sessionId,
+        id: id
+      });
+    }
     
     console.log('Unregistered script injection:', id);
     return { unregistered: true, id };

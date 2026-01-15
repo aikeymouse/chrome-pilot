@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="material-symbols.css">
   <link rel="stylesheet" href="panel.css">
   <link rel="stylesheet" href="inspector.css">
+  <link rel="stylesheet" href="injection-modal.css">
 </head>
 <body>
   <div class="container">
@@ -108,6 +109,21 @@
     </footer>
   </div>
 
+  <!-- Injection Modal -->
+  <div id="injection-modal-overlay" class="injection-modal-overlay">
+    <div class="injection-modal">
+      <div class="injection-modal-header">
+        <h3>Script Injections</h3>
+        <button id="injection-modal-close" class="injection-modal-close">&times;</button>
+      </div>
+      <div id="injection-modal-body" class="injection-modal-body">
+        <div class="injection-empty-state">No active injections</div>
+      </div>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="injection-modal.css">
+  <script src="injection-modal.js"></script>
   <script src="inspector.js"></script>
   <script src="panel.js"></script>
 </body>
