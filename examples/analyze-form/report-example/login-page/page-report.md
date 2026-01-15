@@ -22,8 +22,7 @@
 Found 2 item(s)
 
 ### Username or email address
-![#login_field](screenshots/element-001-0.png)
-![#login_field](screenshots/element-001-1.png)
+![#login_field](screenshots/element-001.png)
 
 **Label Selector:**
 ```css
@@ -44,18 +43,19 @@ label[for="login_field"]
 
 ---
 
-### required_field_2d1d
+### required_field_4ce4
+![input[name="required_field_4ce4"]](screenshots/element-002.png)
 
 **Selector:**
 ```css
-input[name="required_field_2d1d"]
+input[name="required_field_4ce4"]
 ```
 
 **Element Details:**
 
 - **Type:** `input` (`text`)
-- **Name:** `required_field_2d1d`
-- **Label Selector:** `required_field_2d1d`
+- **Name:** `required_field_4ce4`
+- **Label Selector:** `required_field_4ce4`
 
 ---
 
@@ -63,8 +63,7 @@ input[name="required_field_2d1d"]
 Found 1 item(s)
 
 ### Password
-![#password](screenshots/element-003-0.png)
-![#password](screenshots/element-003-1.png)
+![#password](screenshots/element-003.png)
 
 **Label Selector:**
 ```css
@@ -127,4 +126,4 @@ input[name="commit"]
 
 ---
 
-*Generated on 1/14/2026, 4:36:20 PM*
+*Generated on 1/14/2026, 7:37:08 PM*
