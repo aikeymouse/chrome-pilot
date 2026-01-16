@@ -1,5 +1,33 @@
 # WebSocket API Protocol Documentation
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Connection Establishment](#connection-establishment)
+  - [WebSocket Connection](#websocket-connection---createresume-session)
+  - [HTTP Endpoint](#http-endpoint---check-serversession-status)
+- [Message Format](#message-format)
+  - [Request Format](#request-format)
+  - [Response Format](#response-format)
+  - [Chunked Response Format](#chunked-response-format)
+- [Commands](#commands)
+  - [1. List Tabs](#1-list-tabs)
+  - [2. Open Tab](#2-open-tab)
+  - [3. Navigate Tab](#3-navigate-tab)
+  - [4. Switch Tab](#4-switch-tab)
+  - [5. Close Tab](#5-close-tab)
+  - [6. Execute JavaScript](#6-execute-javascript)
+  - [7. Call DOM Helper Function](#7-call-dom-helper-function)
+  - [8. Capture Screenshot](#8-capture-screenshot)
+  - [9. Register Script Injection](#9-register-script-injection)
+  - [10. Unregister Script Injection](#10-unregister-script-injection)
+- [Event Messages](#event-messages)
+- [Error Codes](#error-codes)
+- [Session Lifecycle](#session-lifecycle)
+- [Best Practices](#best-practices)
+- [Examples](#examples)
+- [Versioning](#versioning)
+
 ## Overview
 
 This document defines the JSON protocol for communication between WebSocket clients and ChromeLink via the Native Messaging Host.
