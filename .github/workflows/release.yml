@@ -200,7 +200,7 @@ jobs:
           echo "" >> CHANGELOG.md
           echo "1. Copy your extension ID from \`chrome://extensions/\`" >> CHANGELOG.md
           echo "2. Run: \`node install.js update-id <your-extension-id>\`" >> CHANGELOG.md
-          echo "3. Restart Chrome" >> CHANGELOG.md
+          echo "3. Extension will connect automatically" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "## Verify Installation" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
