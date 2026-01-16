@@ -1,10 +1,22 @@
 /**
  * Enhanced test client with helper methods
+ * Extends the ChromeLink client with test-specific utilities
  */
 
-const ChromeLinkClient = require('../examples/chromelink-client');
+// Use local file dependency (linked via package.json)
+const ChromeLinkClient = require('@aikeymouse/chromelink-client');
 
 class TestClient extends ChromeLinkClient {
+  /**
+   * Create test client with verbose logging disabled by default
+   */
+  constructor(options = {}) {
+    super({
+      verbose: false,
+      ...options
+    });
+  }
+
   /**
    * Wait for connection with timeout
    */

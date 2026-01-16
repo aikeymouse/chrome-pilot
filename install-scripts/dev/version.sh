@@ -69,6 +69,36 @@ case "$COMMAND" in
             fi
         fi
         
+        # Client node package.json
+        if [ -f "$PROJECT_ROOT/clients/node/package.json" ]; then
+            CLIENT_VERSION=$(jq -r '.version' "$PROJECT_ROOT/clients/node/package.json")
+            if [ "$CLIENT_VERSION" == "$CURRENT_VERSION" ]; then
+                echo "  ✓ clients/node/package.json: $CLIENT_VERSION"
+            else
+                echo "  ✗ clients/node/package.json: $CLIENT_VERSION (expected: $CURRENT_VERSION)"
+            fi
+        fi
+        
+        # Client placeholder package.json
+        if [ -f "$PROJECT_ROOT/clients/chromelink-client/package.json" ]; then
+            PLACEHOLDER_VERSION=$(jq -r '.version' "$PROJECT_ROOT/clients/chromelink-client/package.json")
+            if [ "$PLACEHOLDER_VERSION" == "$CURRENT_VERSION" ]; then
+                echo "  ✓ clients/chromelink-client/package.json: $PLACEHOLDER_VERSION"
+            else
+                echo "  ✗ clients/chromelink-client/package.json: $PLACEHOLDER_VERSION (expected: $CURRENT_VERSION)"
+            fi
+        fi
+        
+        echo ""
+        echo "Local file dependencies:"
+        # Check if tests/package.json has local file dependency
+        if [ -f "$PROJECT_ROOT/tests/package.json" ]; then
+            if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/tests/package.json" 2>/dev/null; then
+                print_warning "tests/package.json uses local file dependency"
+                echo "  Run 'cd tests && npm install' to update symlink after version changes"
+            fi
+        fi
+        
         echo ""
         ;;
         
@@ -113,9 +143,35 @@ case "$COMMAND" in
             print_success "native-host/package.json updated"
         fi
         
+        # Update client node package.json
+        if [ -f "$PROJECT_ROOT/clients/node/package.json" ]; then
+            TEMP_FILE=$(mktemp)
+            jq --arg version "$NEW_VERSION" '.version = $version' "$PROJECT_ROOT/clients/node/package.json" > "$TEMP_FILE"
+            mv "$TEMP_FILE" "$PROJECT_ROOT/clients/node/package.json"
+            print_success "clients/node/package.json updated"
+        fi
+        
+        # Update client placeholder package.json
+        if [ -f "$PROJECT_ROOT/clients/chromelink-client/package.json" ]; then
+            TEMP_FILE=$(mktemp)
+            jq --arg version "$NEW_VERSION" '.version = $version' "$PROJECT_ROOT/clients/chromelink-client/package.json" > "$TEMP_FILE"
+            mv "$TEMP_FILE" "$PROJECT_ROOT/clients/chromelink-client/package.json"
+            print_success "clients/chromelink-client/package.json updated"
+        fi
+        
         echo ""
         print_success "Version updated to $NEW_VERSION"
         echo ""
+        
+        # Check for local file dependencies
+        if [ -f "$PROJECT_ROOT/tests/package.json" ]; then
+            if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/tests/package.json" 2>/dev/null; then
+                print_warning "Local file dependency detected in tests/package.json"
+                echo "  Run: cd tests && npm install"
+                echo ""
+            fi
+        fi
+        
         echo "Next steps:"
         echo "  1. Commit changes: git commit -am 'Bump version to $NEW_VERSION'"
         echo "  2. Create tag: git tag -a v$NEW_VERSION -m 'Release v$NEW_VERSION'"
@@ -158,9 +214,46 @@ case "$COMMAND" in
             fi
         fi
         
+        # Update client node package.json if needed
+        if [ -f "$PROJECT_ROOT/clients/node/package.json" ]; then
+            CLIENT_VERSION=$(jq -r '.version' "$PROJECT_ROOT/clients/node/package.json")
+            if [ "$CLIENT_VERSION" != "$CURRENT_VERSION" ]; then
+                TEMP_FILE=$(mktemp)
+                jq --arg version "$CURRENT_VERSION" '.version = $version' "$PROJECT_ROOT/clients/node/package.json" > "$TEMP_FILE"
+                mv "$TEMP_FILE" "$PROJECT_ROOT/clients/node/package.json"
+                print_success "clients/node/package.json synced: $CLIENT_VERSION → $CURRENT_VERSION"
+                UPDATED=1
+            else
+                print_info "clients/node/package.json already synced: $CLIENT_VERSION"
+            fi
+        fi
+        
+        # Update client placeholder package.json if needed
+        if [ -f "$PROJECT_ROOT/clients/chromelink-client/package.json" ]; then
+            PLACEHOLDER_VERSION=$(jq -r '.version' "$PROJECT_ROOT/clients/chromelink-client/package.json")
+            if [ "$PLACEHOLDER_VERSION" != "$CURRENT_VERSION" ]; then
+                TEMP_FILE=$(mktemp)
+                jq --arg version "$CURRENT_VERSION" '.version = $version' "$PROJECT_ROOT/clients/chromelink-client/package.json" > "$TEMP_FILE"
+                mv "$TEMP_FILE" "$PROJECT_ROOT/clients/chromelink-client/package.json"
+                print_success "clients/chromelink-client/package.json synced: $PLACEHOLDER_VERSION → $CURRENT_VERSION"
+                UPDATED=1
+            else
+                print_info "clients/chromelink-client/package.json already synced: $PLACEHOLDER_VERSION"
+            fi
+        fi
+        
         echo ""
         if [ $UPDATED -eq 1 ]; then
             print_success "Sync complete"
+            
+            # Check for local file dependencies
+            if [ -f "$PROJECT_ROOT/tests/package.json" ]; then
+                if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/tests/package.json" 2>/dev/null; then
+                    echo ""
+                    print_warning "Local file dependency detected in tests/package.json"
+                    echo "  Run: cd tests && npm install"
+                fi
+            fi
         else
             print_info "All versions already synced to $CURRENT_VERSION"
         fi

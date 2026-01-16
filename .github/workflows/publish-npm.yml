@@ -1,0 +1,169 @@
+name: Publish to npm
+
+on:
+  # Manual trigger with options
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (test without publishing)'
+        required: false
+        type: boolean
+        default: true
+      publish_placeholder:
+        description: 'Also publish chromelink-client placeholder'
+        required: false
+        type: boolean
+        default: true
+  
+  # Automatic trigger on version tags
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  validate-version:
+    name: Validate Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      is-prerelease: ${{ steps.check-prerelease.outputs.is-prerelease }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get version from tag or VERSION file
+        id: get-version
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            # Extract version from tag (remove 'v' prefix)
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            # Read from VERSION file for manual dispatch
+            VERSION=$(cat VERSION | tr -d '[:space:]')
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Check if prerelease
+        id: check-prerelease
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "is-prerelease=false" >> $GITHUB_OUTPUT
+          else
+            echo "is-prerelease=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Validate package.json versions match
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          
+          # Check clients/node/package.json
+          NODE_VERSION=$(jq -r '.version' clients/node/package.json)
+          if [ "$NODE_VERSION" != "$VERSION" ]; then
+            echo "❌ Version mismatch: clients/node/package.json has $NODE_VERSION, expected $VERSION"
+            exit 1
+          fi
+          echo "✓ clients/node/package.json version matches: $NODE_VERSION"
+          
+          # Check clients/chromelink-client/package.json
+          PLACEHOLDER_VERSION=$(jq -r '.version' clients/chromelink-client/package.json)
+          if [ "$PLACEHOLDER_VERSION" != "$VERSION" ]; then
+            echo "❌ Version mismatch: clients/chromelink-client/package.json has $PLACEHOLDER_VERSION, expected $VERSION"
+            exit 1
+          fi
+          echo "✓ clients/chromelink-client/package.json version matches: $PLACEHOLDER_VERSION"
+          
+          echo ""
+          echo "✅ All package versions validated: $VERSION"
+
+  publish-scoped:
+    name: Publish @aikeymouse/chromelink-client
+    needs: validate-version
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        working-directory: ./clients/node
+        run: npm install
+      
+      - name: Dry run (test package)
+        if: ${{ github.event.inputs.dry_run == 'true' || github.event.inputs.dry_run == '' }}
+        working-directory: ./clients/node
+        run: |
+          echo "🧪 Running dry run..."
+          npm publish --dry-run
+          echo ""
+          echo "✅ Dry run successful! Package is ready to publish."
+          echo ""
+          echo "To publish for real:"
+          echo "  1. Go to Actions tab"
+          echo "  2. Run 'Publish to npm' workflow"
+          echo "  3. Uncheck 'Dry run' option"
+      
+      - name: Publish to npm
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        working-directory: ./clients/node
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish summary
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        run: |
+          echo "## ✅ Published @aikeymouse/chromelink-client" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.validate-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** https://www.npmjs.com/package/@aikeymouse/chromelink-client" >> $GITHUB_STEP_SUMMARY
+          echo "**Provenance:** Enabled" >> $GITHUB_STEP_SUMMARY
+
+  publish-placeholder:
+    name: Publish chromelink-client
+    needs: [validate-version, publish-scoped]
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.publish_placeholder == 'true' || github.event.inputs.publish_placeholder == '' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Dry run (test package)
+        if: ${{ github.event.inputs.dry_run == 'true' || github.event.inputs.dry_run == '' }}
+        working-directory: ./clients/chromelink-client
+        run: |
+          echo "🧪 Running dry run for placeholder package..."
+          npm publish --dry-run
+          echo ""
+          echo "✅ Placeholder package dry run successful!"
+      
+      - name: Publish to npm
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        working-directory: ./clients/chromelink-client
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish summary
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        run: |
+          echo "## ✅ Published chromelink-client" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.validate-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** https://www.npmjs.com/package/chromelink-client" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** This is a placeholder that re-exports @aikeymouse/chromelink-client" >> $GITHUB_STEP_SUMMARY

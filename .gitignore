@@ -19,3 +19,10 @@ examples/dev.notes.txt
 examples/page-source.txt
 examples/*.png
 docs/dev/bugs.txt
+
+# Client packages
+clients/*/node_modules/
+clients/*/.npmrc
+clients/*/package-lock.json
+clients/*/*.tgz
+docs/dev/NPM_PUBLISH.md

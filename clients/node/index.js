@@ -1,14 +1,37 @@
 /**
- * WebSocket Client Helper for ChromeLink
+ * ChromeLink WebSocket Client
+ * Official Node.js client for ChromeLink browser automation
+ * 
+ * @license MIT
+ * @see https://github.com/aikeymouse/chrome-link
  */
 
 const WebSocket = require('ws');
 
 class ChromeLinkClient {
-  constructor() {
+  /**
+   * Create a new ChromeLink client
+   * @param {Object} options - Client options
+   * @param {boolean} [options.verbose=true] - Enable verbose logging
+   */
+  constructor(options = {}) {
+    this.verbose = options.verbose !== false;
     this.ws = null;
     this.sessionId = null;
     this.pendingRequests = new Map();
+    this.requestCounter = 0;
+    this.chunks = new Map(); // For chunked response assembly
+    this.currentTabId = null;
+  }
+
+  /**
+   * Internal logging method
+   * @private
+   */
+  log(...args) {
+    if (this.verbose) {
+      console.log(...args);
+    }
   }
 
   /**
@@ -28,7 +51,7 @@ class ChromeLinkClient {
       this.ws = new WebSocket(url);
 
       this.ws.on('open', () => {
-        console.log('✓ Connected to WebSocket server');
+        this.log('✓ Connected to WebSocket server');
       });
 
       this.ws.on('message', (data) => {
@@ -37,7 +60,7 @@ class ChromeLinkClient {
         // Handle sessionCreated message
         if (message.type === 'sessionCreated') {
           this.sessionId = message.sessionId;
-          console.log(`✓ Session created: ${this.sessionId}`);
+          this.log(`✓ Session created: ${this.sessionId}`);
           resolve();
           return;
         }
@@ -45,7 +68,7 @@ class ChromeLinkClient {
         // Handle sessionResumed message
         if (message.type === 'sessionResumed') {
           this.sessionId = message.sessionId;
-          console.log(`✓ Session resumed: ${this.sessionId}`);
+          this.log(`✓ Session resumed: ${this.sessionId}`);
           resolve();
           return;
         }
@@ -66,16 +89,48 @@ class ChromeLinkClient {
       });
 
       this.ws.on('close', () => {
-        console.log('✓ WebSocket connection closed');
+        this.log('✓ WebSocket connection closed');
       });
     });
   }
 
   /**
    * Handle incoming messages
+   * @private
    */
   handleMessage(message) {
-    console.log('← Received:', JSON.stringify(message, null, 2));
+    this.log('← Received:', JSON.stringify(message, null, 2));
+
+    // Handle chunked responses (for results >1MB)
+    if (message.chunk !== undefined) {
+      if (!this.chunks.has(message.requestId)) {
+        this.chunks.set(message.requestId, new Array(message.totalChunks));
+      }
+      
+      const chunksArray = this.chunks.get(message.requestId);
+      chunksArray[message.chunkIndex] = message.chunk;
+      
+      // Check if all chunks received
+      if (chunksArray.every(c => c !== undefined)) {
+        // Assemble chunks
+        const combined = chunksArray.join('');
+        const decoded = Buffer.from(combined, 'base64').toString();
+        const result = JSON.parse(decoded);
+        this.chunks.delete(message.requestId);
+        
+        // Resolve the pending request
+        const resolver = this.pendingRequests.get(message.requestId);
+        if (resolver) {
+          if (result.error) {
+            resolver.reject(result.error);
+          } else {
+            resolver.resolve(result.result);
+          }
+          this.pendingRequests.delete(message.requestId);
+        }
+      }
+      return;
+    }
 
     // Handle response messages (either with type='response' or with requestId)
     if (message.type === 'response' || (message.requestId && message.hasOwnProperty('result'))) {
@@ -96,10 +151,11 @@ class ChromeLinkClient {
 
   /**
    * Send request and wait for response
+   * @private
    */
   sendRequest(action, params = {}) {
     return new Promise((resolve, reject) => {
-      const requestId = `req-${Date.now()}`;
+      const requestId = `req-${Date.now()}-${++this.requestCounter}`;
 
       const message = {
         action,
@@ -107,7 +163,7 @@ class ChromeLinkClient {
         requestId
       };
 
-      console.log('→ Sending:', JSON.stringify(message, null, 2));
+      this.log('→ Sending:', JSON.stringify(message, null, 2));
 
       this.pendingRequests.set(requestId, { resolve, reject });
       this.ws.send(JSON.stringify(message));
@@ -126,7 +182,7 @@ class ChromeLinkClient {
    * Session is automatically created on connection - this method is a no-op
    */
   async createSession(timeout = 300000) {
-    console.log(`✓ Using existing session: ${this.sessionId}`);
+    this.log(`✓ Using existing session: ${this.sessionId}`);
     return { sessionId: this.sessionId };
   }
 
@@ -134,11 +190,11 @@ class ChromeLinkClient {
    * Navigate to URL (opens in new tab and focuses it)
    */
   async navigate(url) {
-    console.log(`→ Navigating to: ${url}`);
+    this.log(`→ Navigating to: ${url}`);
     const result = await this.sendRequest('openTab', { url, focus: true });
-    console.log('✓ Navigation complete, result:', JSON.stringify(result, null, 2));
+    this.log('✓ Navigation complete, result:', JSON.stringify(result, null, 2));
     this.currentTabId = result.tab.id;
-    console.log(`✓ Current tab ID set to: ${this.currentTabId}`);
+    this.log(`✓ Current tab ID set to: ${this.currentTabId}`);
     return result;
   }
 
@@ -147,9 +203,9 @@ class ChromeLinkClient {
    */
   async executeJS(code, tabId = null) {
     const targetTabId = tabId || this.currentTabId;
-    console.log(`→ Executing JS in tab ${targetTabId}: ${code.substring(0, 50)}...`);
+    this.log(`→ Executing JS in tab ${targetTabId}: ${code.substring(0, 50)}...`);
     const result = await this.sendRequest('executeJS', { code, tabId: targetTabId });
-    console.log(`✓ Result: ${JSON.stringify(result.value)}`);
+    this.log(`✓ Result: ${JSON.stringify(result.value)}`);
     return result;
   }
 
@@ -158,13 +214,13 @@ class ChromeLinkClient {
    */
   async callHelper(functionName, args = [], tabId = null) {
     const targetTabId = tabId || this.currentTabId;
-    console.log(`→ Calling helper: ${functionName}(${args.join(', ')})`);
+    this.log(`→ Calling helper: ${functionName}(${args.join(', ')})`);
     const result = await this.sendRequest('callHelper', { 
       functionName, 
       args, 
       tabId: targetTabId 
     });
-    console.log(`✓ Result: ${JSON.stringify(result.value)}`);
+    this.log(`✓ Result: ${JSON.stringify(result.value)}`);
     return result;
   }
 
@@ -172,7 +228,7 @@ class ChromeLinkClient {
    * Wait for element (using polling with executeJS)
    */
   async waitForElement(selector, timeout = 10000) {
-    console.log(`→ Waiting for element: ${selector}`);
+    this.log(`→ Waiting for element: ${selector}`);
     const start = Date.now();
     
     while (Date.now() - start < timeout) {
@@ -180,11 +236,11 @@ class ChromeLinkClient {
         const escapedSelector = selector.replace(/'/g, "\\'");
         const result = await this.executeJS(`document.querySelector('${escapedSelector}') !== null`);
         if (result.value === true) {
-          console.log('✓ Element found');
+          this.log('✓ Element found');
           return { found: true };
         }
       } catch (err) {
-        console.log(`  Retrying... (${err.message})`);
+        this.log(`  Retrying... (${err.message})`);
       }
       await this.wait(500);
     }
@@ -196,11 +252,16 @@ class ChromeLinkClient {
    * Click element
    */
   async click(selector) {
-    console.log(`→ Clicking element: ${selector}`);
+    this.log(`→ Clicking element: ${selector}`);
     const escapedSelector = selector.replace(/'/g, "\\'");
-    const code = `(function() { document.querySelector('${escapedSelector}').click(); return true; })()`;
+    const code = `(function() {
+      const el = document.querySelector('${escapedSelector}');
+      if (!el) throw new Error('Element not found: ${escapedSelector}');
+      el.click();
+      return true;
+    })()`;
     const result = await this.executeJS(code);
-    console.log('✓ Click complete');
+    this.log('✓ Click complete');
     return result;
   }
 
@@ -208,18 +269,19 @@ class ChromeLinkClient {
    * Type text into element
    */
   async type(selector, text) {
-    console.log(`→ Typing "${text}" into: ${selector}`);
+    this.log(`→ Typing "${text}" into: ${selector}`);
     const escapedSelector = selector.replace(/'/g, "\\'");
     const escapedText = text.replace(/'/g, "\\'");
     const code = `(function() {
       const el = document.querySelector('${escapedSelector}');
+      if (!el) throw new Error('Element not found: ${escapedSelector}');
       el.value = '${escapedText}';
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
     })()`;
     const result = await this.executeJS(code);
-    console.log('✓ Type complete');
+    this.log('✓ Type complete');
     return result;
   }
 
@@ -227,10 +289,15 @@ class ChromeLinkClient {
    * Get element text
    */
   async getText(selector) {
-    console.log(`→ Getting text from: ${selector}`);
-    const code = `document.querySelector('${selector}').textContent`;
+    this.log(`→ Getting text from: ${selector}`);
+    const escapedSelector = selector.replace(/'/g, "\\'");
+    const code = `(function() {
+      const el = document.querySelector('${escapedSelector}');
+      if (!el) throw new Error('Element not found: ${escapedSelector}');
+      return el.textContent;
+    })()`;
     const result = await this.executeJS(code);
-    console.log(`✓ Text: "${result.value}"`);
+    this.log(`✓ Text: "${result.value}"`);
     return { text: result.value };
   }
 
@@ -238,9 +305,9 @@ class ChromeLinkClient {
    * List tabs
    */
   async listTabs() {
-    console.log('→ Listing tabs');
+    this.log('→ Listing tabs');
     const result = await this.sendRequest('listTabs');
-    console.log(`✓ Found ${result.tabs.length} tabs`);
+    this.log(`✓ Found ${result.tabs.length} tabs`);
     return result;
   }
 
@@ -248,9 +315,9 @@ class ChromeLinkClient {
    * Close a tab
    */
   async closeTab(tabId) {
-    console.log(`→ Closing tab: ${tabId}`);
+    this.log(`→ Closing tab: ${tabId}`);
     const result = await this.sendRequest('closeTab', { tabId });
-    console.log('✓ Tab closed');
+    this.log('✓ Tab closed');
     return result;
   }
 
@@ -259,7 +326,7 @@ class ChromeLinkClient {
    */
   async closeSession() {
     if (this.sessionId) {
-      console.log(`→ Closing WebSocket connection (session will expire on timeout)`);
+      this.log(`→ Closing WebSocket connection (session will expire on timeout)`);
       this.sessionId = null;
       return { closed: true };
     }
@@ -269,154 +336,8 @@ class ChromeLinkClient {
    * Wait for a period of time
    */
   async wait(ms) {
-    console.log(`⏱  Waiting ${ms}ms...`);
+    this.log(`⏱  Waiting ${ms}ms...`);
     await new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Wait for connection with timeout
-   */
-  async waitForConnection(timeout = 5000) {
-    const start = Date.now();
-    while (!this.sessionId && Date.now() - start < timeout) {
-      await this.wait(100);
-    }
-    if (!this.sessionId) {
-      throw new Error('Connection timeout - session not created');
-    }
-    return true;
-  }
-
-  /**
-   * Get initial tab IDs for cleanup tracking
-   */
-  async getInitialTabIds() {
-    const result = await this.listTabs();
-    return result.tabs.map(tab => tab.id);
-  }
-
-  /**
-   * Cleanup tabs created during test
-   */
-  async cleanupTabs(initialTabIds) {
-    const currentResult = await this.listTabs();
-    const currentTabIds = currentResult.tabs.map(tab => tab.id);
-    
-    // Close tabs that weren't there initially
-    for (const tabId of currentTabIds) {
-      if (!initialTabIds.includes(tabId)) {
-        try {
-          await this.closeTab(tabId);
-        } catch (err) {
-          // Tab may already be closed
-          console.log(`Could not close tab ${tabId}: ${err.message}`);
-        }
-      }
-    }
-  }
-
-  /**
-   * Assert response is valid according to protocol
-   * @param {Object} response - The response object
-   * @param {Object} options - Validation options
-   * @param {Array<string>} options.requiredFields - Fields that must exist
-   * @param {Object} options.fieldTypes - Map of field names to expected types
-   * @param {Function} options.customValidator - Custom validation function
-   */
-  assertValidResponse(response, options = {}) {
-    const { requiredFields = [], fieldTypes = {}, customValidator } = options;
-    
-    if (!response) {
-      throw new Error('Response is null or undefined');
-    }
-    
-    // Check required fields exist
-    for (const field of requiredFields) {
-      if (!(field in response)) {
-        throw new Error(`Response missing required field: ${field}`);
-      }
-    }
-    
-    // Check field types
-    for (const [field, expectedType] of Object.entries(fieldTypes)) {
-      if (field in response) {
-        const actualType = Array.isArray(response[field]) ? 'array' : typeof response[field];
-        if (actualType !== expectedType) {
-          throw new Error(`Field '${field}' has type '${actualType}', expected '${expectedType}'`);
-        }
-      }
-    }
-    
-    // Run custom validator if provided
-    if (customValidator && typeof customValidator === 'function') {
-      customValidator(response);
-    }
-    
-    return true;
-  }
-
-  /**
-   * Validate tab object structure
-   */
-  assertValidTab(tab) {
-    return this.assertValidResponse(tab, {
-      requiredFields: ['id', 'url', 'title'],
-      fieldTypes: {
-        id: 'number',
-        url: 'string',
-        title: 'string',
-        active: 'boolean'
-      }
-    });
-  }
-
-  /**
-   * Validate success response
-   */
-  assertValidSuccessResponse(response) {
-    return this.assertValidResponse(response, {
-      requiredFields: ['success'],
-      fieldTypes: { success: 'boolean' },
-      customValidator: (res) => {
-        if (res.success !== true) {
-          throw new Error('Response success field is not true');
-        }
-      }
-    });
-  }
-
-  /**
-   * Validate executeJS/callHelper response
-   */
-  assertValidExecutionResponse(response) {
-    return this.assertValidResponse(response, {
-      requiredFields: ['value'],
-      customValidator: (res) => {
-        // Value can be any type
-        if (!('value' in res)) {
-          throw new Error('Response missing value field');
-        }
-      }
-    });
-  }
-
-  /**
-   * Wait for tab to be ready
-   */
-  async waitForTabReady(tabId, timeout = 5000) {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-      try {
-        const result = await this.executeJS('document.readyState', tabId);
-        if (result.value === 'complete' || result.value === 'interactive') {
-          return true;
-        }
-      } catch (err) {
-        // Tab might not be ready yet
-      }
-      await this.wait(100);
-    }
-    throw new Error(`Tab ${tabId} not ready within ${timeout}ms`);
   }
 
   /**

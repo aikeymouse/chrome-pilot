@@ -1,0 +1,49 @@
+{
+  "name": "@aikeymouse/chromelink-client",
+  "version": "1.1.3",
+  "description": "Official Node.js client for ChromeLink browser automation via WebSocket",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "prepublishOnly": "echo 'Publishing @aikeymouse/chromelink-client'"
+  },
+  "keywords": [
+    "chrome",
+    "automation",
+    "websocket",
+    "testing",
+    "browser-control",
+    "chromelink",
+    "browser-automation",
+    "remote-control",
+    "e2e-testing"
+  ],
+  "author": "aikeymouse",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aikeymouse/chrome-link.git",
+    "directory": "clients/node"
+  },
+  "homepage": "https://github.com/aikeymouse/chrome-link#readme",
+  "bugs": {
+    "url": "https://github.com/aikeymouse/chrome-link/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.0.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

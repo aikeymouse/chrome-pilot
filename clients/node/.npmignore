@@ -1,0 +1,43 @@
+# Exclude development files
+node_modules/
+*.log
+*.tgz
+
+# Exclude tests
+*.test.js
+test/
+tests/
+__tests__/
+
+# Exclude examples
+examples/
+example/
+
+# Exclude CI/build files
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Exclude OS files
+.DS_Store
+Thumbs.db
+
+# Exclude source control
+.git/
+.gitignore
+.gitattributes
+
+# Exclude documentation source
+docs/
+*.md.bak
+
+# Keep only distribution files
+!index.js
+!index.d.ts
+!README.md
+!CHANGELOG.md
+!LICENSE
+!package.json

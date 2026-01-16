@@ -3,7 +3,7 @@
  */
 
 const { expect } = require('chai');
-const ChromeLinkClient = require('../helpers/chromelink-client');
+const ChromeLinkClient = require('../helpers/test-client');
 
 describe('Session Lifecycle', function() {
   it('should create session on connection', async function() {

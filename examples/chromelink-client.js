@@ -1,5 +1,18 @@
 /**
  * WebSocket Client Helper for ChromeLink
+ * 
+ * @deprecated This file is deprecated and kept for reference only.
+ * Please use the official npm package instead:
+ * 
+ *   npm install @aikeymouse/chromelink-client
+ *   // or
+ *   npm install chromelink-client
+ * 
+ * Usage:
+ *   const ChromeLinkClient = require('@aikeymouse/chromelink-client');
+ *   const client = new ChromeLinkClient({ verbose: true });
+ * 
+ * Documentation: https://www.npmjs.com/package/@aikeymouse/chromelink-client
  */
 
 const WebSocket = require('ws');
