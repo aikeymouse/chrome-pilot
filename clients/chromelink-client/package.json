@@ -26,7 +26,7 @@
     "url": "https://github.com/aikeymouse/chrome-link/issues"
   },
   "dependencies": {
-    "@aikeymouse/chromelink-client": "^0.1.0"
+    "@aikeymouse/chromelink-client": "^1.1.3"
   },
   "publishConfig": {
     "access": "public"
