@@ -8,12 +8,14 @@ Remote Chrome tab control via WebSocket API with session management and side pan
 
 - **WebSocket API**: Control Chrome tabs remotely via WebSocket connection
 - **Session Management**: Create sessions with configurable timeouts, resume existing sessions
-- **Tab Operations**: List, open, navigate, switch tabs in current active window
+- **Tab Operations**: List, open, navigate, switch, close tabs in current active window
 - **JavaScript Execution**: Execute JavaScript in tabs with configurable timeout and result return
+- **Script Injection**: Register early script injections for WebView2 mocking, test configuration, and API interception without debugger warnings
 - **Inspector Mode**: Interactive element inspection with detailed DOM tree analysis and CSS selectors
-- **Helper Functions**: Execute CSP-safe helper functions for screenshots, element inspection, and DOM manipulation
-- **Side Panel UI**: Monitor connected clients, view session details, track logs in real-time
-- **Per-Session Logging**: All requests/responses logged to dedicated session files
+- **Helper Functions**: Comprehensive DOM operations for CSP-restricted pages including click, type, highlight, element bounds, viewport scrolling, and container analysis
+- **Screenshot Capture**: Full page or element-cropped screenshots with base64 PNG output
+- **Side Panel UI**: Monitor connected clients, view session details, manage script injections, track logs in real-time
+- **Per-Session Logging**: All requests/responses logged to dedicated session files with configurable retention
 - **Chunked Messages**: Handle large results with automatic 1MB chunking
 - **Auto-Restart**: Native host automatically restarts on extension updates
 
@@ -52,7 +54,7 @@ Parameters:
 - `timeout`: Session timeout in milliseconds (default: 300000 = 5 minutes)
 - `sessionId`: (Optional) Resume existing session if not expired
 
-Then connect via WebSocket client (see `tests/examples/` for Node.js client examples).
+Then connect via WebSocket client (see `examples/` for Node.js client examples).
 
 ### WebSocket Commands
 
