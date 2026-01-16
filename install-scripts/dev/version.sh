@@ -154,7 +154,9 @@ case "$COMMAND" in
         # Update client placeholder package.json
         if [ -f "$PROJECT_ROOT/clients/chromelink-client/package.json" ]; then
             TEMP_FILE=$(mktemp)
-            jq --arg version "$NEW_VERSION" '.version = $version' "$PROJECT_ROOT/clients/chromelink-client/package.json" > "$TEMP_FILE"
+            jq --arg version "$NEW_VERSION" \
+               '.version = $version | .dependencies."@aikeymouse/chromelink-client" = ("^" + $version)' \
+               "$PROJECT_ROOT/clients/chromelink-client/package.json" > "$TEMP_FILE"
             mv "$TEMP_FILE" "$PROJECT_ROOT/clients/chromelink-client/package.json"
             print_success "clients/chromelink-client/package.json updated"
         fi
@@ -231,9 +233,12 @@ case "$COMMAND" in
         # Update client placeholder package.json if needed
         if [ -f "$PROJECT_ROOT/clients/chromelink-client/package.json" ]; then
             PLACEHOLDER_VERSION=$(jq -r '.version' "$PROJECT_ROOT/clients/chromelink-client/package.json")
-            if [ "$PLACEHOLDER_VERSION" != "$CURRENT_VERSION" ]; then
+            PLACEHOLDER_DEP_VERSION=$(jq -r '.dependencies."@aikeymouse/chromelink-client"' "$PROJECT_ROOT/clients/chromelink-client/package.json" | sed 's/\^//')
+            if [ "$PLACEHOLDER_VERSION" != "$CURRENT_VERSION" ] || [ "$PLACEHOLDER_DEP_VERSION" != "$CURRENT_VERSION" ]; then
                 TEMP_FILE=$(mktemp)
-                jq --arg version "$CURRENT_VERSION" '.version = $version' "$PROJECT_ROOT/clients/chromelink-client/package.json" > "$TEMP_FILE"
+                jq --arg version "$CURRENT_VERSION" \
+                   '.version = $version | .dependencies."@aikeymouse/chromelink-client" = ("^" + $version)' \
+                   "$PROJECT_ROOT/clients/chromelink-client/package.json" > "$TEMP_FILE"
                 mv "$TEMP_FILE" "$PROJECT_ROOT/clients/chromelink-client/package.json"
                 print_success "clients/chromelink-client/package.json synced: $PLACEHOLDER_VERSION → $CURRENT_VERSION"
                 UPDATED=1
