@@ -678,6 +678,11 @@ function renderLogs() {
       if (direction === 'response' && parsedData.error) {
         hasError = true;
       }
+      
+      // Check if response has result.success === false
+      if (direction === 'response' && parsedData.result && parsedData.result.success === false) {
+        hasError = true;
+      }
     } catch (e) {
       // If parsing fails, just show the raw data
     }

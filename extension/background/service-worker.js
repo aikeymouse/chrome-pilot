@@ -726,17 +726,17 @@ async function callHelperWithTimeout(tabId, functionName, args, timeout) {
       const results = await chrome.scripting.executeScript({
         target: { tabId },
         func: async (fnName, fnArgs) => {
-          if (!window.__chromeLinkHelper) {
-            throw new Error('ChromeLink helper not loaded');
-          }
-          
-          const fn = window.__chromeLinkHelper[fnName];
-          if (!fn) {
-            throw new Error(`Helper function not found: ${fnName}`);
-          }
-          
-          // Call function and let errors propagate
+          // Validate and call function inside try-catch
           try {
+            if (!window.__chromeLinkHelper) {
+              throw new Error('ChromeLink helper not loaded');
+            }
+            
+            const fn = window.__chromeLinkHelper[fnName];
+            if (!fn) {
+              throw new Error(`Helper function not found: ${fnName}`);
+            }
+            
             const result = fn(...fnArgs);
             // Handle promises by checking for then method
             const value = (result && typeof result.then === 'function') 
@@ -764,10 +764,10 @@ async function callHelperWithTimeout(tabId, functionName, args, timeout) {
       const result = results[0].result;
       
       // Check if the function execution failed
-      if (result && !result.success && result.error) {
+      if (result && result.success === false) {
         reject({
           code: 'EXECUTION_ERROR',
-          message: result.error
+          message: result.error || 'Helper function execution failed'
         });
         return;
       }
