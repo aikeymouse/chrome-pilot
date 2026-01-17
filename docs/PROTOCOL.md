@@ -1537,18 +1537,6 @@ function handleMessage(message) {
 }
 ```
 
-### Session Keep-Alive
-
-Send periodic ping commands to prevent session timeout:
-```javascript
-setInterval(() => {
-  send({
-    action: "listTabs",
-    requestId: `ping-${Date.now()}`
-  });
-}, 240000); // Every 4 minutes (if timeout is 5 minutes)
-```
-
 ### Tab ID Management
 
 Cache tab IDs but validate before use:
