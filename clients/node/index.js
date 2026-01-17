@@ -21,7 +21,6 @@ class ChromeLinkClient {
     this.pendingRequests = new Map();
     this.requestCounter = 0;
     this.chunks = new Map(); // For chunked response assembly
-    this.currentTabId = null;
   }
 
   /**
@@ -187,22 +186,16 @@ class ChromeLinkClient {
   }
 
   /**
-   * Navigate to URL (opens in new tab and focuses it)
+   * Execute JavaScript in a tab
+   * @param {string} code - JavaScript code to execute
+   * @param {number} tabId - Tab ID to execute in
+   * @returns {Promise<{value: any, type: string}>}
+   * @example
+   * const result = await client.executeJS('document.title', tabId);
+   * console.log('Title:', result.value);
    */
-  async navigate(url) {
-    this.log(`→ Navigating to: ${url}`);
-    const result = await this.sendRequest('openTab', { url, focus: true });
-    this.log('✓ Navigation complete, result:', JSON.stringify(result, null, 2));
-    this.currentTabId = result.tab.id;
-    this.log(`✓ Current tab ID set to: ${this.currentTabId}`);
-    return result;
-  }
-
-  /**
-   * Execute JavaScript in the current tab
-   */
-  async executeJS(code, tabId = null) {
-    const targetTabId = tabId || this.currentTabId;
+  async executeJS(code, tabId) {
+    const targetTabId = tabId;
     this.log(`→ Executing JS in tab ${targetTabId}: ${code.substring(0, 50)}...`);
     const result = await this.sendRequest('executeJS', { code, tabId: targetTabId });
     this.log(`✓ Result: ${JSON.stringify(result.value)}`);
@@ -211,9 +204,15 @@ class ChromeLinkClient {
 
   /**
    * Call a predefined helper function (for CSP-restricted pages)
+   * @param {string} functionName - Helper function name
+   * @param {Array} [args=[]] - Function arguments
+   * @param {number} tabId - Tab ID to execute in
+   * @returns {Promise<{value: any, type: string}>}
+   * @example
+   * await client.callHelper('clickElement', ['button.submit'], tabId);
    */
-  async callHelper(functionName, args = [], tabId = null) {
-    const targetTabId = tabId || this.currentTabId;
+  async callHelper(functionName, args = [], tabId) {
+    const targetTabId = tabId;
     this.log(`→ Calling helper: ${functionName}(${args.join(', ')})`);
     const result = await this.sendRequest('callHelper', { 
       functionName, 
@@ -225,16 +224,22 @@ class ChromeLinkClient {
   }
 
   /**
-   * Wait for element (using polling with executeJS)
+   * Wait for element to appear in DOM
+   * @param {string} selector - CSS selector
+   * @param {number} [timeout=10000] - Max wait time in ms
+   * @param {number} tabId - Tab ID to check in
+   * @returns {Promise<{found: boolean}>}
+   * @example
+   * await client.waitForElement('div.loaded', 5000, tabId);
    */
-  async waitForElement(selector, timeout = 10000) {
+  async waitForElement(selector, timeout = 10000, tabId) {
     this.log(`→ Waiting for element: ${selector}`);
     const start = Date.now();
     
     while (Date.now() - start < timeout) {
       try {
         const escapedSelector = selector.replace(/'/g, "\\'");
-        const result = await this.executeJS(`document.querySelector('${escapedSelector}') !== null`);
+        const result = await this.executeJS(`document.querySelector('${escapedSelector}') !== null`, tabId);
         if (result.value === true) {
           this.log('✓ Element found');
           return { found: true };
@@ -249,9 +254,14 @@ class ChromeLinkClient {
   }
 
   /**
-   * Click element
+   * Click an element
+   * @param {string} selector - CSS selector
+   * @param {number} tabId - Tab ID to execute in
+   * @returns {Promise<{value: boolean}>}
+   * @example
+   * await client.click('button.submit', tabId);
    */
-  async click(selector) {
+  async click(selector, tabId) {
     this.log(`→ Clicking element: ${selector}`);
     const escapedSelector = selector.replace(/'/g, "\\'");
     const code = `(function() {
@@ -260,15 +270,21 @@ class ChromeLinkClient {
       el.click();
       return true;
     })()`;
-    const result = await this.executeJS(code);
+    const result = await this.executeJS(code, tabId);
     this.log('✓ Click complete');
     return result;
   }
 
   /**
    * Type text into element
+   * @param {string} selector - CSS selector
+   * @param {string} text - Text to type
+   * @param {number} tabId - Tab ID to execute in
+   * @returns {Promise<{value: boolean}>}
+   * @example
+   * await client.type('input[name="username"]', 'john_doe', tabId);
    */
-  async type(selector, text) {
+  async type(selector, text, tabId) {
     this.log(`→ Typing "${text}" into: ${selector}`);
     const escapedSelector = selector.replace(/'/g, "\\'");
     const escapedText = text.replace(/'/g, "\\'");
@@ -280,15 +296,20 @@ class ChromeLinkClient {
       el.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
     })()`;
-    const result = await this.executeJS(code);
+    const result = await this.executeJS(code, tabId);
     this.log('✓ Type complete');
     return result;
   }
 
   /**
    * Get element text
+   * @param {string} selector - CSS selector
+   * @param {number} tabId - Tab ID to execute in
+   * @returns {Promise<{value: string}>}
+   * @example
+   * const text = await client.getText('h1.title', tabId);
    */
-  async getText(selector) {
+  async getText(selector, tabId) {
     this.log(`→ Getting text from: ${selector}`);
     const escapedSelector = selector.replace(/'/g, "\\'");
     const code = `(function() {
@@ -296,7 +317,7 @@ class ChromeLinkClient {
       if (!el) throw new Error('Element not found: ${escapedSelector}');
       return el.textContent;
     })()`;
-    const result = await this.executeJS(code);
+    const result = await this.executeJS(code, tabId);
     this.log(`✓ Text: "${result.value}"`);
     return { text: result.value };
   }
@@ -319,6 +340,174 @@ class ChromeLinkClient {
     const result = await this.sendRequest('closeTab', { tabId });
     this.log('✓ Tab closed');
     return result;
+  }
+
+  /**
+   * Open a new tab with URL
+   * @param {string} url - URL to open
+   * @param {boolean} [focus=true] - Focus Chrome window before opening
+   * @returns {Promise<{tab: Object}>} Tab object with id, url, title, etc.
+   * @example
+   * const result = await client.openTab('https://example.com');
+   * console.log('Opened tab:', result.tab.id);
+   */
+  async openTab(url, focus = true) {
+    this.log(`→ Opening new tab: ${url}`);
+    const result = await this.sendRequest('openTab', { url, focus });
+    this.log(`✓ Tab opened: ${result.tab.id}`);
+    return result;
+  }
+
+  /**
+   * Navigate an existing tab to a new URL
+   * @param {number} tabId - Tab ID to navigate
+   * @param {string} url - URL to navigate to
+   * @param {boolean} [focus=true] - Focus Chrome window before navigating
+   * @returns {Promise<{success: boolean, tabId: number}>}
+   * @example
+   * await client.navigateTab(123, 'https://github.com');
+   */
+  async navigateTab(tabId, url, focus = true) {
+    this.log(`→ Navigating tab ${tabId} to: ${url}`);
+    const result = await this.sendRequest('navigateTab', { tabId, url, focus });
+    this.log('✓ Navigation complete');
+    return result;
+  }
+
+  /**
+   * Switch to (activate) a specific tab
+   * @param {number} tabId - Tab ID to activate
+   * @returns {Promise<{success: boolean, tabId: number}>}
+   * @example
+   * await client.switchTab(123);
+   */
+  async switchTab(tabId) {
+    this.log(`→ Switching to tab: ${tabId}`);
+    const result = await this.sendRequest('switchTab', { tabId });
+    this.log('✓ Tab switched');
+    return result;
+  }
+
+  /**
+   * Go back in tab's browsing history
+   * @param {number} tabId - Tab ID to navigate back
+   * @returns {Promise<{success: boolean, tabId: number}>}
+   * @example
+   * await client.goBack(123);
+   */
+  async goBack(tabId) {
+    this.log(`→ Going back in tab: ${tabId}`);
+    const result = await this.sendRequest('goBack', { tabId });
+    this.log('✓ Navigated back');
+    return result;
+  }
+
+  /**
+   * Go forward in tab's browsing history
+   * @param {number} tabId - Tab ID to navigate forward
+   * @returns {Promise<{success: boolean, tabId: number}>}
+   * @example
+   * await client.goForward(123);
+   */
+  async goForward(tabId) {
+    this.log(`→ Going forward in tab: ${tabId}`);
+    const result = await this.sendRequest('goForward', { tabId });
+    this.log('✓ Navigated forward');
+    return result;
+  }
+
+  /**
+   * Capture screenshot of viewport or specific elements
+   * @param {Object} [options={}] - Screenshot options
+   * @param {number} [options.tabId] - Tab ID (uses active tab if omitted)
+   * @param {string} [options.format='png'] - Image format: 'png' or 'jpeg'
+   * @param {number} [options.quality=90] - JPEG quality 0-100
+   * @param {string|string[]} [options.selectors] - CSS selector(s) for element screenshots
+   * @returns {Promise<{dataUrl: string, bounds?: Object, elementCount?: number}>}
+   * @example
+   * // Viewport screenshot
+   * const screenshot = await client.captureScreenshot({ tabId: 123 });
+   * 
+   * // Element screenshot
+   * const elementShot = await client.captureScreenshot({ 
+   *   tabId: 123, 
+   *   selectors: ['h1', 'button.submit'] 
+   * });
+   */
+  async captureScreenshot(options = {}) {
+    const { tabId, format = 'png', quality = 90, selectors } = options;
+    this.log(`→ Capturing screenshot${selectors ? ' of elements' : ''}`);
+    const result = await this.sendRequest('captureScreenshot', {
+      ...(tabId && { tabId }),
+      format,
+      quality,
+      ...(selectors && { selectors })
+    });
+    this.log('✓ Screenshot captured');
+    return result;
+  }
+
+  /**
+   * Register script injection for URL patterns
+   * @param {string} id - Unique identifier for this injection
+   * @param {string} code - JavaScript code to inject
+   * @param {string[]} [matches=['<all_urls>']] - URL patterns to inject on
+   * @param {string} [runAt='document_start'] - When to inject: 'document_start', 'document_end', 'document_idle'
+   * @returns {Promise<{registered: boolean, id: string}>}
+   * @example
+   * // Mock WebView2 API
+   * await client.registerInjection(
+   *   'webview2-mock',
+   *   'window.chrome = window.chrome || {}; window.chrome.webview = { postMessage: () => {} };',
+   *   ['https://my-app.com/*'],
+   *   'document_start'
+   * );
+   */
+  async registerInjection(id, code, matches = ['<all_urls>'], runAt = 'document_start') {
+    this.log(`→ Registering injection: ${id}`);
+    const result = await this.sendRequest('registerInjection', {
+      id,
+      code,
+      matches,
+      runAt
+    });
+    this.log('✓ Injection registered');
+    return result;
+  }
+
+  /**
+   * Unregister a previously registered script injection
+   * @param {string} id - ID of the injection to remove
+   * @returns {Promise<{unregistered: boolean, id: string}>}
+   * @example
+   * await client.unregisterInjection('webview2-mock');
+   */
+  async unregisterInjection(id) {
+    this.log(`→ Unregistering injection: ${id}`);
+    const result = await this.sendRequest('unregisterInjection', { id });
+    this.log('✓ Injection unregistered');
+    return result;
+  }
+
+  /**
+   * Get the currently active tab
+   * @returns {Promise<Object|null>} Active tab object or null if none active
+   * @example
+   * const activeTab = await client.getActiveTab();
+   * if (activeTab) {
+   *   console.log('Active tab:', activeTab.id, activeTab.url);
+   * }
+   */
+  async getActiveTab() {
+    this.log('→ Getting active tab');
+    const { tabs } = await this.listTabs();
+    const activeTab = tabs.find(tab => tab.active) || null;
+    if (activeTab) {
+      this.log(`✓ Active tab: ${activeTab.id}`);
+    } else {
+      this.log('✓ No active tab found');
+    }
+    return activeTab;
   }
 
   /**

@@ -23,31 +23,35 @@ async function main() {
     });
     await client.wait(1000);
     
-    // Test 2: Navigate to example.com
-    console.log('\nTest 2: Navigating to example.com...');
-    const exampleTab = await client.navigate('https://example.com');
-    openedTabs.push(exampleTab.tab.id);
+    // Test 2: Open example.com in new tab
+    console.log('\nTest 2: Opening example.com...');
+    const exampleTab = await client.openTab('https://example.com');
+    const exampleTabId = exampleTab.tab.id;
+    openedTabs.push(exampleTabId);
     await client.wait(2000);
     
     // Test 3: Wait for h1 element
     console.log('\nTest 3: Waiting for h1 element...');
-    await client.waitForElement('h1');
+    await client.waitForElement('h1', 10000, exampleTabId);
     await client.wait(500);
     
     // Test 4: Get h1 text
     console.log('\nTest 4: Getting h1 text...');
-    const h1Text = await client.getText('h1');
+    const h1Text = await client.getText('h1', exampleTabId);
+    console.log(`  Text: ${h1Text.value}`);
     await client.wait(1000);
     
-    // Test 5: Navigate to Google
-    console.log('\nTest 5: Navigating to Google...');
-    const googleTab = await client.navigate('https://www.google.com');
-    openedTabs.push(googleTab.tab.id);
+    // Test 5: Open Google in new tab
+    console.log('\nTest 5: Opening Google...');
+    const googleTab = await client.openTab('https://www.google.com');
+    const googleTabId = googleTab.tab.id;
+    openedTabs.push(googleTabId);
     await client.wait(2000);
     
     // Test 6: List tabs again
     console.log('\nTest 6: Listing tabs again...');
     const updatedTabs = await client.listTabs();
+    console.log(`  Total tabs: ${updatedTabs.tabs.length}`);
     await client.wait(1000);
     
     // Test 7: Close all opened tabs
