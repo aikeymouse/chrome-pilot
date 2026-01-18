@@ -39,7 +39,7 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@aikeymouse/chromelink-client": "file:../clients/node",
+    "@aikeymouse/chromelink-client": "^1.2.0",
     "ws": "^8.16.0"
   },
   "peerDependencies": {},
