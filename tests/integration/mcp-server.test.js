@@ -590,6 +590,223 @@ describe('MCP Server Integration Tests', function() {
     });
   });
 
+  describe('DOM Helper Functions', function() {
+    let testTabId;
+
+    before(async function() {
+      const result = await sendMCPRequest('tools/call', {
+        name: 'chrome_open_tab',
+        arguments: {
+          url: TEST_URLS.SELENIUM_FORM,
+          focus: true
+        }
+      });
+      testTabId = parseToolResult(result).tab.id;
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    });
+
+    after(async function() {
+      if (testTabId) {
+        await sendMCPRequest('tools/call', {
+          name: 'chrome_close_tab',
+          arguments: { tabId: testTabId }
+        });
+      }
+    });
+
+    describe('Element Query Helpers', function() {
+      it('should check element existence using elementExists', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'elementExists',
+            args: ['input[name="my-text"]'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.equal(true);
+      });
+
+      it('should check element visibility using isVisible', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'isVisible',
+            args: ['h1'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.equal(true);
+      });
+
+      it('should get HTML using getHTML', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'getHTML',
+            args: ['h1'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.be.a('string');
+        expect(data.value.length).to.be.greaterThan(0);
+      });
+    });
+
+    describe('Element Interaction Helpers', function() {
+      it('should click element using clickElement', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'clickElement',
+            args: ['input[name="my-text"]'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.equal(true);
+      });
+
+      it('should type text using typeText', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'typeText',
+            args: ['input[name="my-text"]', 'Helper Test', true],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.equal(true);
+
+        // Verify text was typed
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const verifyResult = await sendMCPRequest('tools/call', {
+          name: 'chrome_execute_js',
+          arguments: {
+            code: 'document.querySelector(\'input[name="my-text"]\').value',
+            tabId: testTabId
+          }
+        });
+        const verifyData = parseToolResult(verifyResult);
+        expect(verifyData.value).to.equal('Helper Test');
+      });
+    });
+
+    describe('Element Positioning Helpers', function() {
+      it('should get element bounds using getElementBounds', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'getElementBounds',
+            args: ['h1'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.be.an('array');
+        expect(data.value.length).to.be.greaterThan(0);
+        expect(data.value[0]).to.have.property('x');
+        expect(data.value[0]).to.have.property('y');
+        expect(data.value[0]).to.have.property('width');
+        expect(data.value[0]).to.have.property('height');
+      });
+
+      it('should scroll element into view using scrollElementIntoView', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'scrollElementIntoView',
+            args: ['h1', 0],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.be.an('array');
+      });
+    });
+
+    describe('Element Highlighting Helpers', function() {
+      it('should highlight elements using highlightElement', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'highlightElement',
+            args: ['input'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.be.a('number');
+        expect(data.value).to.be.greaterThan(0);
+      });
+
+      it('should remove highlights using removeHighlights', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'removeHighlights',
+            args: [],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.be.a('number');
+      });
+    });
+
+    describe('Element Inspection Helpers', function() {
+      it('should inspect element using inspectElement', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'inspectElement',
+            args: ['h1'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.be.an('object');
+        expect(data.value).to.have.property('clickedElement');
+        expect(data.value).to.have.property('parents');
+        expect(data.value).to.have.property('children');
+        expect(data.value.clickedElement).to.have.property('tagName', 'h1');
+      });
+
+      it('should get container elements using getContainerElements', async function() {
+        const result = await sendMCPRequest('tools/call', {
+          name: 'chrome_call_helper',
+          arguments: {
+            functionName: 'getContainerElements',
+            args: ['form', 'input, button, label'],
+            tabId: testTabId
+          }
+        });
+
+        const data = parseToolResult(result);
+        expect(data.value).to.be.an('array');
+        expect(data.value.length).to.be.greaterThan(0);
+        expect(data.value[0]).to.have.property('tagName');
+        expect(data.value[0]).to.have.property('selector');
+        expect(data.value[0]).to.have.property('attributes');
+        expect(data.value[0]).to.have.property('visible');
+      });
+    });
+  });
+
   describe('Error Handling', function() {
     it('should handle invalid tool name', async function() {
       try {

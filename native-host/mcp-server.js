@@ -313,14 +313,31 @@ class MCPServer {
         },
         {
           name: 'chrome_call_helper',
-          description: 'Call a predefined helper function (getText, clickElement, typeText, elementExists)',
+          description: 'Call a predefined DOM helper function for CSP-restricted pages. Available helpers: Element Interaction (clickElement, typeText, appendChar, clearContentEditable), Element Query (getText, getHTML, getLastHTML, elementExists, isVisible, waitForElement), Element Highlighting (highlightElement, removeHighlights), Element Positioning (getElementBounds, scrollElementIntoView), Element Inspection (inspectElement, getContainerElements)',
           inputSchema: {
             type: 'object',
             properties: {
               functionName: {
                 type: 'string',
                 description: 'Name of the helper function',
-                enum: ['getText', 'clickElement', 'typeText', 'elementExists']
+                enum: [
+                  'clickElement', 
+                  'typeText', 
+                  'appendChar', 
+                  'clearContentEditable',
+                  'getText', 
+                  'getHTML', 
+                  'getLastHTML', 
+                  'elementExists', 
+                  'isVisible', 
+                  'waitForElement',
+                  'highlightElement', 
+                  'removeHighlights',
+                  'getElementBounds', 
+                  'scrollElementIntoView',
+                  'inspectElement', 
+                  'getContainerElements'
+                ]
               },
               args: {
                 type: 'array',

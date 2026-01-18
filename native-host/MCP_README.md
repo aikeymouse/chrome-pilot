@@ -47,7 +47,12 @@ The MCP server will:
 
 ### JavaScript Execution
 - `chrome_execute_js` - Execute arbitrary JavaScript
-- `chrome_call_helper` - Call predefined helper functions
+- `chrome_call_helper` - Call predefined helper functions:
+  - **Element Interaction**: clickElement, typeText, appendChar, clearContentEditable
+  - **Element Query**: getText, getHTML, getLastHTML, elementExists, isVisible, waitForElement
+  - **Element Highlighting**: highlightElement, removeHighlights
+  - **Element Positioning**: getElementBounds, scrollElementIntoView
+  - **Element Inspection**: inspectElement, getContainerElements
 
 ### Screenshots
 - `chrome_capture_screenshot` - Capture tab screenshot (PNG/JPEG)
