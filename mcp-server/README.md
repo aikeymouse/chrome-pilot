@@ -278,4 +278,21 @@ Recommendations:
 
 ## License
 
-MIT - See LICENSE file in repository root
+MIT License - see [LICENSE](./LICENSE) file for details.
+
+**Important Licensing Notice:**
+
+This MCP server (`@aikeymouse/chromelink-mcp`) is licensed under the MIT License and can be used freely in both non-commercial and commercial projects.
+
+However, this server connects to the **ChromeLink browser extension**, which uses dual licensing:
+
+- **Non-Commercial Use**: Free under CC BY-NC-ND 4.0
+  - Personal projects, education, research, open source (non-commercial)
+  
+- **Commercial Use**: Requires Commercial License
+  - Commercial products, revenue-generating apps, business use, SaaS, client work
+  - Contact: https://github.com/aikeymouse/chrome-link/issues
+
+**Summary:** While this NPM package is MIT licensed, using it in a commercial application requires a ChromeLink commercial license.
+
+See the main [ChromeLink LICENSE](https://github.com/aikeymouse/chrome-link/blob/main/LICENSE) for complete details.

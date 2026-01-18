@@ -650,7 +650,22 @@ For complete protocol specification, see [PROTOCOL.md](https://github.com/aikeym
 
 MIT License - see [LICENSE](./LICENSE) file for details.
 
-**Note:** This client library is licensed under MIT. The ChromeLink browser extension and native host are licensed under CC BY-NC-ND 4.0.
+**Important Licensing Notice:**
+
+This client library (`@aikeymouse/chromelink-client`) is licensed under the MIT License and can be used freely in both non-commercial and commercial projects.
+
+However, this library connects to the **ChromeLink browser extension**, which uses dual licensing:
+
+- **Non-Commercial Use**: Free under CC BY-NC-ND 4.0
+  - Personal projects, education, research, open source (non-commercial)
+  
+- **Commercial Use**: Requires Commercial License
+  - Commercial products, revenue-generating apps, business use, SaaS, client work
+  - Contact: https://github.com/aikeymouse/chrome-link/issues
+
+**Summary:** While this NPM package is MIT licensed, using it in a commercial application requires a ChromeLink commercial license.
+
+See the main [ChromeLink LICENSE](https://github.com/aikeymouse/chrome-link/blob/main/LICENSE) for complete details.
 
 ## Repository
 

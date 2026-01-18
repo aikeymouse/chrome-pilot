@@ -1,7 +1,66 @@
-Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
+ChromeLink - Dual License
 
-ChromeLink - Chrome Extension Remote Control
 Copyright (c) 2026 aikeymouse
+
+ChromeLink is dual-licensed to provide flexibility for different use cases.
+
+================================================================================
+LICENSING OPTIONS
+================================================================================
+
+1. NON-COMMERCIAL USE (Free)
+   License: Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 
+   See: LICENSE-NONCOMMERCIAL (below)
+   
+   For:
+   - Personal projects
+   - Educational purposes
+   - Research and development
+   - Open source projects (non-commercial)
+   
+   You are free to:
+   - Use the software for non-commercial purposes
+   - Share the software with proper attribution
+   
+   Restrictions:
+   - Cannot use for commercial purposes
+   - Cannot create derivative works
+   - Must provide attribution
+
+2. COMMERCIAL USE (Paid)
+   License: Commercial License
+   See: LICENSE-COMMERCIAL
+   
+   Required for:
+   - Commercial products or services
+   - Revenue-generating applications
+   - Internal business use
+   - SaaS applications
+   - Consulting or client work
+   
+   Benefits:
+   - Full commercial usage rights
+   - Modification and integration rights
+   - Priority support
+   - Updates and maintenance
+   
+   Contact: https://github.com/aikeymouse/chrome-link/issues
+
+3. OPEN SOURCE COMPONENTS (MIT License)
+   The following published NPM packages are MIT licensed:
+   - @aikeymouse/chromelink-client
+   - @aikeymouse/chromelink-mcp
+   
+   See: LICENSE-MIT
+   
+   Note: These packages connect to the ChromeLink extension which 
+   requires a commercial license for commercial use.
+
+================================================================================
+LICENSE-NONCOMMERCIAL (CC BY-NC-ND 4.0)
+================================================================================
+
+Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International
 
 This work is licensed under the Creative Commons 
 Attribution-NonCommercial-NoDerivatives 4.0 International License. 
@@ -11,9 +70,9 @@ You are free to:
   non-commercial purposes
 
 Under the following terms:
-- Attribution — You must give appropriate credit, provide a link to the license, 
-  and indicate if changes were made. You may do so in any reasonable manner, but 
-  not in any way that suggests the licensor endorses you or your use.
+- Attribution — You must give appropriate credit, provide a link to the 
+  license, and indicate if changes were made. You may do so in any reasonable 
+  manner, but not in any way that suggests the licensor endorses you or your use.
 - NonCommercial — You may not use the material for commercial purposes.
 - NoDerivatives — If you remix, transform, or build upon the material, you may 
   not distribute the modified material.
@@ -23,8 +82,36 @@ measures that legally restrict others from doing anything the license permits.
 
 Full license text: https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
 
-WARRANTY DISCLAIMER:
-This software is provided "as is", without warranty of any kind, express or 
-implied, including but not limited to the warranties of merchantability, fitness for 
-a particular purpose and noninfringement.
+================================================================================
+COMPONENT-SPECIFIC LICENSING
+================================================================================
+
+Extension (extension/):           CC BY-NC-ND 4.0 or Commercial
+Native Host (native-host/):       CC BY-NC-ND 4.0 or Commercial
+Node.js Client (clients/node/):   MIT License*
+MCP Server (mcp-server/):         MIT License*
+Examples (examples/):             MIT License
+
+* Requires ChromeLink extension (CC BY-NC-ND 4.0 or Commercial)
+
+================================================================================
+WARRANTY DISCLAIMER
+================================================================================
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+
+================================================================================
+QUESTIONS?
+================================================================================
+
+For licensing questions:
+- Open an issue: https://github.com/aikeymouse/chrome-link/issues
+- See documentation: https://github.com/aikeymouse/chrome-link#readme
+
 
