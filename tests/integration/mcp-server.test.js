@@ -73,7 +73,7 @@ describe('MCP Server Integration Tests', function() {
     this.timeout(10000);
 
     // Start MCP server
-    const mcpServerPath = path.join(__dirname, '../../native-host/mcp-server.js');
+    const mcpServerPath = path.join(__dirname, '../../mcp-server/index.js');
     mcpServer = spawn('node', [mcpServerPath], {
       stdio: ['pipe', 'pipe', 'pipe']
     });

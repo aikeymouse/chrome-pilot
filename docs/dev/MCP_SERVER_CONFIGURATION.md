@@ -17,7 +17,7 @@ Add the ChromeLink MCP server:
   "mcpServers": {
     "chrome-link": {
       "command": "node",
-      "args": ["/Users/YOUR_USERNAME/Projects/chrome-driver-extension/native-host/mcp-server.js"],
+      "args": ["/Users/YOUR_USERNAME/Projects/chrome-driver-extension/mcp-server/index.js"],
       "env": {}
     }
   }
@@ -39,7 +39,7 @@ Add the ChromeLink MCP server:
   "mcpServers": {
     "chrome-link": {
       "command": "node",
-      "args": ["C:\\Users\\YOUR_USERNAME\\Projects\\chrome-driver-extension\\native-host\\mcp-server.js"],
+      "args": ["C:\\Users\\YOUR_USERNAME\\Projects\\chrome-driver-extension\\mcp-server\\index.js"],
       "env": {}
     }
   }
@@ -59,7 +59,7 @@ Add the ChromeLink MCP server:
   "mcpServers": {
     "chrome-link": {
       "command": "node",
-      "args": ["/home/YOUR_USERNAME/Projects/chrome-driver-extension/native-host/mcp-server.js"],
+      "args": ["/home/YOUR_USERNAME/Projects/chrome-driver-extension/mcp-server/index.js"],
       "env": {}
     }
   }
@@ -152,7 +152,7 @@ For development and debugging, use the MCP Inspector tool:
 npm install -g @modelcontextprotocol/inspector
 
 # Run MCP server with inspector
-npx @modelcontextprotocol/inspector node native-host/mcp-server.js
+npx @modelcontextprotocol/inspector node mcp-server/index.js
 ```
 
 This will open a web interface where you can:
@@ -170,7 +170,7 @@ You can configure the WebSocket URL via environment variables:
   "mcpServers": {
     "chrome-link": {
       "command": "node",
-      "args": ["/path/to/native-host/mcp-server.js"],
+      "args": ["/path/to/mcp-server/index.js"],
       "env": {
         "CHROME_LINK_WS_URL": "ws://localhost:9000"
       }
@@ -194,7 +194,7 @@ You can configure the WebSocket URL via environment variables:
 2. **Verify file path is absolute**:
    ```bash
    # Test the command manually
-   node /Users/YOUR_USERNAME/Projects/chrome-driver-extension/native-host/mcp-server.js
+   node /Users/YOUR_USERNAME/Projects/chrome-driver-extension/mcp-server/index.js
    ```
 
 3. **Check Claude Desktop logs**:

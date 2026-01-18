@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+/**
+ * ChromeLink MCP Server - Executable
+ * 
+ * This script launches the MCP server for Chrome browser automation.
+ * It connects to the browser-link-server via WebSocket and exposes
+ * Chrome automation capabilities via the Model Context Protocol.
+ */
+
+require('../index.js');

@@ -2,9 +2,50 @@
 
 Model Context Protocol (MCP) server that exposes Chrome browser automation capabilities to AI agents like Claude, GPT, and other MCP-compatible tools.
 
-## Quick Start
+## Installation
 
-### Prerequisites
+### Option 1: NPM (Recommended)
+
+```bash
+npm install -g @chromelink/mcp-server
+```
+
+Then configure in your MCP client:
+
+```json
+{
+  "mcpServers": {
+    "chrome-link": {
+      "command": "chromelink-mcp"
+    }
+  }
+}
+```
+
+### Option 2: From Source
+
+Clone the repository and use the server directly:
+
+```bash
+git clone https://github.com/aikeymouse/chrome-link.git
+cd chrome-link/mcp-server
+npm install
+```
+
+Configure with absolute path:
+
+```json
+{
+  "mcpServers": {
+    "chrome-link": {
+      "command": "node",
+      "args": ["/absolute/path/to/chrome-link/mcp-server/index.js"]
+    }
+  }
+}
+```
+
+## Prerequisites
 
 1. **Install ChromeLink extension** in Chrome
 2. **Start browser-link-server** (automatically started by extension on first connection)
@@ -17,7 +58,7 @@ Model Context Protocol (MCP) server that exposes Chrome browser automation capab
 ### Running the MCP Server
 
 ```bash
-node native-host/mcp-server.js
+node mcp-server/index.js
 ```
 
 The MCP server will:
@@ -72,13 +113,13 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "chrome-link": {
       "command": "node",
-      "args": ["/absolute/path/to/chrome-driver-extension/native-host/mcp-server.js"]
+      "args": ["/absolute/path/to/chrome-driver-extension/mcp-server/index.js"]
     }
   }
 }
 ```
 
-**Important**: Use absolute path to `mcp-server.js`
+**Important**: Use absolute path to `index.js`
 
 After configuration:
 1. Restart Claude Desktop
@@ -130,7 +171,7 @@ Chrome Extension
 node native-host/browser-link-server.js
 
 # In another terminal, test MCP server
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | node native-host/mcp-server.js
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | node mcp-server/index.js
 ```
 
 Expected output:
@@ -155,7 +196,7 @@ cat /tmp/test-mcp.json | node native-host/mcp-server.js 2>/dev/null
 
 ```bash
 npm install -g @modelcontextprotocol/inspector
-npx @modelcontextprotocol/inspector node native-host/mcp-server.js
+npx @modelcontextprotocol/inspector node mcp-server/index.js
 ```
 
 Opens web UI for testing tools interactively.
