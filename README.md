@@ -3,6 +3,22 @@
 Remote Chrome tab control via WebSocket API with session management and side panel UI.
 
 [![Patreon](https://img.shields.io/badge/Support-Patreon-orange?logo=patreon)](https://www.patreon.com/aikeymouse)
+[![npm](https://img.shields.io/npm/v/@aikeymouse/chromelink-client)](https://www.npmjs.com/package/@aikeymouse/chromelink-client)
+[![npm](https://img.shields.io/npm/v/@aikeymouse/chromelink-mcp)](https://www.npmjs.com/package/@aikeymouse/chromelink-mcp)
+
+## Quick Start
+
+**Install NPM Client:**
+```bash
+npm install @aikeymouse/chromelink-client
+```
+
+**Or use with AI Agents (MCP):**
+```bash
+npm install -g @aikeymouse/chromelink-mcp
+```
+
+See [Installation](#installation) for complete setup.
 
 ## Features
 
@@ -176,6 +192,57 @@ See [docs/PROTOCOL.md](docs/PROTOCOL.md) for complete API documentation.
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0).
+ChromeLink uses **dual licensing** to support both non-commercial and commercial use cases:
 
-See [LICENSE](LICENSE) file for details.
+### Non-Commercial Use (Free)
+
+**License:** Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)
+
+**Permitted for:**
+- Personal projects and learning
+- Educational institutions and students
+- Research and academic work
+- Open source projects (non-commercial)
+
+**You can:**
+- ✅ Use ChromeLink for free
+- ✅ Share and redistribute (with attribution)
+
+**Restrictions:**
+- ❌ No commercial use
+- ❌ No derivative works
+- ✅ Attribution required
+
+### Commercial Use (Paid License Required)
+
+**License:** Commercial License
+
+**Required for:**
+- Commercial products or services
+- Revenue-generating applications
+- Internal business automation
+- SaaS applications
+- Consulting or client work
+
+**Benefits:**
+- ✅ Full commercial usage rights
+- ✅ Modification and integration rights
+- ✅ Priority support
+- ✅ Updates and maintenance
+
+**Contact:** https://github.com/aikeymouse/chrome-link/issues
+
+### Published NPM Packages (MIT License)
+
+The following NPM packages are MIT licensed and can be freely used:
+
+- **[@aikeymouse/chromelink-client](https://www.npmjs.com/package/@aikeymouse/chromelink-client)** - Node.js WebSocket client
+- **[@aikeymouse/chromelink-mcp](https://www.npmjs.com/package/@aikeymouse/chromelink-mcp)** - Model Context Protocol server for AI agents
+
+**Important:** While these NPM packages are MIT licensed, they require the ChromeLink browser extension to function. The extension uses dual licensing (CC BY-NC-ND 4.0 or Commercial), so commercial applications need a commercial license.
+
+### Complete Licensing Details
+
+See [LICENSE](LICENSE) file for complete dual-licensing terms and conditions.
+
+**Questions?** Open an issue: https://github.com/aikeymouse/chrome-link/issues
