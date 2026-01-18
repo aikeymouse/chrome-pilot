@@ -31,7 +31,7 @@
  *   }
  */
 
-const ChromeLinkClient = require('../clients/node/index.js');
+const ChromeLinkClient = require('@aikeymouse/chromelink-client');
 
 // MCP Protocol Implementation
 class MCPServer {
@@ -552,7 +552,7 @@ class MCPServer {
               },
               serverInfo: {
                 name: 'chrome-link',
-                version: '1.0.0'
+                version: '1.2.0'
               }
             }
           });

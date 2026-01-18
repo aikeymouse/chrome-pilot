@@ -1,6 +1,7 @@
 node_modules/
 native-host/logs/*.log
 *.log
+*.bak
 .DS_Store
 *.zip
 dist/

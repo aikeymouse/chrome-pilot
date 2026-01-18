@@ -7,7 +7,7 @@ Model Context Protocol (MCP) server that exposes Chrome browser automation capab
 ### Option 1: NPM (Recommended)
 
 ```bash
-npm install -g @chromelink/mcp-server
+npm install -g @aikeymouse/chromelink-mcp
 ```
 
 Then configure in your MCP client:
@@ -49,14 +49,31 @@ Configure with absolute path:
 
 1. **Install ChromeLink extension** in Chrome
 2. **Start browser-link-server** (automatically started by extension on first connection)
-3. **Install Node.js** dependencies:
-   ```bash
-   cd clients/node
-   npm install
-   ```
 
-### Running the MCP Server
+## Local Development
 
+For local development with file dependencies:
+
+```bash
+cd chrome-link/mcp-server
+npm install  # Creates symlink to ../clients/node
+```
+
+The MCP server uses a local file dependency (`"@aikeymouse/chromelink-client": "file:../clients/node"`) for development. This is automatically converted to an npm dependency (`^1.2.0`) during publishing via the `prepublishOnly` script.
+
+After version changes, update the symlink:
+```bash
+cd mcp-server && npm install
+```
+
+## Running the MCP Server
+
+### From NPM Installation
+```bash
+chromelink-mcp
+```
+
+### From Source
 ```bash
 node mcp-server/index.js
 ```

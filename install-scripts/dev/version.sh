@@ -89,6 +89,17 @@ case "$COMMAND" in
             fi
         fi
         
+        # MCP server package.json
+        if [ -f "$PROJECT_ROOT/mcp-server/package.json" ]; then
+            MCP_VERSION=$(jq -r '.version' "$PROJECT_ROOT/mcp-server/package.json")
+            MCP_DEP=$(jq -r '.dependencies."@aikeymouse/chromelink-client"' "$PROJECT_ROOT/mcp-server/package.json")
+            if [ "$MCP_VERSION" == "$CURRENT_VERSION" ]; then
+                echo "  ✓ mcp-server/package.json: $MCP_VERSION (client dep: $MCP_DEP)"
+            else
+                echo "  ✗ mcp-server/package.json: $MCP_VERSION (expected: $CURRENT_VERSION, client dep: $MCP_DEP)"
+            fi
+        fi
+        
         echo ""
         echo "Local file dependencies:"
         # Check if tests/package.json has local file dependency
@@ -96,6 +107,14 @@ case "$COMMAND" in
             if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/tests/package.json" 2>/dev/null; then
                 print_warning "tests/package.json uses local file dependency"
                 echo "  Run 'cd tests && npm install' to update symlink after version changes"
+            fi
+        fi
+        
+        # Check if mcp-server/package.json has local file dependency
+        if [ -f "$PROJECT_ROOT/mcp-server/package.json" ]; then
+            if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/mcp-server/package.json" 2>/dev/null; then
+                print_warning "mcp-server/package.json uses local file dependency"
+                echo "  Run 'cd mcp-server && npm install' to update symlink after version changes"
             fi
         fi
         
@@ -161,6 +180,24 @@ case "$COMMAND" in
             print_success "clients/chromelink-client/package.json updated"
         fi
         
+        # Update MCP server package.json
+        if [ -f "$PROJECT_ROOT/mcp-server/package.json" ]; then
+            TEMP_FILE=$(mktemp)
+            # Get current dependency value to preserve file: or ^version format
+            CURRENT_DEP=$(jq -r '.dependencies."@aikeymouse/chromelink-client"' "$PROJECT_ROOT/mcp-server/package.json")
+            if [[ "$CURRENT_DEP" == file:* ]]; then
+                # Preserve file dependency, only update version
+                jq --arg version "$NEW_VERSION" '.version = $version' "$PROJECT_ROOT/mcp-server/package.json" > "$TEMP_FILE"
+            else
+                # Update both version and dependency
+                jq --arg version "$NEW_VERSION" \
+                   '.version = $version | .dependencies."@aikeymouse/chromelink-client" = ("^" + $version)' \
+                   "$PROJECT_ROOT/mcp-server/package.json" > "$TEMP_FILE"
+            fi
+            mv "$TEMP_FILE" "$PROJECT_ROOT/mcp-server/package.json"
+            print_success "mcp-server/package.json updated"
+        fi
+        
         echo ""
         print_success "Version updated to $NEW_VERSION"
         echo ""
@@ -170,6 +207,14 @@ case "$COMMAND" in
             if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/tests/package.json" 2>/dev/null; then
                 print_warning "Local file dependency detected in tests/package.json"
                 echo "  Run: cd tests && npm install"
+                echo ""
+            fi
+        fi
+        
+        if [ -f "$PROJECT_ROOT/mcp-server/package.json" ]; then
+            if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/mcp-server/package.json" 2>/dev/null; then
+                print_warning "Local file dependency detected in mcp-server/package.json"
+                echo "  Run: cd mcp-server && npm install"
                 echo ""
             fi
         fi
@@ -247,6 +292,30 @@ case "$COMMAND" in
             fi
         fi
         
+        # Update MCP server package.json if needed
+        if [ -f "$PROJECT_ROOT/mcp-server/package.json" ]; then
+            MCP_VERSION=$(jq -r '.version' "$PROJECT_ROOT/mcp-server/package.json")
+            MCP_DEP=$(jq -r '.dependencies."@aikeymouse/chromelink-client"' "$PROJECT_ROOT/mcp-server/package.json")
+            # Only update if version is different (preserve file: dependency format)
+            if [ "$MCP_VERSION" != "$CURRENT_VERSION" ]; then
+                TEMP_FILE=$(mktemp)
+                if [[ "$MCP_DEP" == file:* ]]; then
+                    # Preserve file dependency
+                    jq --arg version "$CURRENT_VERSION" '.version = $version' "$PROJECT_ROOT/mcp-server/package.json" > "$TEMP_FILE"
+                else
+                    # Update both version and dependency
+                    jq --arg version "$CURRENT_VERSION" \
+                       '.version = $version | .dependencies."@aikeymouse/chromelink-client" = ("^" + $version)' \
+                       "$PROJECT_ROOT/mcp-server/package.json" > "$TEMP_FILE"
+                fi
+                mv "$TEMP_FILE" "$PROJECT_ROOT/mcp-server/package.json"
+                print_success "mcp-server/package.json synced: $MCP_VERSION → $CURRENT_VERSION"
+                UPDATED=1
+            else
+                print_info "mcp-server/package.json already synced: $MCP_VERSION"
+            fi
+        fi
+        
         echo ""
         if [ $UPDATED -eq 1 ]; then
             print_success "Sync complete"
@@ -257,6 +326,14 @@ case "$COMMAND" in
                     echo ""
                     print_warning "Local file dependency detected in tests/package.json"
                     echo "  Run: cd tests && npm install"
+                fi
+            fi
+            
+            if [ -f "$PROJECT_ROOT/mcp-server/package.json" ]; then
+                if grep -q '"@aikeymouse/chromelink-client".*"file:' "$PROJECT_ROOT/mcp-server/package.json" 2>/dev/null; then
+                    echo ""
+                    print_warning "Local file dependency detected in mcp-server/package.json"
+                    echo "  Run: cd mcp-server && npm install"
                 fi
             fi
         else

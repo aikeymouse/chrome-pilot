@@ -14,6 +14,11 @@ on:
         required: false
         type: boolean
         default: true
+      publish_mcp:
+        description: 'Also publish MCP server'
+        required: false
+        type: boolean
+        default: true
   
   # Automatic trigger on version tags
   push:
@@ -77,6 +82,14 @@ jobs:
             exit 1
           fi
           echo "✓ clients/chromelink-client/package.json version matches: $PLACEHOLDER_VERSION"
+          
+          # Check mcp-server/package.json
+          MCP_VERSION=$(jq -r '.version' mcp-server/package.json)
+          if [ "$MCP_VERSION" != "$VERSION" ]; then
+            echo "❌ Version mismatch: mcp-server/package.json has $MCP_VERSION, expected $VERSION"
+            exit 1
+          fi
+          echo "✓ mcp-server/package.json version matches: $MCP_VERSION"
           
           echo ""
           echo "✅ All package versions validated: $VERSION"
@@ -176,3 +189,51 @@ jobs:
           echo "**Version:** ${{ needs.validate-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "**Package:** https://www.npmjs.com/package/chromelink-client" >> $GITHUB_STEP_SUMMARY
           echo "**Note:** This is a placeholder that re-exports @aikeymouse/chromelink-client" >> $GITHUB_STEP_SUMMARY
+
+  publish-mcp-server:
+    name: Publish @aikeymouse/chromelink-mcp
+    needs: [validate-version, publish-scoped]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    if: ${{ github.event.inputs.publish_mcp == 'true' || github.event.inputs.publish_mcp == '' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        working-directory: ./mcp-server
+        run: npm install
+      
+      - name: Dry run (test package)
+        if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.dry_run == 'true' || github.event.inputs.dry_run == '') }}
+        working-directory: ./mcp-server
+        run: |
+          echo "🧪 Running dry run for MCP server..."
+          npm publish --dry-run
+          echo ""
+          echo "✅ MCP server dry run successful!"
+      
+      - name: Publish to npm
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'false') }}
+        working-directory: ./mcp-server
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish summary
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        run: |
+          echo "## ✅ Published @aikeymouse/chromelink-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.validate-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** https://www.npmjs.com/package/@aikeymouse/chromelink-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "**Provenance:** Enabled" >> $GITHUB_STEP_SUMMARY

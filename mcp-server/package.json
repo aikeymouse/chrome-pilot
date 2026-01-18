@@ -1,6 +1,6 @@
 {
-  "name": "@chromelink/mcp-server",
-  "version": "0.1.0",
+  "name": "@aikeymouse/chromelink-mcp",
+  "version": "1.2.0",
   "description": "Model Context Protocol (MCP) server for Chrome browser automation via AI agents",
   "main": "index.js",
   "bin": {
@@ -8,7 +8,9 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "node scripts/prepare-publish.js",
+    "postpublish": "node scripts/restore-publish.js"
   },
   "keywords": [
     "mcp",
@@ -37,13 +39,19 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
+    "@aikeymouse/chromelink-client": "file:../clients/node",
     "ws": "^8.16.0"
   },
   "peerDependencies": {},
   "files": [
     "index.js",
     "bin/",
+    "scripts/",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }
