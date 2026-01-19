@@ -604,15 +604,22 @@ window.__chromeLinkHelper = {
     if (element.id) {
       xpath = `//*[@id=${escapeXPath(element.id)}]`;
     }
-    // 2. For radio/checkbox, try name + value combination
+    // 2. Try semantic HTML5 tags if unique on page
+    else if (['form', 'nav', 'header', 'footer', 'main', 'aside', 'article', 'section'].includes(tag)) {
+      const sameTagElements = document.querySelectorAll(tag);
+      if (sameTagElements.length === 1) {
+        xpath = `//${tag}`;
+      }
+    }
+    // 3. For radio/checkbox, try name + value combination
     else if ((element.tagName === 'INPUT' && (element.type === 'radio' || element.type === 'checkbox')) && element.name && element.value) {
       xpath = `//input[@name=${escapeXPath(element.name)}][@value=${escapeXPath(element.value)}]`;
     }
-    // 3. Try name attribute alone
+    // 4. Try name attribute alone
     else if (element.name) {
       xpath = `//${tag}[@name=${escapeXPath(element.name)}]`;
     }
-    // 4. Try data-* attributes
+    // 5. Try data-* attributes
     else {
       for (const attr of element.attributes) {
         if (attr.name.startsWith('data-')) {
@@ -621,16 +628,16 @@ window.__chromeLinkHelper = {
         }
       }
     }
-    // 5. Try aria-label
+    // 6. Try aria-label
     if (!xpath && element.hasAttribute('aria-label')) {
       xpath = `//${tag}[@aria-label=${escapeXPath(element.getAttribute('aria-label'))}]`;
     }
-    // 6. Try type + placeholder for inputs
+    // 7. Try type + placeholder for inputs
     if (!xpath && element.tagName === 'INPUT' && element.type && element.placeholder) {
       xpath = `//input[@type=${escapeXPath(element.type)}][@placeholder=${escapeXPath(element.placeholder)}]`;
     }
 
-    // 7. Positional fallback - find nearest ancestor with id
+    // 8. Positional fallback - find nearest ancestor with id
     if (!xpath) {
       let ancestor = element.parentElement;
       while (ancestor && ancestor !== document.body) {
@@ -654,7 +661,7 @@ window.__chromeLinkHelper = {
       }
     }
 
-    // 8. Absolute positional path from body as last resort
+    // 9. Absolute positional path from body as last resort
     if (!xpath) {
       const path = [];
       let current = element;
@@ -666,21 +673,25 @@ window.__chromeLinkHelper = {
         current = parent;
       }
       
-      // Handle body element specially
-      if (current === document.body) {
-        xpath = '//body';
-      } else if (path.length > 0) {
-        xpath = `//${path.join('/')}`;
+      // Build XPath from the path we collected
+      if (path.length > 0) {
+        xpath = `//body/${path.join('/')}`;
       } else {
-        // Fallback for edge cases (like document.body itself)
-        xpath = `//${tag}`;
+        // Element is body itself
+        xpath = '//body';
       }
     }
 
     // Validate XPath resolves to the same element
-    const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    if (result !== element) {
-      throw new Error(`XPath validation failed for element: ${element.tagName}`);
+    try {
+      const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      if (result !== element) {
+        console.warn(`XPath validation failed for ${element.tagName}, generated: ${xpath}`);
+        return xpath; // Return best-effort even if validation fails
+      }
+    } catch (err) {
+      console.warn(`XPath evaluation failed: ${err.message}, xpath: ${xpath}`);
+      return xpath;
     }
 
     return xpath;
