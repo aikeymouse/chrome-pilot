@@ -419,7 +419,7 @@ window.__chromeLinkHelper = {
     
     // 6. Try any data-* attributes (common for test automation and component identification)
     for (const attr of element.attributes) {
-      if (attr.name.startsWith('data-')) {
+      if (attr.name.startsWith('data-') && attr.name !== 'data-xray-label') {
         const dataSelector = `[${attr.name}="${escapeAttributeValue(attr.value)}"]`;
         if (document.querySelectorAll(dataSelector).length === 1) {
           return dataSelector;
@@ -624,7 +624,7 @@ window.__chromeLinkHelper = {
     // 5. Try data-* attributes
     else {
       for (const attr of element.attributes) {
-        if (attr.name.startsWith('data-')) {
+        if (attr.name.startsWith('data-') && attr.name !== 'data-xray-label') {
           xpath = `//*[@${attr.name}=${escapeXPath(attr.value)}]`;
           break;
         }
