@@ -1054,43 +1054,55 @@ window.__chromeLinkHelper = {
   },
 
   /**
-   * Show X-ray overlays for element tree
+   * Show X-ray overlays for element tree using CSS-based approach
    */
   _internal_showXrayOverlays(elementData) {
     // Remove existing overlays
     this._internal_hideXrayOverlays();
     
-    const overlayContainer = document.createElement('div');
-    overlayContainer.id = '__chromelink-xray-overlays';
-    overlayContainer.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 2147483646;
-    `;
-    
-    // Create overlays only for parent of clicked element, clicked element, and children
-    const elementsToOverlay = [];
-    
-    // Add only the direct parent (last parent in the array)
-    if (elementData.parents && elementData.parents.length > 0) {
-      elementsToOverlay.push({ elem: elementData.parents[elementData.parents.length - 1], isClicked: false });
+    // Add CSS styles if not already present
+    if (!document.getElementById('__chromelink-xray-styles')) {
+      const style = document.createElement('style');
+      style.id = '__chromelink-xray-styles';
+      style.textContent = `
+        .__chromelink-xray {
+          position: relative !important;
+          outline: 2px solid rgba(59, 130, 246, 0.7) !important;
+          outline-offset: 0px !important;
+        }
+        
+        .__chromelink-xray-clicked {
+          position: relative !important;
+          outline: 2px solid rgba(255, 152, 0, 0.7) !important;
+          outline-offset: 0px !important;
+        }
+        
+        .__chromelink-xray::before,
+        .__chromelink-xray-clicked::before {
+          content: attr(data-xray-label) !important;
+          position: absolute !important;
+          top: -1px !important;
+          right: -1px !important;
+          background: rgba(59, 130, 246, 0.7) !important;
+          color: white !important;
+          padding: 2px 6px !important;
+          font-size: 10px !important;
+          font-weight: 600 !important;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+          white-space: nowrap !important;
+          border-radius: 0 2px 0 4px !important;
+          z-index: 2147483646 !important;
+          pointer-events: none !important;
+        }
+        
+        .__chromelink-xray-clicked::before {
+          background: rgba(255, 152, 0, 0.7) !important;
+        }
+      `;
+      document.head.appendChild(style);
     }
     
-    // Add clicked element (with special styling)
-    if (elementData.clickedElement) {
-      elementsToOverlay.push({ elem: elementData.clickedElement, isClicked: true });
-    }
-    
-    // Add children
-    if (elementData.children) {
-      elementsToOverlay.push(...elementData.children.map(child => ({ elem: child, isClicked: false })));
-    }
-    
-    elementsToOverlay.filter(item => item.elem).forEach(({ elem: elemInfo, isClicked }) => {
+    const addXrayClass = (elemInfo, isClicked) => {
       try {
         const selector = elemInfo.selector || elemInfo.xpathSelector;
         if (!selector) return;
@@ -1101,54 +1113,47 @@ window.__chromeLinkHelper = {
         
         if (!el) return;
         
-        const rect = el.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) return;
+        // Store original values to restore later
+        if (!el.__chromeLinkOriginalPosition) {
+          el.__chromeLinkOriginalPosition = el.style.position;
+        }
+        if (!el.__chromeLinkOriginalOutline) {
+          el.__chromeLinkOriginalOutline = el.style.outline;
+        }
+        if (!el.__chromeLinkOriginalOutlineOffset) {
+          el.__chromeLinkOriginalOutlineOffset = el.style.outlineOffset;
+        }
         
-        // Use orange for clicked element, blue for others
-        const borderColor = isClicked ? 'rgba(255, 152, 0, 0.7)' : 'rgba(59, 130, 246, 0.7)';
-        const backgroundColor = isClicked ? 'rgba(255, 152, 0, 0.7)' : 'rgba(59, 130, 246, 0.7)';
-        
-        // Create overlay
-        const overlay = document.createElement('div');
-        overlay.style.cssText = `
-          position: absolute;
-          left: ${rect.left}px;
-          top: ${rect.top}px;
-          width: ${rect.width}px;
-          height: ${rect.height}px;
-          border: 2px solid ${borderColor};
-          border-radius: 4px;
-        `;
-        
-        // Create label
+        // Generate label
         const tag = elemInfo.tagName;
-        const className = elemInfo.attributes?.class ? elemInfo.attributes.class.split(' ')[0] : '';
+        const className = elemInfo.attributes?.class ? elemInfo.attributes.class.split(' ').filter(c => !c.startsWith('__chromelink'))[0] : '';
         const labelText = `<${tag}>${className ? ' .' + className : ''}`;
         
-        const label = document.createElement('div');
-        label.style.cssText = `
-          position: absolute;
-          top: -1px;
-          right: -1px;
-          background: ${backgroundColor};
-          color: white;
-          font-size: 10px;
-          font-weight: 600;
-          padding: 2px 6px;
-          border-radius: 0 2px 0 4px;
-          white-space: nowrap;
-          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        `;
-        label.textContent = labelText;
-        
-        overlay.appendChild(label);
-        overlayContainer.appendChild(overlay);
+        // Add class and label
+        el.setAttribute('data-xray-label', labelText);
+        el.classList.add(isClicked ? '__chromelink-xray-clicked' : '__chromelink-xray');
       } catch (err) {
-        console.warn('Failed to create overlay for element:', err);
+        console.warn('Failed to add xray class for element:', err);
       }
-    });
+    };
     
-    document.body.appendChild(overlayContainer);
+    // Add classes only for parent of clicked element, clicked element, and children
+    
+    // Add only the direct parent (last parent in the array)
+    if (elementData.parents && elementData.parents.length > 0) {
+      addXrayClass(elementData.parents[elementData.parents.length - 1], false);
+    }
+    
+    // Add clicked element (with special styling)
+    if (elementData.clickedElement) {
+      addXrayClass(elementData.clickedElement, true);
+    }
+    
+    // Add children
+    if (elementData.children) {
+      elementData.children.forEach(child => addXrayClass(child, false));
+    }
+    
     return { shown: true };
   },
 
@@ -1156,10 +1161,28 @@ window.__chromeLinkHelper = {
    * Hide X-ray overlays
    */
   _internal_hideXrayOverlays() {
-    const overlays = document.getElementById('__chromelink-xray-overlays');
-    if (overlays) {
-      overlays.remove();
-    }
+    // Remove all xray classes and restore original styles
+    const xrayElements = document.querySelectorAll('.__chromelink-xray, .__chromelink-xray-clicked');
+    xrayElements.forEach(element => {
+      element.classList.remove('__chromelink-xray', '__chromelink-xray-clicked');
+      element.removeAttribute('data-xray-label');
+      
+      // Restore original styles
+      if (element.__chromeLinkOriginalPosition !== undefined) {
+        element.style.position = element.__chromeLinkOriginalPosition;
+        delete element.__chromeLinkOriginalPosition;
+      }
+      if (element.__chromeLinkOriginalOutline !== undefined) {
+        element.style.outline = element.__chromeLinkOriginalOutline;
+        delete element.__chromeLinkOriginalOutline;
+      }
+      if (element.__chromeLinkOriginalOutlineOffset !== undefined) {
+        element.style.outlineOffset = element.__chromeLinkOriginalOutlineOffset;
+        delete element.__chromeLinkOriginalOutlineOffset;
+      }
+    });
+    
+    // Keep styles in DOM for performance on repeated show/hide
     return { hidden: true };
   }
 };
@@ -1243,53 +1266,6 @@ window.__chromeLinkHelper = {
         childInfo.siblingCount = calculateSiblingCount(child);
         return childInfo;
       });
-    
-    // Highlight element if requested
-    if (shouldHighlight) {
-      // Clear any existing highlight timeout for this element
-      if (window.__chromeLinkHighlightTimeout) {
-        clearTimeout(window.__chromeLinkHighlightTimeout);
-      }
-      
-      // Clear any previously highlighted element
-      if (window.__chromeLinkHighlightedElement) {
-        const prev = window.__chromeLinkHighlightedElement;
-        prev.element.style.outline = prev.originalOutline;
-        prev.element.style.outlineOffset = prev.originalOutlineOffset;
-        if (!prev.originalOutline) {
-          prev.element.style.removeProperty('outline');
-        }
-        if (!prev.originalOutlineOffset) {
-          prev.element.style.removeProperty('outline-offset');
-        }
-      }
-      
-      // Store original styles
-      const originalStyles = {
-        element: element,
-        originalOutline: element.style.outline,
-        originalOutlineOffset: element.style.outlineOffset
-      };
-      window.__chromeLinkHighlightedElement = originalStyles;
-      
-      // Apply highlight
-      element.style.setProperty('outline', '2px solid #1a73e8', 'important');
-      element.style.setProperty('outline-offset', '2px', 'important');
-      
-      // Set timeout to remove highlight
-      window.__chromeLinkHighlightTimeout = setTimeout(() => {
-        element.style.outline = originalStyles.originalOutline;
-        element.style.outlineOffset = originalStyles.originalOutlineOffset;
-        if (!originalStyles.originalOutline) {
-          element.style.removeProperty('outline');
-        }
-        if (!originalStyles.originalOutlineOffset) {
-          element.style.removeProperty('outline-offset');
-        }
-        window.__chromeLinkHighlightedElement = null;
-        window.__chromeLinkHighlightTimeout = null;
-      }, 3000);
-    }
     
     return {
       clickedElement: clickedInfo,
