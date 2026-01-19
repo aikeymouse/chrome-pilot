@@ -443,8 +443,10 @@ window.__chromeLinkHelper = {
       }
     }
     
-    // 9. Try unique class (filter out common utility classes)
+    // 9. Try unique class (filter out common utility classes and x-ray classes)
     const classes = Array.from(element.classList).filter(cls => {
+      // Skip x-ray related classes
+      if (cls.startsWith('__chromelink-xray')) return false;
       // Skip generic utility classes (Bootstrap, Tailwind-like patterns)
       // But be more lenient for divs since they often only have structural classes
       if (tagLower === 'div') {
@@ -1212,11 +1214,21 @@ window.__chromeLinkHelper = {
       info.textContent = window.__chromeLinkHelper._internal_getDirectText(el);
     }
     
-    // Collect all attributes
+    // Collect all attributes (filter out x-ray related attributes)
     if (el.attributes) {
       for (let i = 0; i < el.attributes.length; i++) {
         const attr = el.attributes[i];
-        info.attributes[attr.name] = attr.value;
+        // Skip x-ray related attributes
+        if (attr.name === 'data-xray-label') continue;
+        // Filter x-ray classes from class attribute
+        if (attr.name === 'class') {
+          const filteredClasses = attr.value.split(' ').filter(cls => !cls.startsWith('__chromelink-xray')).join(' ');
+          if (filteredClasses) {
+            info.attributes[attr.name] = filteredClasses;
+          }
+        } else {
+          info.attributes[attr.name] = attr.value;
+        }
       }
     }
     
@@ -1229,7 +1241,8 @@ window.__chromeLinkHelper = {
     
     const siblings = Array.from(el.parentElement.children);
     const tagName = el.tagName.toLowerCase();
-    const firstClass = el.classList.length > 0 ? el.classList[0] : null;
+    // Get first non-xray class
+    const firstClass = Array.from(el.classList).find(cls => !cls.startsWith('__chromelink-xray')) || null;
     
     // Count siblings with same tag and first class (exclude inspector indicator)
     return siblings.filter(sibling => {
