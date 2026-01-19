@@ -577,10 +577,11 @@ function renderTabs() {
     return;
   }
   
+  // Sort tabs by index
   const sortedTabs = [...displayTabs].sort((a, b) => a.index - b.index);
   
   tabsList.innerHTML = sortedTabs.map(tab => `
-    <div class="tab-item ${tab.active ? 'active' : ''}">
+    <div class="tab-item ${tab.active ? 'active' : ''}" data-tab-id="${tab.id}" style="cursor: pointer;">
       <div class="tab-header">
         <span class="tab-id">#${tab.id}</span>
         <span class="tab-title">${escapeHtml(tab.title || 'Untitled')}</span>
@@ -588,6 +589,20 @@ function renderTabs() {
       <div class="tab-url">${escapeHtml(tab.url || 'about:blank')}</div>
     </div>
   `).join('');
+  
+  // Add click handlers to switch tabs
+  tabsList.querySelectorAll('.tab-item').forEach(tabItem => {
+    tabItem.addEventListener('click', async (e) => {
+      const tabId = parseInt(tabItem.dataset.tabId);
+      if (tabId) {
+        try {
+          await chrome.tabs.update(tabId, { active: true });
+        } catch (error) {
+          console.error('Failed to switch to tab:', error);
+        }
+      }
+    });
+  });
 }
 
 /**
