@@ -13,6 +13,7 @@ let keepaliveTimer = null;
 let currentWindowId = null;
 let tabCache = new Map();
 const activeSessions = new Set(); // Track active session IDs
+let inspectorTabId = null; // Track which tab has inspector mode enabled
 
 /**
  * Send keepalive ping to native host
@@ -919,6 +920,9 @@ async function enableInspector(params) {
       world: 'MAIN'
     });
     
+    // Track inspector state
+    inspectorTabId = tabId;
+    
     console.log('Inspector enabled on tab:', tabId);
     return { enabled: true, tabId };
   } catch (error) {
@@ -949,6 +953,11 @@ async function disableInspector(params) {
       func: () => window.__chromeLinkHelper._internal_disableClickTracking(),
       world: 'MAIN'
     });
+    
+    // Clear inspector state if this was the inspector tab
+    if (inspectorTabId === tabId) {
+      inspectorTabId = null;
+    }
     
     return { disabled: true, tabId };
   } catch (error) {
@@ -1137,8 +1146,18 @@ chrome.tabs.onCreated.addListener((tab) => {
   });
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   tabCache.set(tabId, tab);
+  
+  // Re-inject inspector if this tab has inspector mode enabled and page has loaded
+  if (inspectorTabId === tabId && changeInfo.status === 'complete') {
+    try {
+      await enableInspector({ tabId });
+      console.log('Re-injected inspector scripts on tab navigation:', tabId);
+    } catch (error) {
+      console.error('Failed to re-inject inspector:', error);
+    }
+  }
   
   sendNativeMessage({
     type: 'tabUpdate',
@@ -1166,6 +1185,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
   const tab = tabCache.get(tabId);
   tabCache.delete(tabId);
+  
+  // Clear inspector state if this was the inspector tab
+  if (inspectorTabId === tabId) {
+    inspectorTabId = null;
+  }
   
   sendNativeMessage({
     type: 'tabUpdate',

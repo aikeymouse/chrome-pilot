@@ -213,6 +213,10 @@ function handleTabUpdate(message) {
       
     case 'removed':
       tabs = tabs.filter(t => t.id !== tab.id);
+      // Exit inspector mode if the inspector tab was closed
+      if (typeof inspectorTabId !== 'undefined' && inspectorTabId === tab.id) {
+        exitInspectorMode();
+      }
       break;
       
     case 'activated':
@@ -220,6 +224,10 @@ function handleTabUpdate(message) {
       const activeIndex = tabs.findIndex(t => t.id === tab.id);
       if (activeIndex !== -1) {
         tabs[activeIndex].active = true;
+      }
+      // Exit inspector mode if user switched to a different tab
+      if (typeof inspectorTabId !== 'undefined' && inspectorTabId !== null && inspectorTabId !== tab.id) {
+        exitInspectorMode();
       }
       break;
   }
