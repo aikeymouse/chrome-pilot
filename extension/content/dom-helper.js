@@ -1072,14 +1072,20 @@ window.__chromeLinkHelper = {
       z-index: 2147483646;
     `;
     
-    // Create overlays for all elements in tree
-    const allElements = [
-      ...(elementData.parents || []),
-      elementData.clickedElement,
-      ...(elementData.children || [])
-    ].filter(Boolean);
+    // Create overlays only for parent of clicked element and children
+    const allElements = [];
     
-    allElements.forEach(elemInfo => {
+    // Add only the direct parent (last parent in the array)
+    if (elementData.parents && elementData.parents.length > 0) {
+      allElements.push(elementData.parents[elementData.parents.length - 1]);
+    }
+    
+    // Add children
+    if (elementData.children) {
+      allElements.push(...elementData.children);
+    }
+    
+    allElements.filter(Boolean).forEach(elemInfo => {
       try {
         const selector = elemInfo.selector || elemInfo.xpathSelector;
         if (!selector) return;
