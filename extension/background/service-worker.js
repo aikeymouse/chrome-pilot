@@ -1301,11 +1301,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('Message from content script:', message, 'sender:', sender);
   if (message.type === 'elementClicked') {
     console.log('Element clicked, forwarding to side panel');
-    // Forward element clicked event to side panel
+    // Forward element clicked event to side panel with frameId
     broadcastToSidePanel({
       type: 'elementClicked',
       element: message.element,
-      tabId: sender.tab?.id
+      tabId: sender.tab?.id,
+      frameId: sender.frameId // Include frameId to execute x-ray in correct frame
     });
   }
   return false;

@@ -7,6 +7,7 @@ let isInspectorMode = false;
 let inspectorTabId = null;
 let inspectedElement = null;
 let selectedTreeElement = null; // Currently selected element in tree
+let inspectedFrameId = 0; // Frame ID where the last click occurred (0 = main frame)
 let xrayMode = true; // X-ray mode active by default
 
 /**
@@ -67,11 +68,11 @@ async function startInspectorMode() {
 async function exitInspectorMode() {
   if (!isInspectorMode) return;
   
-  // Hide X-ray overlays
+  // Hide X-ray overlays in all frames
   if (inspectorTabId) {
     try {
       await chrome.scripting.executeScript({
-        target: { tabId: inspectorTabId },
+        target: { tabId: inspectorTabId, allFrames: true },
         func: () => window.__chromeLinkHelper._internal_hideXrayOverlays(),
         world: 'MAIN'
       });
@@ -129,8 +130,9 @@ function handleElementClicked(message) {
   }
   
   inspectedElement = message.element;
+  inspectedFrameId = message.frameId || 0; // Store frame ID (0 = main frame)
   selectedTreeElement = inspectedElement.clickedElement; // Default to clicked element
-  console.log('Inspected element set:', inspectedElement);
+  console.log('Inspected element set:', inspectedElement, 'frameId:', inspectedFrameId);
   renderInspectedElement();
   
   // Auto-scroll to bottom after new element is clicked
@@ -285,17 +287,17 @@ async function updateXrayOverlays() {
   
   try {
     if (xrayMode) {
-      // Show overlays on page
+      // Show overlays on page in the correct frame
       await chrome.scripting.executeScript({
-        target: { tabId: inspectorTabId },
+        target: { tabId: inspectorTabId, frameIds: [inspectedFrameId] },
         func: (elementData) => window.__chromeLinkHelper._internal_showXrayOverlays(elementData),
         args: [inspectedElement],
         world: 'MAIN'
       });
     } else {
-      // Hide overlays
+      // Hide overlays in the correct frame
       await chrome.scripting.executeScript({
-        target: { tabId: inspectorTabId },
+        target: { tabId: inspectorTabId, frameIds: [inspectedFrameId] },
         func: () => window.__chromeLinkHelper._internal_hideXrayOverlays(),
         world: 'MAIN'
       });

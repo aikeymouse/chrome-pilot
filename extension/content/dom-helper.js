@@ -996,23 +996,29 @@ window.__chromeLinkHelper = {
     
     // Store click handler so we can remove it later
     window.__chromeLinkClickHandler = (event) => {
-
-      // Don't prevent default to avoid breaking page functionality
+      // Get the actual element that was clicked (not what the event bubbled to)
+      // Use event.target in capture phase to get the deepest element
+      const element = event.target;
+      
+      // Don't process clicks on the inspector indicator itself
+      if (element.id === '__chromelink-inspector-indicator' || 
+          element.closest('#__chromelink-inspector-indicator')) {
+        return;
+      }
+      
+      // Stop propagation to prevent multiple handlers from firing
       event.stopPropagation();
       
-      const element = event.target;
       const elementData = buildElementTree(element, true);
       
       // Send message via custom event (since we're in MAIN world, chrome.runtime is not available)
-      // Always dispatch on top window so inspector bridge in top window catches it
-      console.log('Dispatching element clicked event:', elementData);
-      const targetWindow = window.top || window;
-      targetWindow.dispatchEvent(new CustomEvent('__chromelink_element_clicked', {
+      // Dispatch on current window, not window.top - each frame handles its own events
+      window.dispatchEvent(new CustomEvent('__chromelink_element_clicked', {
         detail: elementData
       }));
     };
     
-    // Add click listener to document
+    // Add click listener to document in capture phase (true) to catch before other handlers
     document.addEventListener('click', window.__chromeLinkClickHandler, true);
     
     // Add visual indicator only in top-level frame (not in iframes)
@@ -1264,8 +1270,9 @@ window.__chromeLinkHelper = {
     // Build element tree data
     const parents = [];
     let currentParent = element.parentElement;
-    // Stop at body element (in iframe context, document.body is the iframe's body)
-    while (currentParent && currentParent !== document.body) {
+    
+    // Traverse up to documentElement (html), including body
+    while (currentParent && currentParent.tagName && currentParent.tagName.toLowerCase() !== 'html') {
       if (currentParent.id !== '__chromelink-inspector-indicator') {
         const parentInfo = buildElementInfo(currentParent, element);
         parentInfo.siblingCount = calculateSiblingCount(currentParent);
