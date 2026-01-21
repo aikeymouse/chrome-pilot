@@ -1004,8 +1004,10 @@ window.__chromeLinkHelper = {
       const elementData = buildElementTree(element, true);
       
       // Send message via custom event (since we're in MAIN world, chrome.runtime is not available)
+      // Always dispatch on top window so inspector bridge in top window catches it
       console.log('Dispatching element clicked event:', elementData);
-      window.dispatchEvent(new CustomEvent('__chromelink_element_clicked', {
+      const targetWindow = window.top || window;
+      targetWindow.dispatchEvent(new CustomEvent('__chromelink_element_clicked', {
         detail: elementData
       }));
     };
@@ -1013,25 +1015,27 @@ window.__chromeLinkHelper = {
     // Add click listener to document
     document.addEventListener('click', window.__chromeLinkClickHandler, true);
     
-    // Add visual indicator that inspector is active
-    const inspectorIndicator = document.createElement('div');
-    inspectorIndicator.id = '__chromelink-inspector-indicator';
-    inspectorIndicator.style.cssText = `
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #1a73e8;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      z-index: 2147483647;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      pointer-events: none;
-    `;
-    inspectorIndicator.textContent = '🔍 Inspector Mode Active';
-    document.body.appendChild(inspectorIndicator);
+    // Add visual indicator only in top-level frame (not in iframes)
+    if (window === window.top) {
+      const inspectorIndicator = document.createElement('div');
+      inspectorIndicator.id = '__chromelink-inspector-indicator';
+      inspectorIndicator.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(26, 115, 232, 0.7);
+        color: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        z-index: 2147483647;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        pointer-events: none;
+      `;
+      inspectorIndicator.textContent = '🔍 Inspector Mode Active';
+      document.body.appendChild(inspectorIndicator);
+    }
     
     return { enabled: true };
   },
@@ -1260,6 +1264,7 @@ window.__chromeLinkHelper = {
     // Build element tree data
     const parents = [];
     let currentParent = element.parentElement;
+    // Stop at body element (in iframe context, document.body is the iframe's body)
     while (currentParent && currentParent !== document.body) {
       if (currentParent.id !== '__chromelink-inspector-indicator') {
         const parentInfo = buildElementInfo(currentParent, element);

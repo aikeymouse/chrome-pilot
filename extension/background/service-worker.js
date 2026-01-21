@@ -899,23 +899,23 @@ async function enableInspector(params) {
   }
   
   try {
-    // Inject inspector bridge (ISOLATED world) to relay messages
+    // Inject inspector bridge (ISOLATED world) to relay messages - in all frames
     await chrome.scripting.executeScript({
-      target: { tabId },
+      target: { tabId, allFrames: true },
       files: ['content/inspector-bridge.js'],
       world: 'ISOLATED'
     });
     
-    // Inject dom-helper.js (MAIN world) if not already injected
+    // Inject dom-helper.js (MAIN world) if not already injected - in all frames
     await chrome.scripting.executeScript({
-      target: { tabId },
+      target: { tabId, allFrames: true },
       files: ['content/dom-helper.js'],
       world: 'MAIN'
     });
     
-    // Enable click tracking
+    // Enable click tracking - in all frames
     const results = await chrome.scripting.executeScript({
-      target: { tabId },
+      target: { tabId, allFrames: true },
       func: () => window.__chromeLinkHelper._internal_enableClickTracking(),
       world: 'MAIN'
     });
@@ -947,9 +947,9 @@ async function disableInspector(params) {
   }
   
   try {
-    // Disable click tracking
+    // Disable click tracking - in all frames
     await chrome.scripting.executeScript({
-      target: { tabId },
+      target: { tabId, allFrames: true },
       func: () => window.__chromeLinkHelper._internal_disableClickTracking(),
       world: 'MAIN'
     });
