@@ -51,7 +51,7 @@ Client App (WebSocket) ←→ Node.js Native Host ←→ Chrome Extension (Servi
 
 ## Installation
 
-See [install-scripts/INSTALL.md](INSTALL.md) for complete installation instructions.
+See [install-scripts/INSTALL.md](install-scripts/INSTALL.md) for complete installation instructions.
 
 ## Usage
 
