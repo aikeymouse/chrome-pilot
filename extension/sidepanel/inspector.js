@@ -286,19 +286,19 @@ async function updateXrayOverlays() {
   if (!inspectorTabId || !inspectedElement) return;
   
   try {
+    // First, clear x-ray overlays from ALL frames to avoid leftovers
+    await chrome.scripting.executeScript({
+      target: { tabId: inspectorTabId, allFrames: true },
+      func: () => window.__chromeLinkHelper._internal_hideXrayOverlays(),
+      world: 'MAIN'
+    });
+    
     if (xrayMode) {
-      // Show overlays on page in the correct frame
+      // Then show overlays only in the specific frame where the element was clicked
       await chrome.scripting.executeScript({
         target: { tabId: inspectorTabId, frameIds: [inspectedFrameId] },
         func: (elementData) => window.__chromeLinkHelper._internal_showXrayOverlays(elementData),
         args: [inspectedElement],
-        world: 'MAIN'
-      });
-    } else {
-      // Hide overlays in the correct frame
-      await chrome.scripting.executeScript({
-        target: { tabId: inspectorTabId, frameIds: [inspectedFrameId] },
-        func: () => window.__chromeLinkHelper._internal_hideXrayOverlays(),
         world: 'MAIN'
       });
     }
